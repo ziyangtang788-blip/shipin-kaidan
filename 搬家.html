@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>搬家 · 把数据搬到 localhost</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#14120E;color:#EDE8DC;font:17px/1.75 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:36px 22px 80px;max-width:820px;margin:0 auto}
+  h1{font-size:27px;color:#F0B23C;margin-bottom:4px}
+  .где{color:#8C8577;font-size:14px;margin-bottom:6px}
+  .mode{display:inline-block;background:#F0B23C;color:#14120E;font-weight:700;font-size:15px;
+        padding:4px 15px;border-radius:20px;margin-bottom:22px}
+  .mode.imp{background:#6ECF8A}
+  .card{background:#1A1712;border:1px solid #2A251D;border-left:5px solid #F0B23C;
+        border-radius:0 12px 12px 0;padding:20px 24px;margin-bottom:16px}
+  .card.imp{border-left-color:#6ECF8A}
+  h2{font-size:19px;margin-bottom:10px;color:#EDE8DC}
+  p{color:#C6BFB0;margin-bottom:10px}
+  p:last-child{margin-bottom:0}
+  .big{display:block;width:100%;background:#F0B23C;color:#14120E;border:0;border-radius:10px;
+       padding:17px;font-size:19px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:14px}
+  .big:hover{background:#FFC košile}
+  .big:hover{background:#FFC55A}
+  .big:disabled{background:#3D382E;color:#8C8577;cursor:not-allowed}
+  .big.imp{background:#6ECF8A}
+  .big.imp:hover{background:#8FE0A6}
+  .drop{border:3px dashed #3D382E;border-radius:12px;padding:34px 20px;text-align:center;
+        color:#8C8577;margin-top:14px;cursor:pointer}
+  .drop:hover,.drop.on{border-color:#6ECF8A;color:#EDE8DC;background:#161D18}
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  td{padding:9px 12px;border-bottom:1px solid #221F19;color:#C6BFB0}
+  td:last-child{text-align:right;color:#F0B23C;font-weight:700;font-family:Consolas,monospace}
+  .log{background:#0E0C09;border:1px solid #2A251D;border-radius:10px;padding:15px 18px;
+       margin-top:16px;font:14px/1.7 Consolas,monospace;color:#9A9282;
+       max-height:280px;overflow:auto;white-space:pre-wrap}
+  .log b{color:#6ECF8A}
+  .log i{color:#F0876A;font-style:normal}
+  .warn{background:#2A1A14;border-left:5px solid #F0876A;border-radius:0 12px 12px 0;
+        padding:15px 20px;margin-bottom:16px;color:#F0A98A;font-size:15px}
+  .step{background:#1E1B15;border-left:5px solid #B8791E;border-radius:0 12px 12px 0;
+        padding:16px 20px;margin-bottom:16px;font-size:15px;color:#C6BFB0}
+  .step b{color:#F0B23C}
+  code{background:#221F19;padding:2px 7px;border-radius:4px;color:#E3C155;
+       font-family:Consolas,monospace;font-size:15px}
+</style>
+</head>
+<body>
+
+<h1>搬家</h1>
+<div class="где" id="где"></div>
+<div class="mode" id="mode"></div>
+
+<div id="app"></div>
+
+<script>
+(function(){
+  var 是本机文件 = location.protocol === "file:";
+  document.getElementById("где").textContent = "当前位置：" + location.href.slice(0,72);
+  var mode = document.getElementById("mode");
+  var app  = document.getElementById("app");
+
+  function 读(k){ try{ return JSON.parse(localStorage.getItem(k)||"null"); }catch(e){ return null; } }
+  function 条(v){ return v==null ? 0 : (Array.isArray(v)?v.length:Object.keys(v).length); }
+
+  /* ══════════════ 导出侧（file://）══════════════ */
+  if (是本机文件) {
+    mode.textContent = "第 1 步 · 导出";
+    mode.className = "mode";
+
+    var ov = 读("gm_ov_v2") || {}, orders = 读("gm_orders") || [];
+    var 明细 = [
+      ["订单记录",        orders.length + " 张"],
+      ["学过的对照 maps", 条(ov.maps)  + " 条"],
+      ["叫法本 gmap",     条(ov.gmap)  + " 条"],
+      ["改过的价 px",     条(ov.px)    + " 条"],
+      ["加的价 padd",     条(ov.padd)  + " 条"],
+      ["门店名单 shops",  条(ov.shops) + " 家"],
+      ["点位 spots",      条(ov.spots) + " 条"]
+    ];
+
+    app.innerHTML =
+      '<div class="card"><h2>这台电脑上现在有这些</h2>' +
+      '<table>' + 明细.map(function(r){
+        return '<tr><td>'+r[0]+'</td><td>'+r[1]+'</td></tr>'; }).join('') + '</table>' +
+      '<button class="big" id="go">导出成一个文件</button>' +
+      '<p style="margin-top:12px;font-size:14px;color:#8C8577">' +
+      '原来这份<b style="color:#6ECF8A">一个字都不会动</b>，导出的是复制品。</p></div>' +
+      '<div class="step"><b>导完下一步：</b>浏览器打开 <code>http://localhost:8080/搬家.html</code>，' +
+      '把刚下载的文件拖进去。</div>';
+
+    document.getElementById("go").onclick = function(){
+      var 包 = {
+        来自: "file://", 时间: new Date().toISOString(),
+        gm_ov_v2: ov, gm_orders: orders
+      };
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(包)], {type:"application/json"}));
+      a.download = "搬家包-" + new Date().toISOString().slice(0,10) + ".json";
+      a.click();
+      this.textContent = "✅ 导好了 —— 去下载文件夹找「搬家包-…json」";
+      this.disabled = true;
+    };
+    return;
+  }
+
+  /* ══════════════ 导入侧（localhost）══════════════ */
+  mode.textContent = "第 2 步 · 导入";
+  mode.className = "mode imp";
+
+  app.innerHTML =
+    '<div class="warn">只往里加，<b>不删你现有的任何东西</b>。已经有的单号会自动跳过，不会重复。</div>' +
+    '<div class="card imp"><h2>把「搬家包」拖进来</h2>' +
+    '<div class="drop" id="drop">拖文件到这里<br><span style="font-size:14px">或者点一下选文件</span></div>' +
+    '<input type="file" id="pick" accept=".json" hidden>' +
+    '<button class="big imp" id="go" disabled>先选文件</button>' +
+    '<div class="log" id="log" hidden></div></div>';
+
+  var drop=document.getElementById("drop"), pick=document.getElementById("pick"),
+      go=document.getElementById("go"), log=document.getElementById("log"), 包=null;
+
+  function 说(s, cls){ log.hidden=false;
+    log.innerHTML += (cls?'<'+cls+'>'+s+'</'+cls+'>':s) + "\n"; log.scrollTop=log.scrollHeight; }
+
+  drop.onclick = function(){ pick.click(); };
+  drop.ondragover = function(e){ e.preventDefault(); drop.classList.add("on"); };
+  drop.ondragleave = function(){ drop.classList.remove("on"); };
+  drop.ondrop = function(e){ e.preventDefault(); drop.classList.remove("on");
+    if(e.dataTransfer.files[0]) 收(e.dataTransfer.files[0]); };
+  pick.onchange = function(){ if(this.files[0]) 收(this.files[0]); };
+
+  function 收(f){
+    var r = new FileReader();
+    r.onload = function(){
+      try { 包 = JSON.parse(r.result); } catch(e){ drop.textContent="这不是搬家包（读不出来）"; return; }
+      var ov = 包.gm_ov_v2||{}, od = 包.gm_orders||[];
+      drop.innerHTML = "✅ " + f.name + "<br><span style='font-size:14px'>" +
+        od.length + " 张单 · 对照 " + 条(ov.maps) + " 条 · 改价 " + 条(ov.px) + " 条</span>";
+      go.disabled = false; go.textContent = "开始搬（" + od.length + " 张单）";
+    };
+    r.readAsText(f);
+  }
+
+  go.onclick = async function(){
+    go.disabled = true; go.textContent = "搬运中…"; log.innerHTML = "";
+    var ov = 包.gm_ov_v2 || {}, orders = 包.gm_orders || [];
+
+    /* 1. 学过的东西：先写本机，再推给后端 */
+    try {
+      var 旧 = 读("gm_ov_v2") || {};
+      ["maps","gmap","px","padd","shops","mem","gone"].forEach(function(k){
+        旧[k] = Object.assign({}, 旧[k]||{}, ov[k]||{}); });
+      旧.spots = (旧.spots||[]).concat(ov.spots||[]);
+      旧.plog  = (旧.plog ||[]).concat(ov.plog ||[]);
+      localStorage.setItem("gm_ov_v2", JSON.stringify(旧));
+      说("本机对照表：写好了", "b");
+
+      var cur = await fetch("/api/overlay").then(r=>r.json()).catch(()=>null);
+      var r2 = await fetch("/api/overlay", {method:"POST",
+        headers:{"content-type":"application/json"},
+        body: JSON.stringify({ version: cur && cur.ok ? cur.version : null, data: 旧 })
+      }).then(r=>r.json());
+      说(r2 && r2.ok ? "后端对照表：推上去了（版本 "+r2.version+"）" : "后端对照表：没推成", r2&&r2.ok?"b":"i");
+    } catch(e){ 说("对照表出错：" + e.message, "i"); }
+
+    /* 2. 订单：已经有的跳过 */
+    var 已有 = {};
+    try {
+      var g = await fetch("/api/orders?from=2000-01-01&to=2999-12-31&limit=1000").then(r=>r.json());
+      (g.rows||[]).forEach(function(o){ 已有[o.order_no] = 1; });
+      说("后端已有 " + Object.keys(已有).length + " 张单");
+    } catch(e){ 说("读不到后端已有的单：" + e.message, "i"); }
+
+    var 成=0, 跳=0, 败=0;
+    for (var i=0; i<orders.length; i++){
+      var o = orders[i];
+      if (o.order_no && 已有[o.order_no]) { 跳++; continue; }
+      try {
+        var r3 = await fetch("/api/orders", {method:"POST",
+          headers:{"content-type":"application/json"}, body: JSON.stringify(o)}).then(r=>r.json());
+        if (r3 && r3.ok) { 成++; if(成%10===0) 说("已搬 "+成+" 张…"); }
+        else { 败++; 说("✗ " + (o.order_no||"无单号") + "：" + ((r3&&r3.error)||"没成"), "i"); }
+      } catch(e){ 败++; 说("✗ " + (o.order_no||"") + "：" + e.message, "i"); }
+    }
+
+    说("");
+    说("═══ 搬完了 ═══", "b");
+    说("搬过去 " + 成 + " 张 · 已有跳过 " + 跳 + " 张" + (败?" · 失败 "+败+" 张":""), 败?"i":"b");
+    说("");
+    说("现在去 http://localhost:8080 点「订单记录」，刷新一下就看得到了。");
+    go.textContent = "搬完了（成 "+成+" / 跳 "+跳+(败?" / 败 "+败:"")+"）";
+  };
+})();
+</script>
+</body>
+</html>

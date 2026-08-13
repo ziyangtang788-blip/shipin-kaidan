@@ -1,0 +1,28 @@
+- [食品配送出单系统](food-delivery-quote-system.md) — 独立小工具：粘订单文字→自动识别→按客户专属价出报价单；三个已拍板的决定
+- [观麦是现有系统](guanmai-incumbent-system.md) — 已定：补位不替代，解决"手工敲单"；183张客户报价单可导出，客户叫法存在「规格名」里
+- [范围：从开单扩到全套进销存](scope-now-just-make-sales-order.md) — 已出 78 项功能选型清单+三套餐，等他勾完再动手；关键是先定做不做服务器版
+- [交付要本地文件](deliver-local-not-artifact.md) — 别发 Artifact 链接，直接在项目文件夹出自包含 HTML，将来推到自己域名
+- [下单表四种格式](customer-order-sheet-formats.md) — 点位写法各不相同；"水豆腐"在5个客户嘴里是5个东西5个价，对照表必须分客户
+- [点位特价规则已破解](spot-price-rule-found.md) — 点位号在 spu_remark，带点位号的行单价一律减 0.40 元
+- [真实单据流程](real-order-doc-flow.md) — 客户特殊采购表 → 我的价格库 → 销售单；名称对不上、按点位拆行才是真难点
+- [主文档位置](food-system-master-doc.md) — 需求细节、样板假数据、待确认清单都在桌面那个 txt 里
+- [新项目是纯流通配送](new-project-pure-distribution.md) — 桌面「食品配送」是新项目,公司不生产;别带 BOM/加工进去,重心在分拣和三个数量
+- [识别三层漏斗](food-delivery-recognition-three-layers.md) — 已定:对照表→旧正则引擎→AI兜底;旧引擎85%可原样搬,只改两处常量
+- [回头核要自动+定点](recheck-auto-and-targeted.md) — 默认开、只重核有问题那几行（?、总数对不上）；输出极短，更准还更省
+- [点位册只是复制粘贴](spot-book-copy-paste-only.md) — **没有权威性**：号→名会变，绝不许拿它改识别结果；那个「N 个点位册子里没有」弹窗要去掉，静默记
+- [点位延后,要提醒补回](spot-code-deferred.md) — 先保数量金额准;但括号点位的解析机制不能删,它是多段数量累加的载体
+- [UI 定为「夜台」](ui-night-desk-direction.md) — 深色+琥珀,只一套不做浅色;改结构前必须校验 85 个 JS 依赖 id,数量框没写 type 是个坑
+- [已经上线了](deployed-site-and-server.md) — 域名 choeyy88.com,部署包在桌面\部署包(不在项目文件夹);改完本地要双击 2-上传网页.bat 才生效
+- [已定做服务器版](cloud-shared-data-decided.md) — 客户几台电脑用,浏览器存储撑不住;上域名+云端存数据,但等工厂数据到了再动手
+- [选择框要能打字搜索](searchable-picker-required.md) — 纯下拉容易选错又慢;存疑变多后这步成了主要操作量
+- [改价走覆盖层](price-edit-override-layer.md) — 观麦底层只读+工具覆盖层,重导不冲掉;改价要留痕,由此逼出"要有用户身份"这条新需求
+- [连不上时的部署办法](deploy-via-github-relay.md) — 他的网络到 VPS 全端口不通;走 GitHub 加密中转+浏览器 Console,命令里不能有中文文件名
+- [后端上线了](backend-live-order-records.md) — 订单记录存服务器、单号服务器发;点位只照搬不挂价,雅食乐减0.4已清空
+- [欠着：没座位的字段先丢](pending-extra-fields-drawer.md) — 开单员/税率这类现在直接丢，他说要的时候再加「后排」
+- [规矩分两层](rules-index-two-layers.md) — CLAUDE.md 放结论、规矩总表放细节；那 5 条别再往这个索引里加，重复=每次会话白花钱
+- [识别成本账](ai-recognition-cost-plan.md) — **已冻结**：先把系统做对再谈省钱；准确率 100/100 是硬前提，不拿基线实测证明就不许动
+- [8/4 拍板的 13 条](decisions-2026-08-04.md) — 界面分两块、四个弹窗全留、点位只做拆行+对账、学过的优先；动手前先看这份
+- [斤转板：悬着，等问工厂](jin-vs-board-open-question.md) — 8/2「能整除折板」vs 8/4「有斤就用斤」打架，直接改钱；**给答复前一行不许改**
+- [想要个「打字让AI改」的窗口](ai-edit-window-idea.md) — 只是想法没拍板；真正的价值在【一句话批量改】，单条改不如直接点
+- [界面待办：模式条+导入订单](ui-todo-mode-bar-and-import.md) — 改单/加单那条太不起眼要放大；「导入订单」指哪一块【还没确认】，下次先问
+- [动开单台必须先问](ask-before-touching-kaidan.md) — 在跑的东西不许直接改；先在桌面出独立文件跑通，他点头才并进去；已改的摆出来给他看，不能用就删

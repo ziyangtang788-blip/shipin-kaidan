@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>试 OCR — 看它把图认成什么样</title>
+<!--
+  试 OCR —— 独立试验页，跟开单台一点关系都没有
+  ============================================================
+  老板 2026-08-09：「我先试一下它图成什么样子」
+
+  双击打开，把图拖进来，看 OCR 认成什么样。
+  左边原图、右边它认出来的表，对着看：哪一格串了、哪个字错了，一眼就知道。
+
+  ⚠ 这个文件里带着密钥，【绝对不许上传】，只放在你自己电脑上。
+    将来并进开单台时改走后端代理 —— 那时候密钥留在服务器，网页里一个字都没有。
+
+  ⚠ 只读不写：不碰开单台、不碰价格库、不存任何东西。关掉就没了。
+  ============================================================
+-->
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#15161a;color:#E8E4DC;
+     font:14px/1.65 "Microsoft YaHei","PingFang SC",system-ui,sans-serif}
+.wrap{max-width:1400px;margin:0 auto;padding:26px 22px 60px}
+h1{font-size:20px;margin:0 0 4px;color:#E0A94F;font-weight:600}
+.sub{color:#8A8578;font-size:13px;margin-bottom:22px}
+
+/* 拖进来的地方 */
+#drop{border:2px dashed #3A3E47;border-radius:14px;padding:44px 20px;text-align:center;
+      background:#1A1C21;cursor:pointer;transition:.15s}
+#drop:hover{border-color:#5A4630;background:#1D1F25}
+#drop.on{border-color:#E0A94F;background:#231D14}
+#drop .big{font-size:17px;color:#D9D4C8;margin-bottom:6px}
+#drop .hint{font-size:12.5px;color:#7A7568}
+#pick{display:none}
+
+#msg{margin:14px 0 0;font-size:13px;color:#8A8578;min-height:20px}
+#msg .run{color:#E0A94F}
+#msg .bad{color:#E0533D}
+
+/* 一张图一张卡 */
+.card{background:#1D1F24;border:1px solid #2C2F36;border-radius:11px;
+      margin-top:20px;overflow:hidden}
+.hd{padding:10px 16px;background:#22252B;border-bottom:1px solid #2C2F36;
+    display:flex;gap:15px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.hd b{color:#E0A94F;font-size:14px}
+.hd span{color:#8A8578}
+.hd .ok{color:#7FBF7F}
+.body{display:flex;align-items:flex-start}
+.L{flex:0 0 38%;padding:14px;border-right:1px solid #2C2F36}
+.L img{max-width:100%;border-radius:6px;background:#fff;display:block}
+.R{flex:1;padding:14px;overflow-x:auto;max-height:76vh;overflow-y:auto}
+table{border-collapse:collapse;font-size:12.5px;margin:6px 0;width:100%}
+th{background:#2C2F36;color:#E0A94F;text-align:left;font-weight:600;white-space:nowrap}
+th,td{border:1px solid #343841;padding:5px 8px;vertical-align:top}
+td{color:#D5D0C4}
+.R p{margin:4px 0;color:#C9C4B8}
+.R h3{margin:8px 0 4px;font-size:14px;color:#E0A94F}
+
+/* 它自己说没把握的 */
+.low{margin:0 14px 14px;padding:10px 12px;border-radius:8px;
+     background:#2A211A;border:1px solid #4A3B28;font-size:12.5px}
+.low b{color:#E0A94F}
+.chip{display:inline-block;background:#3A2C1E;border:1px solid #5A4630;border-radius:5px;
+      padding:1px 7px;margin:4px 5px 0 0;font-size:12px}
+.err{padding:14px;color:#E0533D}
+.foot{margin-top:26px;color:#63604F;font-size:12px;line-height:1.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>试 OCR — 看它把图认成什么样</h1>
+  <div class="sub">左边是你给的原图，右边是它认出来的东西。只是试，什么都不会改。</div>
+
+  <div id="drop">
+    <div class="big">把下单表拖进来</div>
+    <div class="hint">或者点一下选文件　·　png / jpg / pdf　·　一次可以拖好几张</div>
+  </div>
+  <input type="file" id="pick" multiple accept="image/*,.pdf">
+  <div id="msg"></div>
+  <div id="out"></div>
+
+  <div class="foot">
+    这一页跟开单台没有任何关系 —— 不读你的价格库、不写任何数据，关掉就没了。<br>
+    ⚠ 这个文件里带着密钥，只能放在你自己电脑上，别传到网上。
+  </div>
+</div>
+
+<script src="密钥-本机.js"></script>
+<script src="引擎-OCR.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var drop=$("drop"), pick=$("pick"), msg=$("msg"), out=$("out");
+  var O=window.GM_OCR, KEY=window.GM_KEY_OCR||"";
+
+  if(!KEY){ msg.innerHTML='<span class="bad">密钥-本机.js 里没找到 GM_KEY_OCR</span>'; }
+
+  var MIME={png:"image/png",jpg:"image/jpeg",jpeg:"image/jpeg",webp:"image/webp",
+            gif:"image/gif",pdf:"application/pdf"};
+
+  /* 拖进来 / 点开选，两条路都通 */
+  drop.addEventListener("click",function(){ pick.click(); });
+  pick.addEventListener("change",function(){ 走(Array.prototype.slice.call(pick.files)); pick.value=""; });
+  ["dragenter","dragover"].forEach(function(e){
+    drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.add("on"); });
+  });
+  ["dragleave","drop"].forEach(function(e){
+    drop.addEventListener(e,function(ev){ ev.preventDefault(); drop.classList.remove("on"); });
+  });
+  drop.addEventListener("drop",function(ev){
+    走(Array.prototype.slice.call(ev.dataTransfer.files));
+  });
+
+  function 读成base64(f){
+    return new Promise(function(ok,no){
+      var r=new FileReader();
+      r.onload=function(){ ok(String(r.result).split(",")[1]); };
+      r.onerror=no;
+      r.readAsDataURL(f);
+    });
+  }
+
+  async function 走(files){
+    if(!files||!files.length) return;
+    for(var i=0;i<files.length;i++){
+      var f=files[i];
+      var ext=(f.name.split(".").pop()||"").toLowerCase();
+      var mime=MIME[ext];
+      if(!mime){ 加卡({名:f.name,错:"不认识这个格式（只认 png / jpg / pdf）"}); continue; }
+      msg.innerHTML='<span class="run">正在认「'+esc(f.name)+'」…（'+(i+1)+'/'+files.length+'）</span>';
+      try{
+        var b64=await 读成base64(f);
+        var t0=Date.now();
+        var 体=O.请求体(b64,mime);
+        /* PDF 要走 document_url 这个口，图片走 image_url */
+        if(mime==="application/pdf")
+          体.document={type:"document_url",document_url:"data:application/pdf;base64,"+b64};
+        var res=await fetch(O.接口,{
+          method:"POST",
+          headers:{"Content-Type":"application/json","Authorization":"Bearer "+KEY},
+          body:JSON.stringify(体)
+        });
+        if(!res.ok){
+          var t=await res.text();
+          throw new Error("HTTP "+res.status+"　"+t.slice(0,200));
+        }
+        var r=O.拆响应(await res.json());
+        加卡({名:f.name, kb:Math.round(f.size/1024), 秒:((Date.now()-t0)/1000).toFixed(1),
+              图:"data:"+mime+";base64,"+b64, r:r, 是PDF:mime==="application/pdf"});
+      }catch(e){
+        加卡({名:f.name,错:String(e.message||e)});
+      }
+    }
+    msg.innerHTML="";
+  }
+
+  function esc(s){
+    return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  }
+
+  /* markdown 表 → 真表格。列有没有串，看一眼就知道 */
+  function 表转HTML(md){
+    var 出=[], 行=String(md||"").split(/\r?\n/), 表=null;
+    行.forEach(function(L){
+      if(/^\s*\|/.test(L)){
+        if(/^\s*\|[\s:|-]*-[\s:|-]*\|?\s*$/.test(L)) return;      /* 分隔行 */
+        var c=L.replace(/^\s*\||\|\s*$/g,"").split("|").map(function(s){return esc(s.trim());});
+        if(!表) 表=[c]; else 表.push(c);
+      }else{
+        if(表){ 出.push(渲染(表)); 表=null; }
+        var t=L.trim();
+        if(!t) return;
+        if(/^#+\s/.test(t)) 出.push("<h3>"+esc(t.replace(/^#+\s*/,""))+"</h3>");
+        else 出.push("<p>"+esc(t)+"</p>");
+      }
+    });
+    if(表) 出.push(渲染(表));
+    return 出.join("")||'<p style="color:#8A8578">（什么都没认出来）</p>';
+  }
+  function 渲染(rows){
+    return "<table><tr>"+rows[0].map(function(h){return "<th>"+h+"</th>";}).join("")+"</tr>"+
+      rows.slice(1).map(function(r){
+        return "<tr>"+r.map(function(v){return "<td>"+v+"</td>";}).join("")+"</tr>";
+      }).join("")+"</table>";
+  }
+
+  function 加卡(c){
+    var d=document.createElement("div");
+    d.className="card";
+    if(c.错){
+      d.innerHTML='<div class="hd"><b>'+esc(c.名)+'</b></div><div class="err">✗ '+esc(c.错)+"</div>";
+    }else{
+      var 低=c.r.没把握的||[];
+      d.innerHTML=
+        '<div class="hd">'+
+          "<b>"+esc(c.名)+"</b>"+
+          "<span>"+c.kb+" KB</span><span>"+c.秒+" 秒</span>"+
+          "<span>认出 "+c.r.文本.length+" 字 / "+c.r.词数+" 个词</span>"+
+          "<span>平均把握 "+(c.r.平均分==null?"—":(c.r.平均分*100).toFixed(1)+"%")+"</span>"+
+          (低.length?"":'<span class="ok">✓ 没有拿不准的字</span>')+
+        "</div>"+
+        '<div class="body">'+
+          '<div class="L">'+(c.是PDF
+              ?'<p style="color:#8A8578">（PDF 不预览，右边是认出来的内容）</p>'
+              :'<img src="'+c.图+'">')+"</div>"+
+          '<div class="R">'+表转HTML(c.r.文本)+"</div>"+
+        "</div>"+
+        (低.length?'<div class="low"><b>它自己说这几处没把握</b>　'+
+          '（并进系统之后，数量位的会自动变成 <b>?</b>，必须人填）<br>'+
+          低.map(function(w){
+            return '<span class="chip">'+esc(w.字||"(空)")+" · "+(w.分*100).toFixed(0)+"%</span>";
+          }).join("")+"</div>":"");
+    }
+    out.insertBefore(d,out.firstChild);
+  }
+})();
+</script>
+</body>
+</html>

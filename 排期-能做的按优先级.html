@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>排期 · 能做的按优先级</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#14120E;color:#EDE8DC;font:16px/1.75 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:28px 20px 90px;max-width:960px;margin:0 auto}
+  h1{font-size:27px;color:#F0B23C;margin-bottom:4px}
+  .sub{color:#8C8577;font-size:14px;margin-bottom:8px}
+  .rule{background:#2A1A14;border:1px solid #5A2E1E;border-radius:10px;padding:14px 18px;
+        margin:16px 0 26px;font-size:15px;color:#F0A98A}
+  .rule b{color:#F0876A}
+  h2{font-size:20px;margin:34px 0 4px;color:#F0B23C;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .lv{background:#F0B23C;color:#14120E;font-size:13px;font-weight:700;
+      padding:2px 11px;border-radius:20px;white-space:nowrap}
+  .lv.you{background:#F0876A}
+  .h2sub{color:#8C8577;font-size:14px;margin-bottom:16px}
+  .card{background:#1A1712;border:1px solid #2A251D;border-left:5px solid #3D382E;
+        border-radius:0 11px 11px 0;padding:16px 20px;margin-bottom:12px}
+  .card.you{border-left-color:#F0876A}
+  .card.go{border-left-color:#6ECF8A}
+  .card.dep{border-left-color:#E3C155}
+  .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:7px}
+  .no{background:#2E2A22;color:#F0B23C;font-weight:700;font-size:13px;
+      padding:2px 9px;border-radius:5px;font-family:Consolas,monospace}
+  .ttl{font-size:18px;font-weight:700;color:#EDE8DC}
+  .meta{margin-left:auto;font-size:13px;color:#8C8577;white-space:nowrap}
+  .txt{color:#C6BFB0;font-size:15px}
+  .ok{margin-top:10px;background:#151F17;border-left:3px solid #6ECF8A;
+      padding:8px 13px;border-radius:0 6px 6px 0;font-size:14px;color:#A8CDB0}
+  .ok b{color:#6ECF8A}
+  .dp{margin-top:9px;background:#221E12;border-left:3px solid #E3C155;
+      padding:8px 13px;border-radius:0 6px 6px 0;font-size:14px;color:#D6C79A}
+  .dp b{color:#E3C155}
+  em{color:#F0B23C;font-style:normal;font-weight:700}
+  .warn{color:#F0876A;font-weight:700}
+  code{background:#221F19;padding:2px 6px;border-radius:4px;font-size:14px;
+       color:#E3C155;font-family:Consolas,monospace}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px}
+  th{background:#1E1B15;color:#9A9282;font-size:13px;text-align:left;padding:8px 11px;
+     border-bottom:1px solid #2E2A22}
+  td{padding:9px 11px;border-bottom:1px solid #221F19;color:#C6BFB0}
+  .foot{margin-top:36px;background:#1E1B15;border-left:5px solid #B8791E;
+        border-radius:0 11px 11px 0;padding:18px 22px}
+  .foot b{color:#F0B23C}
+  @media print{body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+
+<h1>排期：能做的，按优先级</h1>
+<div class="sub">2026-08-09　·　只列<b>已经拍板 + 现在真能动手</b>的。没拍板的（OCR、省钱线）和等工厂的，全不在这张表里。</div>
+
+<div class="rule"><b>⛔ 规矩：</b>下面每一条，<b>你点头之前我不动手</b>。动开单台的一律先在桌面出独立文件，跑通给你看，你说行才并进去。</div>
+
+<!-- ===== 第 0 ===== -->
+<h2><span class="lv you">第 0 位</span>你那边先动，不然我做什么都白搭</h2>
+<div class="h2sub">这 2 条卡着后面一半的活。你做完我这边才有意义。</div>
+
+<div class="card you">
+<div class="top"><span class="no">A1</span><span class="ttl">观麦价格库重新导一份</span><span class="meta">你 · 半小时</span></div>
+<div class="txt">现在这本是旧的，已经抓到两处错（轩宝缺一样货、永辉拉面差 4 毛）。
+<em>价格库不对，识别再准也出错单。</em></div>
+<div class="dp"><b>它挡着：</b>C1（清重复品）—— 你不重导我就先别清，清完被新表盖掉等于白做。</div>
+</div>
+
+<div class="card you">
+<div class="top"><span class="no">A4</span><span class="ttl">斤转板，给一句准话</span><span class="meta">你 · 一句话</span></div>
+<div class="txt">8/2「除得尽就折板」vs 8/4「有斤就用斤」，两句打架，<span class="warn">直接改钱</span>。
+你不说准话，我一行都不敢动。</div>
+</div>
+
+<!-- ===== 第 1 ===== -->
+<h2><span class="lv">第 1 位</span>地基：把总规则写下来</h2>
+<div class="h2sub">1 条。零风险，最先做，后面所有事都拿它当依据。</div>
+
+<div class="card go">
+<div class="top"><span class="no">B1</span><span class="ttl">总规则写进说明书</span><span class="meta">我 · 半小时 · 零风险</span></div>
+<div class="txt">写的是<em>规矩</em>，不是答案：
+<p style="background:#221F19;padding:13px 17px;border-radius:8px;margin:11px 0;color:#EDE8DC">
+「哪一列是什么，<b style="color:#F0B23C">不许由代码或提示词写死</b>。<br>
+先读懂表 → 认不出的问人 → 答案按<code>客户+表</code>存本子 → 以后照本子读。」</p>
+<span class="warn">不写</span>「矩阵表列头＝点位」这种具体答案——那是拿碧源一张表推的，别家那排可能真是门店。</div>
+<div class="ok"><b>做完算过的标准：</b>说明书里能查到这条原则；<b>没有任何一句</b>写死了某张表某一列是什么。</div>
+</div>
+
+<!-- ===== 第 2 ===== -->
+<h2><span class="lv">第 2 位</span>核心：问一句就学会</h2>
+<div class="h2sub">4 条，是一整套，一起做一起验。这是这轮真正要交付的东西。</div>
+
+<div class="card dep">
+<div class="top"><span class="no">C5</span><span class="ttl">先把提示词里写死的假设拿掉</span><span class="meta">我 · 半天</span></div>
+<div class="txt">现在提示词写着「<em>门店</em>从第几列开始」——它<span class="warn">一上来就假定那排是门店</span>，
+逼着 AI 必须填一个数，<em>它就不会说"我不确定"了</em>。<br>
+改成中性的：「这一列是什么？<em>不确定就直说不确定</em>。」</div>
+<div class="dp"><b>为什么排在 B2 前面：</b>不改这条，AI 永远不说"不确定"，<b>B2 那个弹窗就没东西可弹</b>。</div>
+<div class="ok"><b>做完算过的标准：</b>拿 49 张真单重跑，<b>⛔ 条数和读出来的数字一个都不许变</b>。变了就退回去重来。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">B2</span><span class="ttl">弹窗：抠出不确定的那块，问一句</span><span class="meta">我 · 1~2 天</span></div>
+<div class="txt">
+<p style="background:#221F19;padding:14px 18px;border-radius:8px;margin:10px 0;color:#EDE8DC">
+碧源<br>1440　1461　1503 …　这些是什么？<br><br>
+<b style="color:#F0B23C">[点位]　[商品]　[其他]</b></p>
+已经认出来的<em>不列、不举例、不预览</em>。只问不确定的那一块。</div>
+<div class="ok"><b>做完算过的标准：</b>4号豆制品 / 广泰粉面 / 碧源三张真单，<b>每张最多弹一次</b>，
+点完出来的行数和金额跟基线一分不差。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">B3</span><span class="ttl">本子：你点完就记住</span><span class="meta">我 · 1 天</span></div>
+<div class="txt">按 <code>客户 + 表的样子 → 答案</code> 存。一个客户可以有好几张不同的表，各记各的。</div>
+<div class="ok"><b>做完算过的标准：</b>同一张表跑第二遍，<b>一句不问、一分钱不花</b>。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">B4</span><span class="ttl">认表：怎么知道是同一张表</span><span class="meta">我 · 半天</span></div>
+<div class="txt">靠<em>表头那排字</em>对不对得上。<br>
+<span class="warn">坑：</span>不能记"第几列"——照片拍歪一格就整体错位，本子上记的全对到隔壁去。</div>
+<div class="ok"><b>做完算过的标准：</b>故意给它一张改过的表（插一列），<b>它必须重新问</b>，
+不许拿旧答案硬套。</div>
+</div>
+
+<div class="rule" style="margin-top:16px"><b>交付方式：</b>B2/B3/B4 + C5 <b>先在桌面做成独立文件</b>，
+拿三张真单跑通 → 我把结果摆给你看 → <b>你说行，才并进开单台</b>。并之前跑 <code>全部检查.js</code>。</div>
+
+<!-- ===== 第 3 ===== -->
+<h2><span class="lv">第 3 位</span>你每天用得着的</h2>
+<div class="h2sub">2 条。不影响对错，但直接影响你每天花多少时间。</div>
+
+<div class="card">
+<div class="top"><span class="no">D2</span><span class="ttl">选客户 / 选货品的框，能打字搜</span><span class="meta">我 · 半天</span></div>
+<div class="txt">现在只能拉下拉框一个个找，又慢又容易点到隔壁那个。
+<em>存疑一多，这步会变成你每天花时间最多的地方。</em></div>
+<div class="ok"><b>做完算过的标准：</b>打两个字就能定位到，回车选中。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">D1</span><span class="ttl">「改单 / 加单」那条放大</span><span class="meta">我 · 1 小时</span></div>
+<div class="txt">现在太不起眼，看不见就容易点错模式。</div>
+<div class="ok"><b>做完算过的标准：</b>不用找就能看见现在处在哪个模式。</div>
+</div>
+
+<!-- ===== 第 4 ===== -->
+<h2><span class="lv">第 4 位</span>保险和收尾</h2>
+<div class="h2sub">4 条。现在不做也不出事，但放着迟早咬人。</div>
+
+<div class="card">
+<div class="top"><span class="no">C3</span><span class="ttl">7 道闸门的顺序，钉个测试</span><span class="meta">我 · 半天</span></div>
+<div class="txt">顺序现在只写在注释里，<em>谁改乱了没有任何东西报警</em>。</div>
+<div class="dp"><b>时机：</b>最好在 B2/B3/B4 并进开单台<b>之前</b>做——那一步要动代码，先上保险。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">C4</span><span class="ttl">矩阵表补上「点位号」</span><span class="meta">我 · 半天</span></div>
+<div class="txt">现在只存"点位叫什么名"，不存号。表头写的偏偏是号（1440），
+<em>号被当成名字存进去了</em>。点位册号→名会变，救不回来。</div>
+</div>
+
+<div class="card">
+<div class="top"><span class="no">C2</span><span class="ttl">两套单位换算合成一套</span><span class="meta">我 · 1 天</span></div>
+<div class="txt">手写 8 条 + 自动算的，管的是同一件事，迟早打架。</div>
+</div>
+
+<div class="card dep">
+<div class="top"><span class="no">C1</span><span class="ttl">观麦重复品清理</span><span class="meta">我 · 半天</span></div>
+<div class="txt">中豆泡 / 薄油片同名同价两条；鸿益小板 / 花板 / 中板各两个价。</div>
+<div class="dp"><b>⚠ 必须等 A1 之后。</b>你先重导价格库，我再清——反过来的话，清理成果被新表盖掉，<b>白做一遍</b>。</div>
+</div>
+
+<!-- ===== 依赖 ===== -->
+<h2><span class="lv">一眼看清</span>谁挡着谁</h2>
+<table>
+<tr><th>先做</th><th>才能做</th><th>不听会怎样</th></tr>
+<tr><td><b>B1</b> 写总规则</td><td>B2 / C5</td><td>没有依据，做出来的东西没人能判对错</td></tr>
+<tr><td><b>C5</b> 拿掉写死的假设</td><td>B2 弹窗</td><td>AI 不说"不确定"，弹窗没东西可弹</td></tr>
+<tr><td><b>C3</b> 钉测试</td><td>B2/B3/B4 并进开单台</td><td>动代码没保险，改坏了不报警</td></tr>
+<tr><td><b>A1</b> 重导价格库（你）</td><td>C1 清重复品</td><td>清完被新表盖掉，白做一遍</td></tr>
+</table>
+
+<div class="foot">
+<b>一句话看懂这张表：</b><br><br>
+<b>你</b>现在就能做两件：<b>A1 导价格库</b>、<b>A4 斤转板给句准话</b>。<br><br>
+<b>我</b>等你点头，按 <b>B1 → C5 → B2 → B3 → B4</b> 这个顺序走，
+中间不碰你在用的开单台，全部做成独立文件跑给你看。<br><br>
+后面 D2 / D1 / C3 / C4 / C2 / C1 排在这一套之后。<br><br>
+<b style="color:#F0876A">要动哪一条，你说一声。没说的我一个字都不动。</b>
+</div>
+
+</body>
+</html>

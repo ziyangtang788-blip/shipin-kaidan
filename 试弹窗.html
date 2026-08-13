@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>试弹窗 — 先读懂这张表</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#14120E;color:#EDE8DC;font:16px/1.7 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:26px 20px 80px;max-width:1080px;margin:0 auto}
+  h1{font-size:25px;color:#F0B23C}
+  .sub{color:#8C8577;font-size:14px;margin-bottom:20px}
+  .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  input[type=text]{background:#1A1712;border:1px solid #3D382E;border-radius:8px;
+    color:#EDE8DC;padding:11px 14px;font:16px inherit;font-family:inherit;min-width:280px}
+  input[type=text]:focus{outline:0;border-color:#F0B23C}
+  .pick{position:relative}
+  .opts{position:absolute;top:100%;left:0;right:0;background:#1A1712;border:1px solid #3D382E;
+    border-radius:8px;margin-top:4px;max-height:280px;overflow:auto;z-index:50;display:none}
+  .opts.on{display:block}
+  .opts div{padding:9px 14px;cursor:pointer;font-size:15px}
+  .opts div:hover,.opts div.sel{background:#2E2A22;color:#F0B23C}
+  .drop{border:3px dashed #3D382E;border-radius:12px;padding:38px 20px;text-align:center;
+    color:#8C8577;cursor:pointer;margin-bottom:16px}
+  .drop:hover,.drop.on{border-color:#F0B23C;color:#EDE8DC;background:#1A1712}
+  .drop b{color:#F0B23C;font-size:19px;display:block;margin-bottom:5px}
+  button{background:#2E2A22;color:#B5AE9E;border:1px solid #3D382E;border-radius:8px;
+    padding:9px 16px;font:15px inherit;font-family:inherit;cursor:pointer}
+  button:hover{background:#3D382E;color:#EDE8DC}
+  button.k{background:#F0B23C;color:#14120E;border-color:#F0B23C;font-weight:700}
+  button.k:hover{background:#FFC55A}
+  .card{background:#1A1712;border:1px solid #2A251D;border-radius:12px;padding:18px 22px;margin-bottom:14px}
+  .card h2{font-size:17px;color:#F0B23C;margin-bottom:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th{background:#1E1B15;color:#9A9282;font-size:13px;text-align:left;padding:8px 10px;
+     border-bottom:1px solid #2E2A22;white-space:nowrap}
+  td{padding:7px 10px;border-bottom:1px solid #221F19;color:#C6BFB0}
+  .ok{color:#6ECF8A;font-weight:700}
+  .ask{color:#F0876A;font-weight:700}
+  .muted{color:#6E685C}
+  .wrap{overflow-x:auto}
+  /* 弹窗 */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;
+    align-items:center;justify-content:center;z-index:100;padding:20px}
+  .mask.on{display:flex}
+  .pop{background:#1A1712;border:1px solid #3D382E;border-radius:14px;padding:26px 30px;
+    max-width:640px;width:100%}
+  .pop .who{color:#8C8577;font-size:14px;margin-bottom:4px}
+  .pop .q{font-size:21px;font-weight:700;color:#EDE8DC;margin-bottom:16px}
+  .vals{background:#0E0C09;border-radius:9px;padding:14px 17px;margin-bottom:20px;
+    font:16px Consolas,monospace;color:#E3C155;word-break:break-all;line-height:2}
+  .btns{display:flex;gap:10px;flex-wrap:wrap}
+  .btns button{flex:1;min-width:96px;padding:13px 8px;font-size:16px}
+  .prog{color:#6E685C;font-size:13px;margin-top:14px;text-align:right}
+  .note{background:#1E1B15;border-left:4px solid #B8791E;border-radius:0 9px 9px 0;
+    padding:12px 16px;margin-bottom:14px;font-size:14px;color:#C6BFB0}
+  .note b{color:#F0B23C}
+</style>
+</head>
+<body>
+
+<h1>试弹窗 — 先读懂这张表</h1>
+<div class="sub">
+  独立文件，<b style="color:#6ECF8A">不碰开单台</b>。规矩总表 §5.5.0：认得出的自己认，认不出的问一句，问完记住。
+</div>
+
+<div class="note">
+  <b>怎么用：</b>① 选客户 ② 把 Excel 拖进来 ③ 认不出的列会弹窗问你 ④ 点完出结果，<b>同一张表第二次不再问</b>
+</div>
+
+<div class="row">
+  <div class="pick">
+    <input type="text" id="cq" placeholder="打字找客户…" autocomplete="off">
+    <div class="opts" id="copts"></div>
+  </div>
+  <span id="cnow" class="muted">还没选客户</span>
+  <button id="forget" style="margin-left:auto">忘掉这张表的记忆</button>
+</div>
+
+<div class="drop" id="drop">
+  <b>把下单表拖进来</b>
+  <span>Excel（.xlsx / .xlsm）· 点一下也能选文件</span>
+</div>
+<input type="file" id="pick" accept=".xlsx,.xlsm,.xls" hidden>
+
+<div id="out"></div>
+
+<div class="mask" id="mask"><div class="pop">
+  <div class="who" id="pwho"></div>
+  <div class="q" id="pq"></div>
+  <div class="vals" id="pv"></div>
+  <div class="btns" id="pb"></div>
+  <div class="prog" id="pp"></div>
+</div></div>
+
+<script src="数据-价格库.js"></script>
+<script src="引擎-读文件.js"></script>
+<script src="引擎-认表.js"></script>
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i);};
+var D=window.GM_DATA||{custs:[],prods:[],items:[]};
+var 本子键="试弹窗-读法本";
+
+/* ═══════ 客户选择（能打字搜）═══════ */
+var CI=null, CN="";
+var cq=$("cq"), copts=$("copts");
+function 画客户(q){
+  q=(q||"").trim().toLowerCase();
+  var hit=D.custs.filter(function(c){
+    return !q || c[1].toLowerCase().indexOf(q)>=0 || c[0].toLowerCase().indexOf(q)>=0;
+  }).slice(0,40);
+  copts.innerHTML=hit.map(function(c){
+    return '<div data-id="'+c[0]+'" data-n="'+c[1].replace(/"/g,'&quot;')+'">'+c[1]+
+           ' <span style="color:#6E685C">'+c[0]+'</span></div>';
+  }).join('')||'<div class="muted" style="cursor:default">没找到</div>';
+  copts.classList.add("on");
+}
+cq.addEventListener("focus",function(){画客户(cq.value);});
+cq.addEventListener("input",function(){画客户(cq.value);});
+copts.addEventListener("click",function(e){
+  var d=e.target.closest("div[data-id]"); if(!d)return;
+  CI=d.dataset.id; CN=d.dataset.n; cq.value=CN;
+  $("cnow").textContent="客户："+CN+"（"+CI+"）"; $("cnow").className="ok";
+  copts.classList.remove("on");
+});
+document.addEventListener("click",function(e){
+  if(!e.target.closest(".pick")) copts.classList.remove("on");
+});
+
+/* ═══════ 这个客户的商品名 / 价格 / 单位，拿来自证 ═══════ */
+var 单位表=["板","包","斤","盒","件","串","个","桶","块","条","袋","箱","公斤","张","份","扎","支","瓶","罐"];
+function 客户资料(id){
+  var ci=D.custs.findIndex(function(c){return c[0]===id;});
+  var 名=Object.create(null), 价=Object.create(null);
+  D.items.forEach(function(r){
+    if(ci>=0 && r[0]!==ci) return;
+    名[String(r[2]).trim()]=1;
+    var p=+r[4]; if(p>0) 价[p.toFixed(2)]=1;
+  });
+  /* 这个客户一条都没有 → 退回全库，至少还能认出"这是商品名" */
+  if(!Object.keys(名).length) D.items.forEach(function(r){
+    名[String(r[2]).trim()]=1; var p=+r[4]; if(p>0) 价[p.toFixed(2)]=1; });
+  return {名:名,价:价};
+}
+
+/* ═══════ 一列一列自证 ═══════ */
+function 是数字(s){ return s!=="" && isFinite(String(s).replace(/[,，\s]/g,"")); }
+function 取数(s){ var n=parseFloat(String(s).replace(/[,，\s]/g,"")); return isFinite(n)?n:null; }
+
+function 认一列(值们, 资料){
+  var v=值们.filter(function(s){return String(s).trim()!=="";}).map(function(s){return String(s).trim();});
+  if(!v.length) return {判:"空", 凭:"整列都是空的"};
+  var n=v.length;
+
+  var 中=v.filter(function(s){return /[一-龥]/.test(s);}).length;
+  var 数=v.filter(是数字).length;
+
+  /* 商品：中文 + 在这个客户的货里查得到 */
+  var 命中=v.filter(function(s){return 资料.名[s];}).length;
+  if(命中/n>=0.6) return {判:"商品", 凭:"有 "+命中+"/"+n+" 个在这个客户的报价单里查得到"};
+
+  /* 单位：就那几个词 */
+  var 单=v.filter(function(s){return 单位表.indexOf(s)>=0;}).length;
+  if(单/n>=0.8) return {判:"单位", 凭:"全是「"+[...new Set(v)].slice(0,5).join(" ")+"」这类词"};
+
+  /* 单价：数字 + 跟这个客户的价对得上 */
+  if(数/n>=0.8){
+    var 对=v.filter(function(s){var x=取数(s);return x!==null&&资料.价[x.toFixed(2)];}).length;
+    if(对/n>=0.5) return {判:"单价", 凭:"有 "+对+"/"+n+" 个跟这个客户的价对得上"};
+  }
+
+  /* 中文但查不到 → 说不准是备注还是没学过的商品 */
+  if(中/n>=0.7) return {判:null, 凭:"是中文，但报价单里一个都查不到 —— 可能是备注，也可能是没学过的商品叫法"};
+
+  /* 光秃秃的数字 —— 这就是分不出来的那种 */
+  if(数/n>=0.8) return {判:null, 凭:"整列都是数字，跟报价单的价对不上 —— 点位号 / 数量 / 序号长得一模一样，分不出"};
+
+  return {判:null, 凭:"又有字又有数，看不出规律"};
+}
+
+/* ═══════ 本子：客户 + 表头指纹 → 答案 ═══════ */
+function 本子(){ try{return JSON.parse(localStorage.getItem(本子键)||"{}");}catch(e){return {};} }
+function 存本子(o){ try{localStorage.setItem(本子键,JSON.stringify(o));}catch(e){} }
+function 指纹(表头){ /* ★ 记表头文字，不记列号 —— 拍歪一格列号就错位 */
+  return 表头.map(function(s){return String(s||"").trim();}).filter(Boolean).join("｜").slice(0,300);
+}
+function 键(ci,fp){ return ci+"§"+fp; }
+
+/* ═══════ 弹窗 ═══════ */
+var 选项=["点位","商品","数量","单价","单位","备注","不要这列"];
+function 问(题, 值样, 第几, 共几){
+  return new Promise(function(done){
+    $("pwho").textContent=CN+"　·　第 "+第几+" / "+共几+" 个不确定的地方";
+    $("pq").textContent=题;
+    $("pv").textContent=值样.join("　");
+    $("pp").textContent="点完就记住，同一张表以后不再问";
+    var b=$("pb"); b.innerHTML="";
+    选项.forEach(function(t){
+      var el=document.createElement("button");
+      el.textContent=t; if(t==="点位") el.className="k";
+      el.onclick=function(){ $("mask").classList.remove("on"); done(t); };
+      b.appendChild(el);
+    });
+    $("mask").classList.add("on");
+  });
+}
+
+/* ═══════ 主流程 ═══════ */
+var drop=$("drop"), pick=$("pick");
+drop.onclick=function(){pick.click();};
+drop.ondragover=function(e){e.preventDefault();drop.classList.add("on");};
+drop.ondragleave=function(){drop.classList.remove("on");};
+drop.ondrop=function(e){e.preventDefault();drop.classList.remove("on");
+  if(e.dataTransfer.files[0]) 跑(e.dataTransfer.files[0]);};
+pick.onchange=function(){ if(this.files[0]) 跑(this.files[0]); };
+
+var 当前指纹="";
+async function 跑(f){
+  if(!CI){ alert("先选客户"); cq.focus(); return; }
+  $("out").innerHTML='<div class="card">读文件中…</div>';
+  var sheets;
+  try{
+    var buf=await f.arrayBuffer();
+    sheets=await window.GM_FILE.readXlsxGrid(buf);
+  }catch(e){ $("out").innerHTML='<div class="card">读不了这个文件：'+e.message+'</div>'; return; }
+  if(!sheets||!sheets.length){ $("out").innerHTML='<div class="card">没读出格子来</div>'; return; }
+
+  /* 只处理行数最多那张表（MVP） */
+  var s=sheets.slice().sort(function(a,b){return (b.rows||b).length-(a.rows||a).length;})[0];
+  var rows=s.rows||s;
+  if(!rows||rows.length<2){ $("out").innerHTML='<div class="card">这张表太短，没内容</div>'; return; }
+
+  /* 表头 = 第一行有字的 */
+  var 头行=0; for(var i=0;i<Math.min(6,rows.length);i++){
+    if((rows[i]||[]).filter(function(c){return String(c||"").trim();}).length>=2){ 头行=i; break; } }
+  var 表头=rows[头行]||[];
+  var 宽=Math.max.apply(null,rows.map(function(r){return (r||[]).length;}));
+  var 数据=rows.slice(头行+1).filter(function(r){return (r||[]).some(function(c){return String(c||"").trim();});});
+
+  var 资料=客户资料(CI);
+  var fp=指纹(表头); 当前指纹=fp;
+  var bk=本子(), 记=bk[键(CI,fp)]||null;
+
+  /* 逐列自证 */
+  var 列=[];
+  for(var c=0;c<宽;c++){
+    var 值=数据.slice(0,60).map(function(r){return (r||[])[c];});
+    var r1=认一列(值,资料);
+    列.push({号:c+1, 头:String(表头[c]||"").trim(), 判:r1.判, 凭:r1.凭,
+             样:值.filter(function(x){return String(x||"").trim();}).slice(0,6).map(String)});
+  }
+
+  /* 本子里有 → 直接套，不问 */
+  var 用了本子=false;
+  if(记){ 列.forEach(function(L){ if(记[L.号]) { L.判=记[L.号]; L.来源="本子"; } }); 用了本子=true; }
+
+  画(列, 用了本子, f.name, 数据.length);
+
+  /* 还有不确定的 → 一个个问 */
+  var 待=列.filter(function(L){return !L.判;});
+  if(!待.length) return;
+
+  var 答=记?Object.assign({},记):{};
+  for(var k=0;k<待.length;k++){
+    var L=待[k];
+    var 题=L.头 ? '「'+L.头+'」这一列是什么？' : '第 '+L.号+' 列是什么？';
+    var a=await 问(题, L.样, k+1, 待.length);
+    L.判=a; L.来源="你刚点的"; 答[L.号]=a;
+    画(列, 用了本子, f.name, 数据.length);
+  }
+  var b2=本子(); b2[键(CI,fp)]=答; 存本子(b2);
+  画(列, 用了本子, f.name, 数据.length, true);
+}
+
+function 画(列, 用了本子, 名, 行数, 存过){
+  var h='<div class="card"><h2>'+名+'　·　'+行数+' 行数据</h2>';
+  if(用了本子) h+='<div class="note"><b>这张表以前认过。</b>直接用本子上记的，一句没问。</div>';
+  if(存过)     h+='<div class="note"><b>✅ 记住了。</b>同一个客户再发这张表，不会再问你。</div>';
+  h+='<div class="wrap"><table><tr><th>列</th><th>表头</th><th>判定</th><th>怎么判的</th><th>里面长这样</th></tr>';
+  列.forEach(function(L){
+    var 判=L.判
+      ? '<span class="ok">'+L.判+'</span>'+(L.来源?' <span class="muted">('+L.来源+')</span>':'')
+      : '<span class="ask">要问你</span>';
+    h+='<tr><td>'+L.号+'</td><td>'+(L.头||'<span class="muted">空</span>')+'</td><td>'+判+
+       '</td><td class="muted">'+L.凭+'</td><td class="muted">'+L.样.slice(0,4).join(' · ')+'</td></tr>';
+  });
+  h+='</table></div></div>';
+  $("out").innerHTML=h;
+}
+
+/* 忘掉这张表 */
+$("forget").onclick=function(){
+  if(!CI||!当前指纹){ alert("先选客户、拖一张表进来"); return; }
+  var b=本子(); delete b[键(CI,当前指纹)]; 存本子(b);
+  alert("忘掉了。再拖同一张表进来，它会重新问你。");
+};
+
+})();
+</script>
+</body>
+</html>

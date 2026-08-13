@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>下拉框 · 5 个版本给你挑</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --bg:#15181D; --panel:#1D2127; --panel2:#22262D;
+    --ink:#E4E7EB; --ink2:#98A0AA; --ink3:#6C747E;
+    --line:#2B3037; --line2:#3A4048; --field:#171B20;
+    --acc:#E8A33D; --acc-soft:rgba(232,163,61,.13); --acc-line:rgba(232,163,61,.38);
+    --ok:#4FA37B; --ok-soft:rgba(79,163,123,.13);
+    --sale:#E88B6A; --r:10px; --r-s:7px;
+  }
+  body{background:var(--bg);color:var(--ink);
+       font:15px/1.6 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:30px 20px 100px;max-width:1080px;margin:0 auto}
+  h1{font-size:27px;color:var(--acc);margin-bottom:4px}
+  .lead{color:var(--ink2);font-size:14px;margin-bottom:8px}
+  .why{background:#2A1A14;border-left:4px solid var(--sale);border-radius:0 10px 10px 0;
+       padding:13px 17px;margin:16px 0 30px;font-size:14px;color:#F0A98A}
+  .why b{color:var(--sale)}
+  h2{font-size:20px;margin:42px 0 3px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  h2 .tag{background:var(--acc);color:var(--bg);font-size:12px;font-weight:700;
+          padding:3px 11px;border-radius:20px;white-space:nowrap}
+  h2 .tag.now{background:var(--line2);color:var(--ink3)}
+  .idea{color:var(--ink2);font-size:14px;margin-bottom:15px}
+  .idea b{color:var(--acc)}
+  .stage{background:var(--panel);border:1px solid var(--line);border-radius:12px;
+         padding:20px 22px;margin-bottom:10px}
+
+  .fld{background:var(--field);border:1px solid var(--line2);border-radius:var(--r-s);
+       padding:10px 13px;display:flex;align-items:center;gap:8px;font-size:15px}
+  .fld.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+  .fld .cv{margin-left:auto;color:var(--ink3);font-size:12px}
+  .pop{background:var(--panel2);border:1px solid var(--line2);border-radius:var(--r-s);
+       margin-top:6px;overflow:hidden;box-shadow:0 14px 34px rgba(0,0,0,.5)}
+  .pop .sr{padding:10px 12px;border-bottom:1px solid var(--line)}
+  .pop .sr input{width:100%;background:var(--field);border:1px solid var(--line2);
+       border-radius:var(--r-s);padding:9px 12px;color:var(--ink);font:15px inherit;font-family:inherit}
+  .it{padding:9px 14px;display:flex;align-items:center;gap:10px;font-size:14.5px;
+      border-bottom:1px solid rgba(255,255,255,.03)}
+  .it:last-child{border-bottom:0}
+  .it.sel{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
+  .it .sid{color:var(--ink3);font-size:12px;font-family:Consolas,monospace}
+  .it .n{margin-left:auto;color:var(--ink3);font-size:12px}
+  .it em{font-style:normal;color:var(--acc);font-weight:700}
+  .grp{padding:7px 14px;background:rgba(255,255,255,.03);color:var(--ink3);
+       font-size:12px;letter-spacing:.5px}
+  .hot{display:flex;gap:8px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--line)}
+  .hot span{background:var(--field);border:1px solid var(--line2);border-radius:20px;
+            padding:7px 14px;font-size:14px}
+  .hot span.a{border-color:var(--acc-line);color:var(--acc)}
+  .kbd{display:inline-block;background:var(--field);border:1px solid var(--line2);
+       border-radius:4px;padding:1px 7px;font-size:12px;font-family:Consolas,monospace;color:var(--ink2)}
+  .card2{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.04);display:flex;gap:12px;align-items:center}
+  .card2:last-child{border-bottom:0}
+  .card2.sel{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
+  .card2 .big{font-size:16px;font-weight:700}
+  .card2 .sub{color:var(--ink3);font-size:12px;margin-top:2px}
+  .card2 .rt{margin-left:auto;text-align:right;color:var(--ink3);font-size:12px}
+  .two{display:flex;gap:0;border:1px solid var(--line2);border-radius:var(--r-s);overflow:hidden}
+  .two .lf{width:180px;border-right:1px solid var(--line2);background:rgba(0,0,0,.15)}
+  .two .rg{flex:1;min-width:0}
+  .two .gi{padding:10px 14px;font-size:14px;border-bottom:1px solid rgba(255,255,255,.03)}
+  .two .gi.on{background:var(--acc-soft);color:var(--acc);font-weight:700}
+  .good{background:#152019;border-left:4px solid var(--ok);border-radius:0 9px 9px 0;
+        padding:9px 14px;font-size:13.5px;color:#A8CDB0;margin-top:9px}
+  .bad{background:#241A14;border-left:4px solid var(--sale);border-radius:0 9px 9px 0;
+       padding:9px 14px;font-size:13.5px;color:#E0AE96;margin-top:7px}
+  .foot{margin-top:52px;background:var(--panel);border-left:5px solid var(--acc);
+        border-radius:0 12px 12px 0;padding:20px 24px}
+  .foot b{color:var(--acc)}
+  table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+  th{color:var(--ink3);text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);font-size:12px}
+  td{padding:7px 9px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--ink2);vertical-align:top}
+</style>
+</head>
+<body>
+
+<h1>下拉框 · 5 个版本</h1>
+<div class="lead">全站 6 个下拉：客户 · 门店 · 对照页客户 · 点位页客户 · 点位册客户 · 商品。挑一个，我一次全换。</div>
+
+<div class="why">
+<b>真正的问题不是难看，是容易点错。</b><br>
+177 家客户里，光「中南NN档」就有 <b>12 家</b>：中南15档 / 中南12档 / 中南31档 / 中南13档 / 中南30档 / 中南38档…<br>
+名字差一个数字，价目表完全不同。<b>浏览器自带的下拉只能用眼睛扫，扫错一行 = 整单价格全错。</b>
+</div>
+
+<!-- ══ 现状 ══ -->
+<h2><span class="tag now">现在</span>浏览器自带的下拉</h2>
+<div class="stage">
+  <div class="fld">真实惠生活超市报价（33 项）<span class="cv">▾</span></div>
+  <div class="pop" style="border-radius:0;box-shadow:none">
+    <div class="it">中南31档（5 项）</div>
+    <div class="it">中南13档（10 项）</div>
+    <div class="it">中南30档（8 项）</div>
+    <div class="it">中南38档（7 项）</div>
+    <div class="it">华辰食品有限公司（14 项）</div>
+    <div class="it" style="background:#2A5BD7;color:#fff">真实惠生活超市报价（33 项）</div>
+  </div>
+</div>
+<div class="bad"><b>毛病：</b>不能在里面打字找　·　行挨着行，全靠眼睛扫　·　选中那条是系统的亮蓝色，跟整页不搭　·　177 家要滚很久</div>
+
+<!-- ══ A ══ -->
+<h2><span class="tag">版本 A</span>搜索面板</h2>
+<div class="idea">点开就是<b>一个搜索框 + 列表</b>，打字立刻筛，命中的字高亮。最直接。</div>
+<div class="stage">
+  <div class="fld on">真实惠生活超市报价<span class="cv">S3005 · 33 项 ▾</span></div>
+  <div class="pop">
+    <div class="sr"><input value="中南3" readonly></div>
+    <div class="it"><span>中<em>南3</em>1档</span><span class="sid">S9421</span><span class="n">5 项</span></div>
+    <div class="it"><span>中<em>南3</em>0档</span><span class="sid">S9418</span><span class="n">8 项</span></div>
+    <div class="it"><span>中<em>南3</em>8档</span><span class="sid">S9425</span><span class="n">7 项</span></div>
+    <div class="it"><span>中<em>南3</em>5档</span><span class="sid">S9423</span><span class="n">7 项</span></div>
+    <div style="padding:8px 14px;color:var(--ink3);font-size:12px">打「3005」也能搜到 —— 编号一样管用</div>
+  </div>
+</div>
+<div class="good"><b>好：</b>打两个字就到　·　编号也能搜　·　高亮让你看清差在哪个数字</div>
+<div class="bad"><b>代价：</b>还是要读一遍才点，12 个中南档挨着排，快手容易点串行</div>
+
+<!-- ══ B ══ -->
+<h2><span class="tag">版本 B</span>常用的排最前</h2>
+<div class="idea">177 家里你天天开的就<b>那二十来家</b>。打开先给最近用过的 8 家<b>大按钮</b>，一眼点中；下面才是全部。</div>
+<div class="stage">
+  <div class="fld on">还没选客户<span class="cv">▾</span></div>
+  <div class="pop">
+    <div class="hot">
+      <span class="a">真实惠生活超市报价</span><span>佛山碧源</span><span>江云生鲜配送</span>
+      <span>轩宝狮山</span><span>广泰超市</span><span>雅食乐</span><span>士荣仓储</span><span>三棵菜白云仓</span>
+    </div>
+    <div class="sr"><input placeholder="都不是？打字找…（名字或编号）" readonly></div>
+    <div class="grp">全部 177 家</div>
+    <div class="it"><span>中南15档</span><span class="sid">S9410</span><span class="n">6 项</span></div>
+    <div class="it"><span>东方市场</span><span class="sid">S9905</span><span class="n">5 项</span></div>
+    <div class="it"><span>华丰超市大沥店</span><span class="sid">S9896</span><span class="n">12 项</span></div>
+  </div>
+</div>
+<div class="good"><b>好：</b>八成的单一下就点中，不用打字也不用滚　·　常用的是大目标，不容易点错</div>
+<div class="bad"><b>代价：</b>头几天名单还没攒起来，跟版本 A 一样</div>
+
+<!-- ══ C ══ -->
+<h2><span class="tag">版本 C</span>键盘流，手不离键盘</h2>
+<div class="idea">点一下<b>直接变成输入框</b>，边打边出候选，<span class="kbd">↑</span><span class="kbd">↓</span> 挑、<span class="kbd">回车</span>定。<b>全程不用鼠标</b>。</div>
+<div class="stage">
+  <div class="fld on"><span style="color:var(--acc)">中南13</span><span style="width:1px;height:18px;background:var(--acc);display:inline-block"></span><span class="cv">↑↓ 选 · 回车确定 · Esc 取消</span></div>
+  <div class="pop">
+    <div class="it sel"><span>中<em>南13</em>档</span><span class="sid">S9413</span><span class="n">10 项</span><span style="color:var(--acc);font-size:12px">回车</span></div>
+    <div class="it"><span>中南1<em>3</em>0档</span><span class="sid">S9430</span><span class="n">4 项</span></div>
+    <div style="padding:8px 14px;color:var(--ink3);font-size:12px">只剩 2 家 —— 再多打一个字就唯一了</div>
+  </div>
+</div>
+<div class="good"><b>好：</b>最快　·　早上开一堆单时手不用在键盘鼠标之间来回　·　只剩一家时回车直接定</div>
+<div class="bad"><b>代价：</b>不打字就没候选，第一次用的人会愣一下</div>
+
+<!-- ══ D ══ -->
+<h2><span class="tag">版本 D</span>大卡片，看清楚再点</h2>
+<div class="idea">每一家一张<b>大卡</b>：名字 + 编号 + 多少项货 + 上次开单是什么时候。<b>行高一倍，早上眼花也点不错。</b></div>
+<div class="stage">
+  <div class="fld on">还没选客户<span class="cv">▾</span></div>
+  <div class="pop">
+    <div class="sr"><input placeholder="打字找…" readonly></div>
+    <div class="card2 sel">
+      <div><div class="big">真实惠生活超市报价</div><div class="sub">S3005 · 33 项在售 · 学过 36 条叫法</div></div>
+      <div class="rt">昨天开过<br>叠北店 / 联和店</div>
+    </div>
+    <div class="card2">
+      <div><div class="big">中南13档</div><div class="sub">S9413 · 10 项在售</div></div>
+      <div class="rt">3 天前</div>
+    </div>
+    <div class="card2">
+      <div><div class="big">中南30档</div><div class="sub">S9418 · 8 项在售</div></div>
+      <div class="rt">上月</div>
+    </div>
+  </div>
+</div>
+<div class="good"><b>好：</b>目标最大、最不容易点错　·　「昨天开过」「有哪几家分店」当场看得见，多一道验证</div>
+<div class="bad"><b>代价：</b>一屏只放得下 5~6 家，找不常用的要多滚</div>
+
+<!-- ══ E ══ -->
+<h2><span class="tag">版本 E</span>先分类，再挑</h2>
+<div class="idea">左边按<b>类型分组</b>，右边才是那一组的客户。<b>12 个中南档关在自己那一格里</b>，不跟别人混。</div>
+<div class="stage">
+  <div class="fld on">还没选客户<span class="cv">▾</span></div>
+  <div class="pop" style="padding:0">
+    <div class="sr"><input placeholder="打字找…（跨组搜）" readonly></div>
+    <div class="two">
+      <div class="lf">
+        <div class="gi on">中南档口　12</div>
+        <div class="gi">市场档口　31</div>
+        <div class="gi">超市　24</div>
+        <div class="gi">配送公司　63</div>
+        <div class="gi">餐饮 / 食堂　38</div>
+        <div class="gi">其它　9</div>
+      </div>
+      <div class="rg">
+        <div class="it"><span>中南01档</span><span class="sid">S9401</span><span class="n">18 项</span></div>
+        <div class="it"><span>中南11档</span><span class="sid">S9411</span><span class="n">9 项</span></div>
+        <div class="it"><span>中南12档</span><span class="sid">S9412</span><span class="n">7 项</span></div>
+        <div class="it sel"><span>中南13档</span><span class="sid">S9413</span><span class="n">10 项</span></div>
+        <div class="it"><span>中南15档</span><span class="sid">S9410</span><span class="n">6 项</span></div>
+        <div class="it"><span>中南16档</span><span class="sid">S9416</span><span class="n">6 项</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="good"><b>好：</b>同类的排一起，一眼看出 12 个档口的区别　·　不用记全名也能找到</div>
+<div class="bad"><b>代价：</b>要多点一下（先选组）　·　分组规则得先定，分错了反而难找</div>
+
+<!-- ══ 尾 ══ -->
+<div class="foot">
+<b>不管选哪个，都保证这几件</b>
+<table>
+<tr><th>项</th><th>怎么保</th></tr>
+<tr><td>6 个下拉一起换</td><td>客户 · 门店 · 对照页 · 点位页 · 点位册 · 商品，做成一个东西，六处都用它</td></tr>
+<tr><td>原来的 <code>select</code> 留着</td><td>藏在后面照旧存值 —— JS 那 35 处读写<b>一个字都不用改</b>，也就不会有「页面死了体检却全绿」</td></tr>
+<tr><td>键盘照样能用</td><td>Tab 进得去、上下键能选、回车能定、Esc 关掉</td></tr>
+<tr><td>「还没选客户」不动</td><td>刚定的规矩：开页面和点清空都是空的，不许有默认值</td></tr>
+</table>
+
+<div style="margin-top:18px"><b>我的看法：</b>你的痛点是<b>「12 个中南档，点错一行整单价格全错」</b>。<br>
+按这个排：<b>B（常用优先）</b> 挡掉八成的机会 —— 天天开的那几家根本不用进列表。<br>
+剩下两成再靠 <b>A 的搜索</b> 收尾。所以 <b>B 里已经含着 A</b>，两个是一套。<br><br>
+C 最快但要打字；D 最保险但滚得多；E 最整齐但要先定分组规则。<br><br>
+<b style="color:var(--sale)">说一个字母就行。也可以说「B，但列表那部分要 D 的大卡片」。</b></div>
+</div>
+
+</body>
+</html>

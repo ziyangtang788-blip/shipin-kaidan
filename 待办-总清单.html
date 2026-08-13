@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>待办总清单 · 食品配送开单系统</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#14120E;color:#E8E2D4;font:15px/1.65 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:28px 20px 80px;max-width:1080px;margin:0 auto}
+  h1{font-size:24px;color:#F0B23C;letter-spacing:1px;margin-bottom:4px}
+  .sub{color:#8C8577;font-size:13px;margin-bottom:22px}
+  .bar{position:sticky;top:0;background:#14120E;padding:12px 0 14px;margin-bottom:18px;
+       border-bottom:1px solid #2E2A22;z-index:9;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .cnt{font-size:19px;color:#F0B23C;font-weight:700}
+  .cnt small{font-size:13px;color:#8C8577;font-weight:400}
+  .prog{flex:1;min-width:160px;height:7px;background:#2E2A22;border-radius:4px;overflow:hidden}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,#B8791E,#F0B23C);width:0;transition:.3s}
+  button{background:#2E2A22;color:#B5AE9E;border:1px solid #3D382E;border-radius:6px;
+         padding:5px 12px;font-size:12px;cursor:pointer;font-family:inherit}
+  button:hover{background:#3D382E;color:#E8E2D4}
+  h2{font-size:17px;margin:30px 0 12px;padding-left:11px;border-left:4px solid #F0B23C}
+  h2 .n{color:#8C8577;font-size:13px;font-weight:400;margin-left:8px}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px}
+  th{background:#1E1B15;color:#9A9282;font-size:12px;font-weight:600;text-align:left;
+     padding:9px 11px;border-bottom:1px solid #2E2A22;white-space:nowrap}
+  td{padding:11px;border-bottom:1px solid #221F19;vertical-align:top}
+  tr:hover td{background:#1A1712}
+  td.ck{width:34px;text-align:center}
+  input[type=checkbox]{width:17px;height:17px;accent-color:#F0B23C;cursor:pointer}
+  td.id{width:42px;color:#6E685C;font-size:12px;font-family:Consolas,monospace}
+  .thing{font-weight:600;color:#E8E2D4}
+  .why{color:#9A9282;font-size:13px;margin-top:3px}
+  tr.done .thing,tr.done .why{text-decoration:line-through;opacity:.4}
+  .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px;
+       vertical-align:middle;white-space:nowrap}
+  .t-block{background:#4A2318;color:#F0876A}
+  .t-go{background:#1E3A24;color:#6ECF8A}
+  .t-wait{background:#3D3416;color:#E3C155}
+  .t-none{background:#2E2A22;color:#9A9282}
+  .hot{color:#F0876A;font-weight:700}
+  .note{background:#1E1B15;border-left:4px solid #B8791E;border-radius:0 8px 8px 0;
+        padding:14px 16px;margin:12px 0;font-size:14px}
+  .note b{color:#F0B23C}
+  ol.plan{background:#1A1712;border:1px solid #2E2A22;border-radius:10px;padding:18px 18px 18px 40px}
+  ol.plan li{margin-bottom:9px}
+  ol.plan li:last-child{margin-bottom:0}
+  code{background:#221F19;padding:2px 6px;border-radius:4px;font-size:13px;
+       color:#E3C155;font-family:Consolas,monospace}
+  @media print{body{background:#fff;color:#000}.bar,button{display:none}}
+</style>
+</head>
+<body>
+
+<h1>待办总清单</h1>
+<div class="sub">
+  2026-08-09 生成　·　出处：说明-规矩总表.md §七 ＋ 记忆/ ＋ 8-09 会话新定<br>
+  <span class="tag t-block">卡着别人</span>
+  <span class="tag t-go">现在能做</span>
+  <span class="tag t-wait">已定等条件</span>
+  <span class="tag t-none">没拍板</span>
+</div>
+
+<div class="bar">
+  <span class="cnt"><span id="d">0</span> / 21 <small>已完成</small></span>
+  <span class="prog"><i id="p"></i></span>
+  <button onclick="if(confirm('把所有勾全清掉？')){localStorage.removeItem('todo0809');location.reload()}">清空勾选</button>
+  <button onclick="window.print()">打印 / 存 PDF</button>
+</div>
+
+<h2>A. 卡在别人身上，我做不了 <span class="n">5 条</span></h2>
+<table>
+<tr><th></th><th></th><th>事</th><th>卡在哪</th></tr>
+<tr><td class="ck"><input type="checkbox" data-k="A1"></td><td class="id">A1</td>
+<td><span class="thing hot">重导观麦价格库</span><span class="tag t-block">最要紧</span>
+<div class="why">已经撞到两回：轩宝缺「尝元韧豆腐（5斤）¥7」、永辉「鲜圆拉面」标 ¥6 实际 ¥5.60。<b>价格库不对，识别再准也出错单</b></div></td><td>等你导出</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="A2"></td><td class="id">A2</td>
+<td><span class="thing">工厂那几个问题</span>
+<div class="why">见 <code>要向工厂索取的下单表清单.txt</code> —— 6 家，每家 2~3 张下单表原图</div></td><td>等工厂</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="A3"></td><td class="id">A3</td>
+<td><span class="thing">李帅 S2951（43 张单）</span>
+<div class="why">整家按公斤下单、价格库按斤，要确认是不是 ×2</div></td><td>等工厂</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="A4"></td><td class="id">A4</td>
+<td><span class="thing hot">斤转板到底怎么算</span>
+<div class="why">8/2「能整除折板」vs 8/4「有斤就用斤」两句打架，<b>直接改钱</b>。⛔ 有答复前一行不许改</div></td><td>等你答复</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="A5"></td><td class="id">A5</td>
+<td><span class="thing">「导入订单」指哪一块</span>
+<div class="why">你提过要"导入订单"，但没说指哪块，不敢猜</div></td><td>等你说</td></tr>
+</table>
+
+<h2>B. 8-09 这次会话定下来的 <span class="n">4 条 · 一套，一起做</span></h2>
+<table>
+<tr><th></th><th></th><th>事</th><th>风险</th></tr>
+<tr><td class="ck"><input type="checkbox" data-k="B1"></td><td class="id">B1</td>
+<td><span class="thing">补规矩总表：写<b>原则</b>——列的含义不许猜、不许写死</span><span class="tag t-go">零风险</span>
+<div class="why">只写一句规矩：「哪一列是什么，不许由代码或提示词写死。第一次问人，答案按 <code>客户+表</code> 存进本子。」<br>
+⚠ <b>不写「矩阵表列头＝点位」这种具体答案</b>——那是拿碧源一张表推的，别家那排可能真是门店。写死了机器就不问了，等于把 B2 弹窗废掉</div></td><td>纯文档</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="B2"></td><td class="id">B2</td>
+<td><span class="thing">认表确认弹窗（简版）</span>
+<div class="why">只把有问题的那块抠出来问一句：「1440 1461 1503… 这些是什么？[点位][商品][其他]」。已认出的不列、不举例、不预览</div></td><td>中</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="B3"></td><td class="id">B3</td>
+<td><span class="thing">读法存本子</span>
+<div class="why"><code>客户 + 表的样子 → 读法</code>。一个客户可以有好几张表，各学各的</div></td><td>中</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="B4"></td><td class="id">B4</td>
+<td><span class="thing">表头对照</span>
+<div class="why">判断表改了没有 / 是不是第二种表。⚠ 键记<b>表头文字</b>，不能记列号——照片拍歪列号会整体错位</div></td><td>中</td></tr>
+</table>
+<div class="note"><b>规矩：</b>B2/B3/B4 先在桌面出<b>独立文件</b>，拿 4号豆制品 / 广泰粉面 / 碧源 三张真单跑通，<b>你点头才并进开单台</b>。</div>
+
+<h2>C. 早就欠着的代码活 <span class="n">5 条</span></h2>
+<table>
+<tr><th></th><th></th><th>事</th><th>影响</th></tr>
+<tr><td class="ck"><input type="checkbox" data-k="C1"></td><td class="id">C1</td>
+<td><span class="thing">观麦重复品清理</span></td>
+<td>中豆泡/薄油片 同名同价两条；鸿益 小板/花板/中板 各有两个价</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="C2"></td><td class="id">C2</td>
+<td><span class="thing">两套换算合成一套</span></td>
+<td><code>数据-换算.js</code> 8 条手写的（匹配前跑）＋「一份几个/换算比」自动的（匹配后跑），概念重叠</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="C3"></td><td class="id">C3</td>
+<td><span class="thing">闸门顺序没有测试钉住</span></td>
+<td>7 道闸门的先后只写在注释里，改错了没人拦</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="C4"></td><td class="id">C4</td>
+<td><span class="thing">矩阵表捡不到点位号</span></td>
+<td><code>摊矩阵</code> 只产出「点位名」没有「点位号」。表头写 1440 这种号会被当成"名"存进去，点位册没权威性，存错救不回来</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="C5"></td><td class="id">C5</td>
+<td><span class="thing">提示词里藏着写死的假设</span></td>
+<td>给 AI 的提示词写着「<b>门店</b>从第几列开始」——<b>一上来就假定那排是门店</b>，正是 B1 要禁的事（存倒是存进 <code>点位名</code>，<code>引擎-认表.js:281</code>）。该改成中性的「这一列是什么？不确定就说不确定」，交给 B2 弹窗问人。⚠ 改词会改变 AI 判断，<b>必须跑 49 份基线验过</b></td></tr>
+</table>
+
+<h2>D. 界面待办 <span class="n">3 条</span></h2>
+<table>
+<tr><th></th><th></th><th>事</th><th>为什么</th></tr>
+<tr><td class="ck"><input type="checkbox" data-k="D1"></td><td class="id">D1</td>
+<td><span class="thing">改单/加单那条模式条要放大</span></td><td>现在太不起眼</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="D2"></td><td class="id">D2</td>
+<td><span class="thing">选择框要能打字搜索</span></td><td>存疑变多后，这步是主要操作量</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="D3"></td><td class="id">D3</td>
+<td><span class="thing">没座位的字段加「后排」</span></td><td>开单员/税率这类现在直接丢，你要的时候再加</td></tr>
+</table>
+
+<h2>E. 已定但等条件 / 没拍板 <span class="n">4 条</span></h2>
+<table>
+<tr><th></th><th></th><th>事</th><th>状态</th></tr>
+<tr><td class="ck"><input type="checkbox" data-k="E1"></td><td class="id">E1</td>
+<td><span class="thing">云端存数据</span><span class="tag t-wait">已定要做</span>
+<div class="why">后端已上线（订单记录、单号已在服务器），剩下的等工厂数据到了再动</div></td><td>等数据</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="E2"></td><td class="id">E2</td>
+<td><span class="thing">省钱线（effort / 键名瘦身 / 分模型）</span><span class="tag t-wait">冻结</span>
+<div class="why"><b>你 8/4 拍板冻结</b>。先把系统做对再谈钱。硬前提：准确率 100/100，拿 <code>基线-49份-opus-结果.json</code> 实测才准动</div></td><td>你解冻</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="E3"></td><td class="id">E3</td>
+<td><span class="thing">接 Mistral OCR</span><span class="tag t-none">没拍板</span>
+<div class="why">老客户能从 ¥0.35 掉到 ¥0.03，但<b>手写中文没测过</b>——这条能推翻整个方案</div></td><td>要先测</td></tr>
+<tr><td class="ck"><input type="checkbox" data-k="E4"></td><td class="id">E4</td>
+<td><span class="thing">图片识别换 Sonnet 5</span><span class="tag t-none">不建议</span>
+<div class="why">省 40%，但风险全压在识别上。已定：<b>图片识别保 Opus 5</b></div></td><td>—</td></tr>
+</table>
+
+<h2>顺手查出两处对不上</h2>
+<div class="note">
+<b>1. 规矩总表 §七 指的文件不存在。</b>它写的是 <code>去工厂要问的.txt</code>，磁盘上实际叫
+<code>要向工厂索取的下单表清单.txt</code>。照着找会以为丢了。<br><br>
+<b>2. <code>引擎-认表.js</code> 提示词从头到尾管点位叫「门店」</b>，但值存进的是 <code>点位名</code>（281 行）。
+用词和落地不一致 —— 就是上面 C5。
+</div>
+
+<h2>我建议的顺序</h2>
+<ol class="plan">
+<li><b class="hot">A1 重导观麦价格库</b> —— 你现在就能做，<b>不做后面全白忙</b></li>
+<li><b>B1 补规矩总表</b> —— 我现在就能做，零风险</li>
+<li><b>B2 / B3 / B4 认表弹窗那一套</b> —— 独立文件跑通给你看，你点头才并进去</li>
+<li><b>A4 斤转板</b> —— 你一有答复就能收</li>
+<li>C 和 D 那几条 —— 排在后面</li>
+</ol>
+
+<script>
+(function(){
+  var KEY='todo0809';
+  var saved=JSON.parse(localStorage.getItem(KEY)||'{}');
+  var boxes=[].slice.call(document.querySelectorAll('input[type=checkbox]'));
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){
+      var tr=b.closest('tr');
+      if(b.checked){n++;tr.classList.add('done');}else{tr.classList.remove('done');}
+    });
+    document.getElementById('d').textContent=n;
+    document.getElementById('p').style.width=(n/boxes.length*100)+'%';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.dataset.k];
+    b.addEventListener('change',function(){
+      saved[b.dataset.k]=b.checked;
+      localStorage.setItem(KEY,JSON.stringify(saved));
+      paint();
+    });
+  });
+  paint();
+})();
+</script>
+</body>
+</html>

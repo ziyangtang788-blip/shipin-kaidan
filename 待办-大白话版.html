@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>待办清单 · 大白话版</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#14120E;color:#EDE8DC;
+       font:17px/1.85 "Microsoft YaHei","PingFang SC",sans-serif;
+       padding:30px 20px 90px;max-width:900px;margin:0 auto}
+  h1{font-size:30px;color:#F0B23C;margin-bottom:6px}
+  .sub{color:#8C8577;font-size:15px;margin-bottom:26px}
+  .bar{position:sticky;top:0;background:#14120E;padding:14px 0 16px;margin-bottom:20px;
+       border-bottom:2px solid #2E2A22;z-index:9;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  .cnt{font-size:22px;color:#F0B23C;font-weight:700}
+  .cnt small{font-size:15px;color:#8C8577;font-weight:400}
+  .prog{flex:1;min-width:150px;height:9px;background:#2E2A22;border-radius:5px;overflow:hidden}
+  .prog i{display:block;height:100%;background:linear-gradient(90deg,#B8791E,#F0B23C);width:0;transition:.3s}
+  button{background:#2E2A22;color:#B5AE9E;border:1px solid #3D382E;border-radius:7px;
+         padding:7px 14px;font-size:14px;cursor:pointer;font-family:inherit}
+  button:hover{background:#3D382E;color:#EDE8DC}
+  h2{font-size:23px;margin:38px 0 6px;color:#F0B23C}
+  .h2sub{color:#8C8577;font-size:15px;margin-bottom:18px}
+  .item{background:#1A1712;border:1px solid #2A251D;border-left:5px solid #3D382E;
+        border-radius:0 12px 12px 0;padding:18px 22px;margin-bottom:14px;display:flex;gap:16px}
+  .item.hot{border-left-color:#F0876A}
+  .item.go{border-left-color:#6ECF8A}
+  .item input{width:22px;height:22px;accent-color:#F0B23C;cursor:pointer;flex-shrink:0;margin-top:5px}
+  .body{flex:1;min-width:0}
+  .ttl{font-size:19px;font-weight:700;color:#EDE8DC;margin-bottom:8px}
+  .code{color:#6E685C;font-size:14px;font-family:Consolas,monospace;margin-right:8px}
+  .txt{color:#C6BFB0}
+  .txt p{margin-bottom:9px}
+  .txt p:last-child{margin-bottom:0}
+  .who{margin-top:11px;font-size:14px;color:#8C8577;border-top:1px dashed #2E2A22;padding-top:9px}
+  .who b{color:#E3C155}
+  .item.done{opacity:.35}
+  .item.done .ttl,.item.done .txt{text-decoration:line-through}
+  em{color:#F0B23C;font-style:normal;font-weight:700}
+  .warn{color:#F0876A;font-weight:700}
+  .box{background:#1E1B15;border-left:5px solid #B8791E;border-radius:0 12px 12px 0;
+       padding:18px 22px;margin:16px 0}
+  ol.plan{background:#1A1712;border:1px solid #2A251D;border-radius:12px;padding:22px 22px 22px 46px}
+  ol.plan li{margin-bottom:12px}
+  ol.plan li:last-child{margin-bottom:0}
+  @media print{body{background:#fff;color:#000}.bar,button{display:none}}
+</style>
+</head>
+<body>
+
+<h1>还要做什么</h1>
+<div class="sub">大白话版　·　2026-08-09</div>
+
+<div class="bar">
+  <span class="cnt"><span id="d">0</span> / 21 <small>做完了</small></span>
+  <span class="prog"><i id="p"></i></span>
+  <button onclick="if(confirm('把所有勾清掉？')){localStorage.removeItem('todoBai');location.reload()}">清空勾</button>
+  <button onclick="window.print()">打印</button>
+</div>
+
+<!-- ===== A ===== -->
+<h2>第一组：要等别人，我干不了</h2>
+<div class="h2sub">这 5 件我一个人做不成，得你或者工厂先给我东西。</div>
+
+<div class="item hot"><input type="checkbox" data-k="A1"><div class="body">
+<div class="ttl"><span class="code">A1</span>价目表要重新导一份 <span class="warn">← 最急</span></div>
+<div class="txt">
+<p>你手上那本"哪个客户、哪样货、卖多少钱"的本子，是<em>旧的</em>。</p>
+<p>已经抓到两个错了：轩宝那个「尝元韧豆腐（5斤）7块」，本子里<em>压根没有这样货</em>；永辉的「鲜圆拉面」本子写 6 块，<em>实际卖 5 块 6</em>。</p>
+<p>本子不对，算出来的钱就不对。<em>这本不换，后面做什么都是白做。</em></p>
+</div>
+<div class="who">谁来做：<b>你</b> —— 去观麦重新导一份出来给我</div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="A2"><div class="body">
+<div class="ttl"><span class="code">A2</span>找工厂要 6 家客户的下单表照片</div>
+<div class="txt">
+<p>每家要 2~3 张，客户微信发来的原图就行。</p>
+<p>为什么要：我得拿<em>真的单子</em>来试，才知道机器读得对不对。光靠想是不行的。</p>
+<p>名单和订单号都写好了，在桌面那个 <b>要向工厂索取的下单表清单.txt</b> 里。</p>
+</div>
+<div class="who">谁来做：<b>工厂</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="A3"><div class="body">
+<div class="ttl"><span class="code">A3</span>李帅那家，到底要不要乘以 2</div>
+<div class="txt">
+<p>这家客户下单写的是<em>公斤</em>，我们的价目表记的是<em>斤</em>。</p>
+<p>1 公斤 = 2 斤。那他写"10 公斤"，我该按 <em>10 斤</em>算还是 <em>20 斤</em>算？</p>
+<p>他家有 43 张单，算错就是 43 张全错。没人确认过，我不敢猜。</p>
+</div>
+<div class="who">谁来做：<b>工厂</b>确认一句</div>
+</div></div>
+
+<div class="item hot"><input type="checkbox" data-k="A4"><div class="body">
+<div class="ttl"><span class="code">A4</span>"斤"要不要折成"板"，你说过两次不一样的话</div>
+<div class="txt">
+<p>有些豆制品是按<em>板</em>卖的，一板等于若干斤。客户写"20 斤"，我要不要帮他折成"2 板"？</p>
+<p>8 月 2 号你说：<em>除得尽就折成板</em>。<br>
+8 月 4 号你说：<em>写了斤就用斤，别折</em>。</p>
+<p>这两句<span class="warn">算出来的钱不一样</span>。你不重新说一句准的，<em>我一行都不敢动</em>。</p>
+</div>
+<div class="who">谁来做：<b>你</b>（或者问工厂）说一句准话</div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="A5"><div class="body">
+<div class="ttl"><span class="code">A5</span>你说的"导入订单"，是指哪一块？</div>
+<div class="txt">
+<p>你提过想要"导入订单"这个功能。</p>
+<p>但是从哪导、导到哪去、导进来之后干嘛，你没说。<em>我猜错了就是白干一场</em>，所以先问。</p>
+</div>
+<div class="who">谁来做：<b>你</b>说一句</div>
+</div></div>
+
+<!-- ===== B ===== -->
+<h2>第二组：今天刚商量定的新功能</h2>
+<div class="h2sub">这 4 件是一整套，要一起做。做的就是「让机器学会看每个客户的表」。</div>
+
+<div class="item go"><input type="checkbox" data-k="B1"><div class="body">
+<div class="ttl"><span class="code">B1</span>往说明书里写一条<em>原则</em>：不许猜，不许写死</div>
+<div class="txt">
+<p>要写的就一句话：<em>「哪一列是什么，机器不许自己猜、也不许写死。第一次问人，问完记在本子上。」</em></p>
+<p><span class="warn">注意这里写的不是答案，是规矩。</span></p>
+<p>我一开始想写的是"最上面那排 = 点位"。<em>那是错的</em> —— 那句话是拿碧源<b>一张</b>表推出来的。换一家客户，那排完全可能<em>真的就是门店</em>。</p>
+<p>写死了会怎样？机器以后看到这种表<em>就不问了，直接当点位填</em> —— <span class="warn">正好把 B2 那个弹窗废掉了</span>。</p>
+<p>所以分清楚两件事：</p>
+<p style="background:#221F19;padding:14px 18px;border-radius:8px;margin:12px 0">
+<b style="color:#F0B23C">说明书</b>里只写<em>规矩</em>：不许猜，问一次，记住。<br><br>
+<b style="color:#F0B23C">本子</b>里才写<em>答案</em>：碧源那张表那排是点位 —— 而且是<em>你第一次用的时候点出来的</em>，不是我预先写好的。</p>
+<p><em>哪个客户、哪张表是什么，一个字都不进说明书。</em></p>
+</div>
+<div class="who">谁来做：<b>我</b> —— <em>只改文档，一行代码不碰，弄不坏任何东西</em></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="B2"><div class="body">
+<div class="ttl"><span class="code">B2</span>看不懂的时候，弹个小窗问你一句</div>
+<div class="txt">
+<p>机器看一张新表，大部分能自己认出来：中文字是商品名、"斤/件/板"是单位、带小数点的是价钱。</p>
+<p>但是<em>一串光秃秃的数字</em>（1440、1461）它分不清 —— 这是点位号？是数量？还是编号？长得一模一样。</p>
+<p>分不清就<em>停下来问你一句</em>，就这么小一个窗：</p>
+<p style="background:#221F19;padding:14px 18px;border-radius:8px;margin:12px 0">
+碧源<br>1440　1461　1503 …　这些是什么？<br><br>
+<b style="color:#F0B23C">[点位]　[商品]　[其他]</b></p>
+<p>已经认出来的<em>不啰嗦、不举例、不给你看一大堆</em>。只问不确定的那一块。</p>
+</div>
+<div class="who">谁来做：<b>我</b>（先出独立文件给你看，你点头才装进去）</div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="B3"><div class="body">
+<div class="ttl"><span class="code">B3</span>你点完之后，记在本子上</div>
+<div class="txt">
+<p>你点了"这些是点位"，机器就<em>记住</em>：碧源这张表，那一排是点位。</p>
+<p>下次碧源再发同样的表 —— <em>一句都不问，直接读</em>。</p>
+<p>跟商品名那套一模一样：你教过一次"碧源说的水豆腐是 5 斤装那个"，以后就不再问你了。</p>
+<p>一个客户可以有<em>好几张不同的表</em>，各记各的，互不打架。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="B4"><div class="body">
+<div class="ttl"><span class="code">B4</span>怎么知道"是同一张表"</div>
+<div class="txt">
+<p>靠<em>看表头那排字</em>对不对得上。对上了就用本子上记的，对不上就当新表，重新问一次。</p>
+<p><span class="warn">这里有个坑：</span>不能靠"第几列"来记。Excel 的列是固定的，但<em>照片拍歪一点，列就整体错位一格</em> —— 本子上记的"第 2 列是点位"就对到隔壁去了，整张单全错。</p>
+<p>所以只能记<em>表头上的字</em>，不能记列号。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="box"><b style="color:#F0B23C">规矩：</b>上面这 3 个（B2 B3 B4）我<em>不会直接改你在用的开单台</em>。先在桌面单独做一个文件，拿 4号豆制品、广泰粉面、碧源三张真单跑给你看。<em>你说行，才装进去。</em></div>
+
+<!-- ===== C ===== -->
+<h2>第三组：机器里早就欠着的老毛病</h2>
+<div class="h2sub">这 5 件不影响你今天用，但放着迟早出事。</div>
+
+<div class="item"><input type="checkbox" data-k="C1"><div class="body">
+<div class="ttl"><span class="code">C1</span>货品表里有重复的货</div>
+<div class="txt">
+<p>同一样东西在表里出现了两条。比如「中豆泡」「薄油片」各有两条，名字一样价格也一样。鸿益的「小板/花板/中板」<em>各有两个价</em>。</p>
+<p>机器碰到就<em>不知道该用哪一条</em>。</p>
+</div>
+<div class="who">谁来做：<b>我</b>（清理掉重复的）</div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="C2"><div class="body">
+<div class="ttl"><span class="code">C2</span>单位换算有两套算法，管的是同一件事</div>
+<div class="txt">
+<p>一套是<em>手写的 8 条</em>，另一套是<em>自动算的</em>。两套都在管"斤怎么换成板、一份是几个"。</p>
+<p>同一件事两套人马干，<em>迟早打架</em>。要合成一套。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="C3"><div class="body">
+<div class="ttl"><span class="code">C3</span>7 道检查的顺序，没人拦着</div>
+<div class="txt">
+<p>机器读完一张单，要过 <em>7 道检查</em>才能出结果，顺序不能乱。</p>
+<p>但这个顺序现在<em>只写在纸条上</em>（代码里的注释）。谁改乱了，<em>没有任何东西会报警</em>。</p>
+<p>要加个自动的守门员，顺序一乱就叫。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="C4"><div class="body">
+<div class="ttl"><span class="code">C4</span>点位的"号"被存丢了</div>
+<div class="txt">
+<p>那种大表格（一行一个商品、一列一个点位），机器只记<em>点位叫什么名字</em>，<em>不记点位号是多少</em>。</p>
+<p>可表头上写的偏偏就是号（1440）—— 结果号被<em>当成名字</em>存进去了。</p>
+<p>点位那本册子只是复制粘贴来的，号对应哪个店<em>会变</em>，不能当权威。所以<span class="warn">存错了就救不回来</span>。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="C5"><div class="body">
+<div class="ttl"><span class="code">C5</span>给 AI 的说明里，藏着一个写死的假设</div>
+<div class="txt">
+<p>现在交给 AI 的那份说明里写着：「<em>门店</em>从第几列开始」「别把校验码当<em>门店</em>」。</p>
+<p>这就是 B1 说的毛病 —— <span class="warn">它一上来就假定了那一排是门店。</span></p>
+<p>（存倒是存对了，进的是"点位"那一格，但一路上都管它叫门店。）</p>
+<p>现在是<em>碰巧不出事</em> —— 那些表里只有点位没有门店。哪天来一张<em>既有门店列又有点位列</em>的表，它按名字去找"门店"，就挑错那一列了。</p>
+<p>按你定的原则，这份说明该改成<em>中性</em>的：「这一列是什么？<em>不确定就说不确定</em>」，然后交给 B2 那个弹窗去问你。</p>
+<p><span class="warn">注意：</span>改这个会<em>改变 AI 的判断</em>。改完必须拿 49 张真单重跑一遍，<em>读出来的数字一个都不许变</em>，才算过关。</p>
+</div>
+<div class="who">谁来做：<b>我</b>（但要跑完整测试才能算数）</div>
+</div></div>
+
+<!-- ===== D ===== -->
+<h2>第四组：界面上不顺手的地方</h2>
+<div class="h2sub">这 3 件是你用着别扭的地方。</div>
+
+<div class="item"><input type="checkbox" data-k="D1"><div class="body">
+<div class="ttl"><span class="code">D1</span>"改单 / 加单"那条太不起眼，要放大</div>
+<div class="txt"><p>现在太小了，容易看不见，看不见就容易点错。</p></div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="D2"><div class="body">
+<div class="ttl"><span class="code">D2</span>选客户、选货品的框，要能打字搜</div>
+<div class="txt">
+<p>现在只能拉下拉框一个个找，<em>又慢又容易点错隔壁那个</em>。</p>
+<p>等"存疑"的东西多起来，<em>这一步会变成你每天花时间最多的地方</em>。所以值得先做。</p>
+</div>
+<div class="who">谁来做：<b>我</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="D3"><div class="body">
+<div class="ttl"><span class="code">D3</span>开单员、税率这些，先扔着</div>
+<div class="txt"><p>页面上没地方放，现在直接不要了。<em>你哪天说要，我再给它们加个"后排"位置。</em></p></div>
+<div class="who">谁来做：<b>我</b>，等你说</div>
+</div></div>
+
+<!-- ===== E ===== -->
+<h2>第五组：定了但没到时候 / 还没拍板</h2>
+<div class="h2sub">这 4 件现在都不动。</div>
+
+<div class="item"><input type="checkbox" data-k="E1"><div class="body">
+<div class="ttl"><span class="code">E1</span>数据存到网上（好几台电脑一起用）</div>
+<div class="txt">
+<p><em>已经定了要做。</em>后端已经上线了，订单记录和单号已经在服务器上了。</p>
+<p>剩下的<em>等工厂数据来了再动</em>。</p>
+</div>
+<div class="who">状态：<b>等数据</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="E2"><div class="body">
+<div class="ttl"><span class="code">E2</span>省钱那一整条线 —— 冻着</div>
+<div class="txt">
+<p>8 月 4 号<em>你自己拍的板</em>：先把系统做对、跑顺，再回头谈省钱。</p>
+<p>硬条件：<em>准确率 100 分不能掉</em>。谁也不许拿"应该差不多"糊弄，必须拿 49 张真单实测过才准动。</p>
+</div>
+<div class="who">状态：<b>你解冻才动</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="E3"><div class="body">
+<div class="ttl"><span class="code">E3</span>换个便宜的读图工具（Mistral）</div>
+<div class="txt">
+<p>老客户的单能从<em>3 毛 5 降到 3 分钱</em>，一个月能省几千块。</p>
+<p><span class="warn">但是：手写的字它认不认得，完全没试过。</span>你九成的单是照片，里头不少是手写的。</p>
+<p><em>这一条没试之前，前面那个"省几千块"一分钱都不算数。</em></p>
+</div>
+<div class="who">状态：<b>没拍板，要先测</b></div>
+</div></div>
+
+<div class="item"><input type="checkbox" data-k="E4"><div class="body">
+<div class="ttl"><span class="code">E4</span>读图换个便宜点的 AI —— 不建议</div>
+<div class="txt">
+<p>能省 4 成钱。但读单子这活<em>是整套系统里最不能出错的一步</em>。</p>
+<p>省下的钱，<em>读错一个数字就全赔进去了</em>。</p>
+<p>已经定了：<em>读图还是用最好的那个</em>。</p>
+</div>
+<div class="who">状态：<b>已定不换</b></div>
+</div></div>
+
+<!-- ===== 顺手 ===== -->
+<h2>顺手发现两个小问题</h2>
+<div class="box">
+<p><b style="color:#F0B23C">一、说明书里指的那个文件，找不到。</b><br>
+说明书写着去看 <b>去工厂要问的.txt</b>，但电脑上<em>根本没有这个文件</em>。实际叫 <b>要向工厂索取的下单表清单.txt</b>。照着找会以为文件丢了。</p>
+<p style="margin-top:14px"><b style="color:#F0B23C">二、就是上面 C5 那条。</b><br>
+机器嘴上管点位叫"门店"，手上存的却是点位。名字和实际对不上。</p>
+</div>
+
+<!-- ===== 顺序 ===== -->
+<h2>我建议这么排</h2>
+<ol class="plan">
+<li><b class="warn">A1 —— 你先去导价目表。</b>这条不做，后面全是白忙。</li>
+<li><b>B1 —— 我补说明书。</b>五分钟，不碰代码，零风险。</li>
+<li><b>B2 / B3 / B4 —— 我做那个"问一句就学会"的功能。</b>先单独做，跑给你看，你点头才装进去。</li>
+<li><b>A4 —— 斤转板那句准话。</b>你一说我马上就能收。</li>
+<li>剩下 C、D 那几条，排后面。</li>
+</ol>
+
+<script>
+(function(){
+  var KEY='todoBai';
+  var saved=JSON.parse(localStorage.getItem(KEY)||'{}');
+  var boxes=[].slice.call(document.querySelectorAll('input[type=checkbox]'));
+  function paint(){
+    var n=0;
+    boxes.forEach(function(b){
+      var it=b.closest('.item');
+      if(b.checked){n++;it.classList.add('done');}else{it.classList.remove('done');}
+    });
+    document.getElementById('d').textContent=n;
+    document.getElementById('p').style.width=(n/boxes.length*100)+'%';
+  }
+  boxes.forEach(function(b){
+    b.checked=!!saved[b.dataset.k];
+    b.addEventListener('change',function(){
+      saved[b.dataset.k]=b.checked;
+      localStorage.setItem(KEY,JSON.stringify(saved));
+      paint();
+    });
+  });
+  paint();
+})();
+</script>
+</body>
+</html>
