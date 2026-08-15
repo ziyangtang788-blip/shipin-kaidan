@@ -88,14 +88,20 @@ process.stdout.write("• 页面：语法 / id / 有没有再抄一份匹配逻�
 }
 
 /* 上传清单：新加的 js 忘了写进部署脚本，线上就是白屏。
-   2026-08-01 起上传走 deploy.ps1（原来的 .bat 在中文系统上闪退，已弃用）。 */
-process.stdout.write("• 上传清单：要传的文件一个都不能漏\n    deploy.ps1 … ");
+   .bat 本身不写逻辑（cmd 在中文系统上按 GBK 读，中文路径会闪退），只负责调 .ps1。
+   ⚠ 2026-08-13：这里原来只查 deploy.ps1，可「2-上传网页.bat」实际调的是 push-all.ps1 ——
+      新-按内容认单.js 只进了 deploy.ps1，检查全绿，真按下去传的那份却漏了它，线上 404。
+      凡是能被双击跑到的上传脚本，一份都不许漏查。 */
+process.stdout.write("• 上传清单：要传的文件一个都不能漏\n    上传脚本 … ");
 {
+  const 部署包 = path.join(process.env.USERPROFILE || "C:/Users/李正", "Desktop", "部署包");
   const cands = [
     "C:/Users/Public/kaidan/deploy.ps1",
-    path.join(process.env.USERPROFILE || "C:/Users/李正", "Desktop", "部署包", "deploy.ps1")
+    "C:/Users/Public/kaidan/push-all.ps1",
+    path.join(部署包, "deploy.ps1"),
+    path.join(部署包, "push-all.ps1")
   ].filter(f => fs.existsSync(f));
-  if (!cands.length) { bad++; console.log("没过 ❌\n      两个位置都找不到 deploy.ps1 —— 上传脚本丢了"); }
+  if (!cands.length) { bad++; console.log("没过 ❌\n      两个位置都找不到上传脚本 —— 部署包丢了"); }
   else {
     /* ★ 清单不再手抄（2026-08-05）
        原来这里写死一串文件名，等于第二份真相 —— 新加一个 .js 忘了同步，
@@ -111,20 +117,32 @@ process.stdout.write("• 上传清单：要传的文件一个都不能漏\n    
     /* 页面引的文件本地得真的在，不然传也没得传 */
     const 本地缺 = need.filter(x => !fs.existsSync(path.join(__dirname, x)));
     if (本地缺.length) errs.push("页面引了这些文件，本地却没有：" + 本地缺.join("、"));
+    /* .bat 是老板真正双击的那个入口 —— 它调的脚本必须在上面查过的名单里，
+       不然改对了 deploy.ps1、双击跑的却是另一份，等于没改。 */
+    const bat = path.join(部署包, "2-上传网页.bat");
+    if (fs.existsSync(bat)) {
+      const 调 = fs.readFileSync(bat, "utf8").match(/([^"\s]+\.ps1)/);
+      /* 路径写法五花八门：%~dp0push-all.ps1、.\push-all.ps1、C:\…\push-all.ps1 —— 只取文件名 */
+      const 调名 = 调 && 调[1].split(/[\\/]/).pop().replace(/^%~dp\d/i, "");
+      if (!调名) errs.push("2-上传网页.bat 里看不出调的哪个 .ps1");
+      else if (!cands.some(f => path.basename(f) === 调名))
+        errs.push("2-上传网页.bat 调的是 " + 调名 + "，可上面根本没查这一份 —— 把它加进 cands");
+    }
     cands.forEach(f => {
       const t = fs.readFileSync(f, "utf8");
+      const 名 = path.basename(path.dirname(f)) + "/" + path.basename(f);
       /* 只认 $files = @( … ) 里面用引号括起来的那些。
          ⚠ 别拿整个文件做 includes：注释里随口提一句文件名就能骗过去，
             我 2026-08-05 就这么骗过自己一次 —— 文件根本没进清单，检查还是绿的。 */
       const 段 = t.match(/\$files\s*=\s*@\(([\s\S]*?)\)/);
-      if (!段) { errs.push(path.basename(path.dirname(f)) + "/deploy.ps1 里找不到 $files 清单"); return; }
+      if (!段) { errs.push(名 + " 里找不到 $files 清单"); return; }
       const 列 = [...段[1].matchAll(/"([^"]+)"/g)].map(m => m[1]);
       const miss = need.filter(x => 列.indexOf(x) < 0);
       const 多 = 列.filter(x => need.indexOf(x) < 0);
-      if (多.length) errs.push(path.basename(path.dirname(f)) + "/deploy.ps1 要传页面根本没引的文件：" + 多.join("、"));
-      if (miss.length) errs.push(path.basename(path.dirname(f)) + "/deploy.ps1 漏了：" + miss.join("、"));
+      if (多.length) errs.push(名 + " 要传页面根本没引的文件：" + 多.join("、"));
+      if (miss.length) errs.push(名 + " 漏了：" + miss.join("、"));
       /* 密钥文件绝不能上传 —— 传上去谁都能按 F12 抄走 */
-      if (t.includes("密钥-本机.js")) errs.push(path.basename(path.dirname(f)) + "/deploy.ps1 里出现了 密钥-本机.js，不能传");
+      if (t.includes("密钥-本机.js")) errs.push(名 + " 里出现了 密钥-本机.js，不能传");
     });
     if (errs.length) { bad++; console.log("没过 ❌"); errs.forEach(e => console.log("      " + e)); }
     else console.log("通过　" + cands.length + " 份脚本、" + need.length + " 个文件都在");

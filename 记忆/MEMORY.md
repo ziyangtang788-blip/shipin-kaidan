@@ -26,3 +26,5 @@
 - [想要个「打字让AI改」的窗口](ai-edit-window-idea.md) — 只是想法没拍板；真正的价值在【一句话批量改】，单条改不如直接点
 - [界面待办：模式条+导入订单](ui-todo-mode-bar-and-import.md) — 改单/加单那条太不起眼要放大；「导入订单」指哪一块【还没确认】，下次先问
 - [动开单台必须先问](ask-before-touching-kaidan.md) — 在跑的东西不许直接改；先在桌面出独立文件跑通，他点头才并进去；已改的摆出来给他看，不能用就删
+- [动手前先过两关](root-cause-before-any-change.md) — 先对终极底层逻辑、再挖根子；补丁的标志是换张表同样的错再犯一次
+- [别重写真单磨出来的东西](dont-rewrite-what-real-orders-polished.md) — 8/12 输过一次；摘那一段搬进去，不留第二套

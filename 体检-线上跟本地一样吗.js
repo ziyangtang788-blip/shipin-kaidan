@@ -21,13 +21,19 @@ const { execFileSync } = require("child_process");
 
 const L = s => process.stdout.write(Buffer.from(s + "\n", "utf8"));
 const 站 = "choeyy88.com";
-const 账 = "laowu", 密 = "LBr49jHUZXpSpG";
+const 账 = "laowu", 密 = "8888";
 const 全查 = process.argv.indexOf("--全") >= 0;
 
-/* 要一模一样的文件 —— 跟 deploy.ps1 那份清单保持一致 */
-const 文件 = ["配送开单台.html", "引擎-解析.js", "引擎-匹配.js", "对照-预置.js",
-              "数据-价格库.js", "数据-常用规格.js", "数据-换算.js", "引擎-读文件.js", "导出-观麦.js",
-              "引擎-读结构.js", "引擎-认表.js", "引擎-点位册.js"];
+/* 要一模一样的文件 —— 【从页面自己读】，不再手抄。
+   ⚠ 2026-08-14：原来这儿写死 12 个文件名，页面实际引 17 个。
+     漏查的 5 个里，有 3 个线上根本是 404（新-按内容认单.js、引擎-断句规矩.js、
+     数据-切法规矩.js）—— 页面天天报错，体检却一路绿灯说「一模一样」。
+     手抄的名单就是第二份真相，迟早对不上。跟 全部检查.js 用同一套推法。 */
+const 页 = fs.readFileSync(path.join(__dirname, "配送开单台.html"), "utf8");
+const 不传 = ["密钥-本机.js"];              /* 密钥只在本机和服务器上，绝不上传 */
+const 文件 = ["配送开单台.html"];
+for (const m of 页.matchAll(/<script\s+src="([^"?]+)/g))
+  if (!/^https?:/.test(m[1]) && 不传.indexOf(m[1]) < 0 && 文件.indexOf(m[1]) < 0) 文件.push(m[1]);
 
 function 指纹(buf) { return crypto.createHash("sha256").update(buf).digest("hex").slice(0, 12); }
 
