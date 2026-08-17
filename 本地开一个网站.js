@@ -13,6 +13,13 @@ const http = require("http"), fs = require("fs"), path = require("path");
 const 根 = __dirname;
 /* 8080 被别的程序占着（多半是后端 server），换一个没人用的 */
 const 端口 = 8123;
+/* 后端在另一个端口上自己跑（后端-server.js 默认 8788）。
+   ⚠ 2026-08-15 挖出来的根子：页面所有活都问同源的 /api/*，
+     本地只开这个静态站的话 /api/health 就是 404 → 页面判定「连不上服务器」
+     → 学过的东西退回存浏览器，而 localhost:8123 是个全新网址，里面一条都没有
+     → 教过的几百条客户叫法全不认得，认出来的东西离谱。
+   所以 /api/ 开头的一律转给后端，别让它 404。 */
+const 后端端口 = parseInt(process.env.KAIDAN_PORT || "8788", 10);
 
 const 类型 = {
   ".html": "text/html; charset=utf-8",
@@ -25,7 +32,25 @@ const 类型 = {
   ".pdf": "application/pdf",
 };
 
+/* /api/* → 原样转给后端，回来什么样就还什么样（含状态码和 content-type） */
+function 转给后端(req, res) {
+  const 上 = http.request({
+    host: "127.0.0.1", port: 后端端口, path: req.url, method: req.method,
+    headers: Object.assign({}, req.headers, { host: "127.0.0.1:" + 后端端口 }),
+  }, r => {
+    res.writeHead(r.statusCode, r.headers);
+    r.pipe(res);
+  });
+  上.on("error", e => {
+    res.writeHead(502, { "content-type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify({ ok: false, error: "后端没开（" + e.code + "）—— 先跑 后端-server.js" }));
+  });
+  req.pipe(上);
+}
+
 http.createServer((req, res) => {
+  if (req.url.indexOf("/api/") === 0) return 转给后端(req, res);
+
   let 名 = decodeURIComponent(req.url.split("?")[0]);
   if (名 === "/") 名 = "/配送开单台.html";
 

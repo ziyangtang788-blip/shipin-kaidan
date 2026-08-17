@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>尝元 · 开单台</title>
+<title>Ricko · 开单台</title>
 
 <style>
   :root{
@@ -373,7 +373,7 @@
 </style>
 
 <header class="topbar">
-  <div class="name">尝元开单台</div>
+  <div class="name">Ricko 开单台</div>
   <span class="pill" id="data-pill">加载中…</span>
   <button class="who" id="who-btn" title="改价格要记是谁改的，点这里设置">操作人：<b>未设置</b></button>
   <nav class="nav" role="tablist">
@@ -821,6 +821,40 @@ window.addEventListener("error",function(ev){
   红条("⚠ 脚本出错，页面功能会失灵：\n"+(ev.message||"")+
       "\n"+String(ev.filename||"").split(/[\\/]/).pop()+" 第 "+ev.lineno+" 行");
 });
+
+/* ═══════════════════════════════════════════════════
+   提醒条 —— 顶掉那一堆要人点「确定」的 alert　★2026-08-16
+   ═══════════════════════════════════════════════════
+   老板 2026-08-16：「现在弹窗太多了」
+
+   盘出来 37 个弹窗，其中一多半是「你还没做上一步」（「还没有单子」写了 5 遍、
+   「先选客户」3 遍）。这种事人自己知道，还要停下来点一下「确定」才能继续 —— 纯添堵。
+   改成飘一条、自己消失，手不用离开。
+
+   ⚠ 只顶【说一句就完】的那种。要人拿主意的（确定/取消）一个都不许改成这个 ——
+     那种必须停下来等人点。
+   ⚠ 「红条」是留给脚本崩了的，那个不该自动消失，别混用。 */
+var 提醒计时=null;
+function 提醒(话,颜色){
+  var d=document.getElementById("tipbar");
+  if(!d){
+    d=document.createElement("div"); d.id="tipbar";
+    d.style.cssText="position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:99998;"+
+      "padding:10px 18px;border-radius:9px;font:14px/1.5 system-ui,sans-serif;"+
+      "box-shadow:0 6px 22px rgba(0,0,0,.42);max-width:min(560px,90vw);white-space:pre-wrap;"+
+      "cursor:pointer";
+    d.onclick=function(){ d.hidden=true; };
+    (document.body||document.documentElement).appendChild(d);
+  }
+  var 红=(颜色==="红");
+  d.style.background = 红 ? "#7a2620" : "#3a3527";
+  d.style.color      = 红 ? "#ffdad4" : "#f0dfae";
+  d.style.border     = "1px solid "+(红?"rgba(255,140,120,.45)":"rgba(224,186,94,.42)");
+  d.textContent=话;
+  d.hidden=false;
+  if(提醒计时) clearTimeout(提醒计时);
+  提醒计时=setTimeout(function(){ d.hidden=true; }, 红?6000:3000);
+}
 /* ★ 2026-08-11：以前只接 error，【没接 unhandledrejection】。
    页面里到处是 promise（存单、调历史单、识别、跟服务器对账）——
    promise 里抛的错【不会触发 error 事件】，它只会变成一个没人接的 rejection：
@@ -850,6 +884,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="引擎-读结构.js?v=20260811b"></script>
 <script src="引擎-认表.js?v=20260811b"></script>
 <script src="新-按内容认单.js?v=20260812"></script>
+<script src="引擎-抓取.js?v=20260816a"></script>
 <script src="引擎-点位册.js?v=20260804a"></script>
 <script src="引擎-匹配.js?v=20260802z"></script>
 <script src="数据-切法规矩.js?v=20260810a"></script>
@@ -1328,7 +1363,7 @@ window.addEventListener("unhandledrejection",function(ev){
   /* 先落本机（快、断网也不丢），再攒 1.5 秒推服务器 ——
      一张单几十行连着学，攒一下只发一次。 */
   function ovSave(){
-    try{localStorage.setItem("gm_ov_v2",JSON.stringify(OV));}catch(e){alert("本地保存失败");}
+    try{localStorage.setItem("gm_ov_v2",JSON.stringify(OV));}catch(e){提醒("本地保存失败","红");}
     if(OV_PUSH) clearTimeout(OV_PUSH);
     OV_PUSH=setTimeout(function(){ OV_PUSH=null; ovPush(); },1500);
   }
@@ -1668,9 +1703,8 @@ window.addEventListener("unhandledrejection",function(ev){
     if(L&&同.length){
       var b3=IDX.byCust[ST.ci], k3=b3&&b3.sku[sku];
       var 名=(k3!==undefined)?DATA.items[k3][2]:sku;
-      统一=confirm("这张单里「"+L.text+"」一共有 "+(同.length+1)+" 行。\n\n"+
-                   "点确定 = 全部改成「"+名+"」，以后也记住\n"+
-                   "点取消 = 只改这一行（这个词就不记成对照了）");
+      /* 2026-08-16：原来用「点确定=…／点取消=…」教人按按钮，改成直接问 */
+      统一=confirm((同.length+1)+" 行都是「"+L.text+"」，一起改成「"+名+"」？");
     }
     if(!统一){
       var b2=IDX.byCust[ST.ci], k2=b2&&b2.sku[sku];
@@ -2031,20 +2065,30 @@ window.addEventListener("unhandledrejection",function(ev){
     var 别货=(window.GM_PARSE.别的货?window.GM_PARSE.别的货():[]).filter(function(z){
       return !已处理["别|"+z.商品+"|"+z.点位+"|"+z.写的];
     });
+    /* ★★ 2026-08-17 老板改口：「那种情况下，你直接加进来就行啦，
+           然后让他自己去选择数量，填数量，然后单位也要可以改的那一种」
+
+       原来摆两个按钮（＋加进来 / 不用管）让人点。毛病是它【只提醒、不拦】——
+       8/17 雅食乐那张单，「(350#03-3张)0斤」里那 3 张就这么摆着没人点，
+       直接打印就漏了。
+       现在不问了：直接加成一行摆进单子，数量和单位都在行上让人改，
+       商品没配上就是存疑 —— 存疑一行都不许导观麦，想漏也漏不掉。 */
     if(别货.length){
-      ADD_BUF=别货.map(function(z){
-        var m=String(z.写的||"").match(/([0-9]+(?:.[0-9]+)?)s*(.*)$/);
-        return { qty:m?parseFloat(m[1]):0, unit:m?(m[2]||"").trim():"",
-                 code:z.点位||"", note:"", 键:"别|"+z.商品+"|"+z.点位+"|"+z.写的,
-                 说:z.商品+(z.点位?("@"+z.点位):"")+" 写着「"+z.写的+"」" };
+      别货.forEach(function(z){
+        已处理["别|"+z.商品+"|"+z.点位+"|"+z.写的]=1;   /* 先记账，重画时不会再加一次 */
+        var m=String(z.写的||"").match(/([0-9]+(?:\.[0-9]+)?)\s*(.*)$/);
+        var q=m?parseFloat(m[1]):0, u=m?(m[2]||"").trim():"";
+        /* 数量单位照客户写的原样放（那是他写的，不是我们编的），两个都能在行上改。
+           商品让人挑 —— manual 标着，重算不会绕开人挑的结果。 */
+        ST.lines.unshift({ text:"", unit:u, qty:q,
+          segs:[{ qty:q, unit:u, code:z.点位||"", note:"" }],
+          i:-1, how:"none", cands:[], manual:true, forceFix:true });
       });
-      h+='<div class="alert warn"><b>? '+别货.length+' 处备注写的是别的单位</b>'+
-        '　—— 这一行是按'+esc(别货[0].本行单位||'')+'的，那多半是<b>另一个商品</b>的订货，没算进来。'+
-        '<br>'+ADD_BUF.map(function(x,i){
-          return '<span style="display:inline-block;margin:6px 10px 0 0">'+esc(x.说)+
-            ' <button class="btn sm addbuf" data-k="'+i+'">＋ 加进来，我挑商品</button>'+
-            ' <button class="btn ghost sm skipbuf" data-k="'+i+'" title="这条不用管，别再提醒">不用管</button></span>';
-        }).join('')+'</div>';
+      ST.dirty=true; ST.custOK=true;
+      h+='<div class="alert warn"><b>已经替你加了 '+别货.length+' 行</b>'+
+         '　—— 备注里写着别的单位（'+esc(别货.map(function(z){ return String(z.写的||""); }).join("、"))+
+         '），多半是另一个商品的订货。<br>'+
+         '<span class="muted">已经摆进下面的单子了，挑一下商品；数量和单位都能改。</span></div>';
     }
 
     /* ★ 2026-08-09 老板：「没写数量的不需要加进来，直接当 0」
@@ -2064,25 +2108,13 @@ window.addEventListener("unhandledrejection",function(ev){
          '　—— 当 0，没放进来。要发就在下面「加一行」补。</div>';
     }
     $("match-alerts").innerHTML=h;
-    /* 提醒条上的「＋ 加进来」：数量/单位/点位预填好，商品让人挑。
-       老板 8/3：「弹出来让我去选择，不要我自己单独加。」 */
-    Array.prototype.forEach.call($("match-alerts").querySelectorAll("button.addbuf"),function(b){
-      b.addEventListener("click",function(){
-        var x=ADD_BUF[parseInt(b.getAttribute("data-k"),10)];
-        if(!x) return;
-        已处理[x.键]=1;                       /* 处理完这条提醒就该消失 */
-        addBlankLine({ qty:x.qty, unit:x.unit, code:x.code, note:x.note });
-      });
-    });
-    /* 「没写数量」那批的两个按钮（加进来 / 不用管）2026-08-09 拿掉了 ——
-       没写数量＝这次不要，当 0。想补就用底下「加一行」，不在提醒条上摆按钮墙。 */
-    /* 「不用管」：这条不加进单，但也别再提醒 */
-    Array.prototype.forEach.call($("match-alerts").querySelectorAll("button.skipbuf"),function(b){
-      b.addEventListener("click",function(){
-        var x=ADD_BUF[parseInt(b.getAttribute("data-k"),10)];
-        if(x){ 已处理[x.键]=1; renderMatch(); }
-      });
-    });
+    /* 「＋ 加进来 / 不用管」这两个按钮 2026-08-17 拿掉了。
+       老板 8/3 原话是「弹出来让我去选择，不要我自己单独加」——
+       8/17 他又往前推了一步：「你直接加进来就行啦，然后让他自己去选择数量，
+       填数量，然后单位也要可以改的那一种」。
+       理由是那两个按钮【只提醒、不拦】：雅食乐 8/17 那张单，「3张」摆在提醒条上
+       没人点，直接打印就漏了。现在上面 别货 那段直接加成行，不再问。
+       「没写数量」那批的按钮 2026-08-09 就拿掉了 —— 没写数量＝这次不要，当 0。 */
     /* 「后面对，总数不用管」：不改任何数字，只是不再提醒 —— 并且留一笔痕。
        老板 2026-08-03：「我只要把后面改好了就可以呀。」
        留痕不是给客户看的（单据上不印），是给自己留个交代：
@@ -2271,7 +2303,13 @@ window.addEventListener("unhandledrejection",function(ev){
             (本行没看清?' placeholder="填数量" title="识别时这个数字没看清，填一下">':'>')+
           (multi?'<br><span class="muted">整行合计 '+qty(r.L.qty)+'</span>':'')+
         '</td>'+
-        '<td>'+esc(r.it?r.it.unit:(r.L.unit||""))+'</td>'+
+        /* ★ 2026-08-17 老板：「单位也要可以改的那一种」
+           原来这一格是死文本、跟着配到的商品走。客户写「3张」「5公斤」而库里按斤卖时，
+           人只能干看着。现在做成能填的框：改完这一行重新配货。
+           改过就标 L.手改 —— 换到计价单位 认这个标记，不会再把人改的顶回去。 */
+        '<td><input class="unit-in" data-row="'+n+'" value="'+
+          esc(r.it?r.it.unit:(r.L.unit||""))+'"'+
+          ' title="单位可以改 —— 改完这一行会重新配货"></td>'+
         /* 观麦里价格是 0 的品，就地填一次价 → 直接进价格库，下次开单就有价了。
            不用再跑去「客户·改价」页找一遍。填的是覆盖层，观麦重导也冲不掉。 */
         '<td class="num">'+(r.it&&!(r.it.price>0)
@@ -2441,6 +2479,34 @@ window.addEventListener("unhandledrejection",function(ev){
       inp.addEventListener("input", function(){ 改数量(inp,false); });
       inp.addEventListener("change",function(){ 改数量(inp,true);  });
       inp.addEventListener("blur",  function(){ 改数量(inp,true);  });
+      inp.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); inp.blur(); } });
+    });
+
+    /* ★ 2026-08-17 老板：「单位也要可以改的那一种」
+       改单位 = 换了一种下单方式（3张 / 5公斤 / 2板），得【重新配货】——
+       单位是配货的依据之一（「水豆腐 斤」和「水豆腐 板」是两条不同的货）。
+       所以不能只改屏幕上那个字，要走 rematch。
+       ⚠ 标 L.手改：换到计价单位 认这个标记，不会再把人改的顶回去
+         （不标的话，下一次重算就把他改的单位换回商品的单位，等于白改）。 */
+    function 改单位(inp){
+      var ri=parseInt(inp.getAttribute("data-row"),10);
+      var v=String(inp.value).trim();
+      var row=R.rows[ri]; if(!row||!row.L) return;
+      var L=row.L;
+      var 原=(row.it?row.it.unit:(L.unit||""));
+      if(v===原) return;                       /* 没改，别白跑一趟 */
+      L.unit=v; L.unit0=v;
+      (L.segs||[]).forEach(function(g){ if(g.unit) g.unit=v; });
+      L.手改=true; L.换=null;
+      /* 单位换了，原来配到的货多半不作数了 —— 重新配一遍，配不上就摆出来让人挑 */
+      L.pinned=false; L.冻=false;
+      ST.dirty=true;
+      rematch();
+      renderMatch();
+    }
+    Array.prototype.forEach.call(tb.querySelectorAll("input.unit-in"),function(inp){
+      inp.addEventListener("change",function(){ 改单位(inp); });
+      inp.addEventListener("blur",  function(){ 改单位(inp); });
       inp.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); inp.blur(); } });
     });
 
@@ -2624,25 +2690,41 @@ window.addEventListener("unhandledrejection",function(ev){
      返回 true = 拦住了。 */
   function 点名没下落(){
     if(!点名报告||!点名报告.length) return false;
-    alert("识别时有 "+点名报告.length+" 行没有下落 —— 先弄清楚再出单：\n\n"+
-      点名报告.slice(0,10).join("\n")+
-      (点名报告.length>10?("\n…还有 "+(点名报告.length-10)+" 行"):"")+
-      "\n\n（确认是废话，就在上面原文里删掉那几行，重新识别一次）");
+    /* 2026-08-16 老板：话只留货名 + 要干什么，别报第几行第几列 */
+    提醒(点名报告.slice(0,8).join("、")+
+        (点名报告.length>8?(" 等 "+点名报告.length+" 行"):"")+
+        "　这几行没读懂，先弄清楚");
     return true;
   }
   function 点名成条(账){
     if(!账||!账.漏||!账.漏.length) return null;
+    /* 只报【是什么】，「第几行、为什么」留在账里给排查用，不摆到人脸上 */
     return 账.漏.filter(function(x){ return x&&x.为什么!=="这一格切不出段"; })
-               .map(function(x){ return "第 "+x.第几行+" 行没下落（"+x.为什么+"）："+x.原文; });
+               .map(function(x){ return String(x.原文||"").slice(0,20); });
+  }
+
+  /* 数量空着的还没填 —— 「导观麦」和「确定订单」两处共用【这一份】。
+     ⚠ 2026-08-16 之前这段话在两个地方各写了一遍（第 3121 行和第 5906 行）。
+       改一处忘另一处，就会出现「导得出去、却确定不了」这种查不动的怪事。
+       CLAUDE.md：匹配逻辑只准一份。
+     返回 true = 拦住了。 */
+  function 数量还空着(){
+    var 空=[];
+    ST.lines.forEach(function(L){
+      (L.segs||[]).forEach(function(g){
+        if(g.没看清) 空.push((L.text||"")+(g.code?("@"+g.code):""));
+      });
+    });
+    if(!空.length) return false;
+    提醒(空.slice(0,8).join("、")+(空.length>8?(" 等 "+空.length+" 处"):"")+"　你去填数量");
+    return true;
   }
 
   function 跑一遍原文(){
     /* 调出来的老行是冻住的，整张重算会把它们解冻重认 ——
        那等于把已经出过的单悄悄改了，必须先问一句。 */
     var 冻数=ST.lines.filter(function(L){ return L&&L.冻; }).length;
-    if(冻数&&!confirm("现在是「加单」，原单那 "+冻数+" 行是冻住的。\n\n"+
-        "点确定 = 整张重新识别一遍，原来那些行可能会变。\n"+
-        "只是要加单的话别点这个 —— 直接把新图或新文件放进来就行。")) return;
+    if(冻数&&!confirm("整张重新识别？原单那 "+冻数+" 行可能会变。")) return;
     ST.lines=解析原文($("raw").value);
     ST.dirty=true;
     rematch();
@@ -2672,7 +2754,46 @@ window.addEventListener("unhandledrejection",function(ev){
     L.qty=Math.round((L.segs||[]).reduce(function(a,g){return a+(g.qty||0);},0)*1000)/1000;
     if(!(L.i>=0)) return;
     var c=window.GM_MATCH.换算比(DATA,L.i,u0);
-    if(!c) return;
+    if(!c){
+      /* ★★ 2026-08-16 毅服那张单：客户写「大板豆腐 15 斤」，
+         库里只有「尝元大板豆腐（14-15斤）[板] ¥12.5」——
+         规格是【范围】，一板到底 14 还是 15 斤定不下来，换算比 只好放弃（这一步是对的，不许猜）。
+
+         可原来这儿是「换不出来就掉头走」：15 原样留着，单位显示成板、
+         再拿去乘板价 → ¥187.50。该是一板出头（¥12.5 上下），差 15 倍，而且不吭声。
+
+         老板 2026-08-16 原话：「可以不允许自己填，空出来让人写就可以了」
+         —— 数量清空、标「没看清」，走现成那条路：橙色行 + 确定订单拦住 + 导观麦拦住。
+
+         ⚠ 这不碰冻着的「斤转板」：既不按 8/2 折板，也不按 8/4 用斤，
+           只是拒绝编一个数出来。工厂答复回来之前，一行都没动那条规矩。
+         ⚠ 只管【客户写的单位和计价单位真不一样】那种。换算比 返回 null 还有
+           「客户没写单位」和「本来就同单位」两种，那两种什么都不做。 */
+      /* ⚠ 2026-08-17 收窄：原来是「单位一不一样」一刀切，会误伤。
+         引擎-解析.js 第 29 行早就画好了线，这儿【复用它】，不许另画一条：
+           散称（斤/公斤/克/两/块）↔ 整份（板/件/包/盒/箱/袋…）
+             —— 必然有倍数，换不出来就是不知道，必须空着让人填
+           整份 ↔ 整份（箱↔件、袋↔包、条↔串）
+             —— 常常是同一个东西两种叫法，一比一，拦它是白拦；
+                本来就有「闸门4 找同单位那条货」和「教一次就记住」在管
+           块 ↔ 斤 —— 老板 8/10 定死 1块=1斤，更不能拦
+         37 份真单实测：一刀切会拦 12 行，按这条线只拦该拦的 5 行。 */
+      var u1=DATA.items[L.i][3]||"";
+      var 论斤的=window.GM_PARSE.论斤的;
+      var 跨秤=u0&&u1&&u0!==u1&&论斤的&&(论斤的.test(u0)!==论斤的.test(u1));
+      if(跨秤){
+        (L.segs||[]).forEach(function(g){
+          if(g.没看清) return;                 /* 本来就要人填的，别改它的话 */
+          var 原=(g.qty0===undefined?g.qty:g.qty0)||0;
+          g.换不过来=true;
+          /* 走 引擎-解析.js 里那个统一的「说不准」——
+             清数、写话、标没看清 全在它里面，这儿不许自己来一套。 */
+          window.GM_PARSE.说不准(g,"客户写 "+原+u0+"，这货按"+u1+"卖，换不过来");
+        });
+        L.qty=0;
+      }
+      return;
+    }
     (L.segs||[]).forEach(function(g){ g.qty=Math.round((g.qty0||0)*c.mul*1000)/1000; });
     L.qty=Math.round((L.segs||[]).reduce(function(a,g){return a+(g.qty||0);},0)*1000)/1000;
     L.unit=DATA.items[L.i][3];
@@ -3073,22 +3194,15 @@ window.addEventListener("unhandledrejection",function(ev){
      列名照观麦的导入模板走，改的是 导出-观麦.js 顶上那张「列名」表，
      这里一个字都不用动。 */
   function 导观麦(){
-    if(ST.ci<0||!ST.lines.length){ alert("还没有单子"); return; }
-    if(!ST.custOK){ alert("先确认是哪家客户 —— 客户没定，导进去就是错的。"); return; }
-    /* 没看清的空数量绝不许导进观麦 —— 跟「一行存疑都不许导」一条线 */
-    var 空着2=[];
-    ST.lines.forEach(function(L){
-      (L.segs||[]).forEach(function(g){
-        if(g.没看清) 空着2.push((L.text||"")+(g.code?("@"+g.code):""));
-      });
-    });
-    if(空着2.length){
-      alert("还有 "+空着2.length+" 处识别没看清、数量空着，填完再导：\n\n"+
-        空着2.slice(0,12).join("\n")+"\n\n（表格里橙色那几行）");
+    if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
+    if(!ST.custOK){ 提醒("先确认是哪家客户"); return; }
+    /* 没看清的空数量绝不许导进观麦 —— 跟「一行存疑都不许导」一条线。
+       判断跟「确定订单」那边共用 数量还空着()，不许在这儿抄第二份。 */
+    if(数量还空着()){
       return;
     }
     var E=window.GM_EXPORT;
-    if(!E){ alert("导出模块没加载（导出-观麦.js）"); return; }
+    if(!E){ 提醒("导出模块没加载（导出-观麦.js）","红"); return; }
     var R=compute();
     /* 把屏幕上这张单摊成「一行一个商品」，跟存进订单记录的那份同一个形状 */
     var lines=R.rows.map(function(r,i){
@@ -3112,19 +3226,15 @@ window.addEventListener("unhandledrejection",function(ev){
        直接把光标送到门店下拉上，人点一下就行。 */
     if(!r.ok&&r.要选门店&&r.要选门店.length){
       var q=r.要选门店[0];
-      alert("先选门店 —— 「"+q.客户+"」在观麦那边有 "+q.店.length+" 个门店：\n\n　　"+
-            q.店.join("\n　　")+
-            "\n\n不选的话观麦不知道这单开给哪家，会报「商户异常」。\n"+
-            "（上面「门店」那个下拉，选一个就行）");
+      /* 光标下面会自动送到门店下拉上 —— 不用再拿文字教一遍怎么点 */
+      提醒("「"+q.客户+"」有 "+q.店.length+" 个门店，选一个");
       var sel=$("shop-select");
       if(sel){ sel.scrollIntoView({behavior:"smooth",block:"center"}); sel.focus(); }
       return;
     }
     if(!r.ok){
-      alert("有 "+r.拦.length+" 行还不能导，先处理掉：\n\n"+
-        r.拦.slice(0,12).map(function(x){ return "第"+x.第+"行　"+x.名+"　—— "+x.因; }).join("\n")+
-        (r.拦.length>12?("\n…还有 "+(r.拦.length-12)+" 行"):"")+
-        "\n\n（导进观麦的东西改起来麻烦，宁可现在多点两下）");
+      提醒(r.拦.slice(0,8).map(function(x){ return x.名; }).join("、")+
+          (r.拦.length>8?(" 等 "+r.拦.length+" 行"):"")+"　这几行还不能导");
       return;
     }
     var buf=E.xlsx("订单导入",r.rows,r.数字列);
@@ -3153,7 +3263,7 @@ window.addEventListener("unhandledrejection",function(ev){
 
   /* ---- 图片：手工画到 canvas 上，跟打印出来那张一个版式 ---- */
   function exportPng(){
-    if(ST.ci<0||!ST.lines.length){ alert("还没有单子"); return; }
+    if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
     var R=compute(), body=sheetBody(R);
     /* 列宽 ★ —— 合计还是 1196，从备注那栏匀了 80 给「客户点位」。
        老板 2026-08-03：点位栏原来只有 140，长的点位印不下被切掉，
@@ -3262,7 +3372,7 @@ window.addEventListener("unhandledrejection",function(ev){
 
   /* ---- Excel：用 Excel 认得的 HTML 表格，版式跟销售单一致 ---- */
   function exportXls(){
-    if(ST.ci<0||!ST.lines.length){ alert("还没有单子"); return; }
+    if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
     var R=compute(), body=sheetBody(R), note=($("order-note").value||"").trim();
     var bd="border:1px solid #000;";
     var h="<html xmlns:x='urn:schemas-microsoft-com:office:excel'><head><meta charset='utf-8'>"+
@@ -3406,7 +3516,7 @@ window.addEventListener("unhandledrejection",function(ev){
   /* 打印/导出前先存，拿到真单号、把号写回单据上，再执行导出 */
   function ordThen(fn){
     return function(){
-      if(ST.ci<0||!ST.lines.length){ alert("还没有单子"); return; }
+      if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
       memRemember(ST.ci,$("raw").value,ST.hint||"");
       ordSave().then(function(){
         var e=$("s-no"); if(e) e.textContent=ST.no;
@@ -3415,8 +3525,7 @@ window.addEventListener("unhandledrejection",function(ev){
       /* 打印/导出前先存单。存这一步要是炸了，fn() 就永远不跑 ——
          人点了「打印」什么都没发生，会以为是按钮坏了，一直点。 */
       .catch(function(e){
-        alert("存单这一步出错了，所以没给你打印/导出：\n"+String(e&&e.message||e)+
-              "\n\n先去「订单记录」看一眼这张单在不在，再重来一次。");
+        提醒("存单出错了，没给你打印/导出：\n"+String(e&&e.message||e),"红");
       });
     };
   }
@@ -3490,7 +3599,7 @@ window.addEventListener("unhandledrejection",function(ev){
      老板 2026-08-03：「这种情况你要弹出来让我去选择，不要我自己单独加。」
      —— 提醒里报出来的东西，得能当场点一下就进单，不能只告诉人「你自己去加」。 */
   function addBlankLine(预填){
-    if(ST.ci<0){ alert("先在上面选客户"); return; }
+    if(ST.ci<0){ 提醒("先在上面选客户"); return; }
     var p=预填||{};
     var q=(p.qty>0)?p.qty:1;
     /* 带名字进来的（「没写数量」那种）当正常行，让引擎去认 ——
@@ -3522,7 +3631,7 @@ window.addEventListener("unhandledrejection",function(ev){
   function ordReopen(o){
     if(!o) return;
     var ci=custIndexById(o.customer_id);
-    if(ci<0){ alert("这张单的客户「"+(o.customer_name||o.customer_id)+"」在价格库里找不到了"); return; }
+    if(ci<0){ 提醒("客户「"+(o.customer_name||o.customer_id)+"」在价格库里找不到了","红"); return; }
     ST.ci=ci; ST.manual=true; ST.custOK=true;
     $("cust-filter").value=""; fillCust($("cust-select"),"",true);
     $("cust-select").value=String(ci);
@@ -3606,7 +3715,7 @@ window.addEventListener("unhandledrejection",function(ev){
     Array.prototype.forEach.call(tb.querySelectorAll("button[data-no]"),function(b){
       if(b.className.indexOf("ordre")>=0){
         b.addEventListener("click",function(){ ordGet(b.getAttribute("data-no")).then(ordReopen)
-          .catch(function(e){ alert("调不出这张单："+String(e&&e.message||e)); }); });
+          .catch(function(e){ 提醒("调不出这张单："+String(e&&e.message||e),"红"); }); });
       }else{
         b.addEventListener("click",function(){ ordToggle(b); });
       }
@@ -3664,7 +3773,7 @@ window.addEventListener("unhandledrejection",function(ev){
       tr.parentNode.insertBefore(det,tr.nextSibling);
       btn.textContent="收起";
     };
-    ordGet(no).then(put).catch(function(e){ alert("展不开这张单的明细："+String(e&&e.message||e)); });
+    ordGet(no).then(put).catch(function(e){ 提醒("展不开这张单的明细："+String(e&&e.message||e),"红"); });
   }
 
   /* ================= 自动认客户 ================= */
@@ -4913,6 +5022,44 @@ window.addEventListener("unhandledrejection",function(ev){
     try{ 认表再摊平(份,key); }catch(e){ 识别炸了("认表",e); }
   }
 
+  /* ═══════════════════════════════════════════════════
+     方法二：不问任何人，按长相直接抓　★2026-08-16
+     ═══════════════════════════════════════════════════
+     老板 8/12 的终极逻辑：「不论是这种表格还是以后的任何一种表格，都是一个逻辑，
+     　这个表格里面有我们所需要的信息，我们只不过去对应抓取我们需要的信息来就可以了」
+
+     8/16 拿 49 份真单跟「问 AI 认表」正面比过：
+       两边一致 32 份　｜　只有方法二出货 12 份　｜　只有方法一出货 0 份
+     方法二一次都没独输过 —— 所以让它先跑，读不出来再退回去问 AI。
+
+     ⚠ 退路必须留着（老板 8/16 拍板）：读不出来 → 查读法本 → 问 AI。
+       样本只有 49 份，不留后手就是拿真单赌。
+
+     ⚠ 多张工作表都出货 = 用哪张定不下来 —— 不许自己挑，退回方法一让 AI 指认。
+       认表那条路有「用第几张表」，方法二没有这个概念，硬挑就会把两张表的货加一起。 */
+  function 抓取试一把(份){
+    var G=window.GM_抓取;
+    if(!G||!G.抓) return null;
+    var 出货的表=[], 全行=[], 全问=[];
+    (份||[]).forEach(function(z){
+      ((z&&z.grid)||[]).forEach(function(sh){
+        var rows=(sh&&sh.rows)||[];
+        if(!rows.length) return;
+        var r=null;
+        try{ r=G.抓(rows); }catch(e){ return; }
+        if(!r||!(r.行||[]).length) return;
+        出货的表.push(1);
+        全行=全行.concat(r.行);
+        (r.没抓到的||[]).forEach(function(q){ if(q&&q.说) 全问.push(q.说); });
+      });
+    });
+    if(!全行.length) return null;
+    /* 一份文件里不止一张表出了货 —— 定不下来，交回方法一 */
+    if(份.length===1&&出货的表.length>1) return null;
+    return { 抬头:{}, 行:全行, 没读懂的:全问,
+             表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
+  }
+
   function 认表再摊平(份,key){
     var T=window.GM_TABLE, S=window.GM_STRUCT;
     $("btn-ocr").disabled=true;
@@ -4937,6 +5084,17 @@ window.addEventListener("unhandledrejection",function(ev){
       收下格子表(合,怎么读的,用量);
       if(之后) 之后();
     }
+
+    /* ⓪ 先按长相直接抓（方法二）—— 谁都不问，一个 token 都不花。
+       ⚠ 整段包起来：这是条近道，它自己出毛病绝不许拖累主流程 ——
+         走不通就当没有这条近道，照旧往下走本子、走 AI。 */
+    try{
+      var 抓好了=抓取试一把(份);
+      if(抓好了){
+        收尾(抓好了,null,"按长相直接抓的，没问 AI、没花钱");
+        return;
+      }
+    }catch(e){ /* 近道自己坏了：当没有它，往下走 */ }
 
     /* ① 本子里有这张表 → 直接套，一个 token 都不花，也不再赌一次
        ⚠ 整段包起来：本子这条路是【省钱的近道】，它自己出毛病也绝不许拖累主流程。
@@ -5040,6 +5198,35 @@ window.addEventListener("unhandledrejection",function(ev){
   /* 重来 = 同一张单、同一份格子再摊一遍（选完客户之后补读不懂的那一趟）。
      这一趟必须【整个换掉】，不能当加单往后接 —— 接的话同一张单会出现两份货。
      客户也不许再猜一遍：人刚亲手选完，替他重猜等于把他的选择抹掉。 */
+  /* ★ 2026-08-17：OCR 认出来的字直接进原文框，走断句 ——
+     跟人自己粘一段文字进来【走的是同一条路】，没有第二套。
+     收尾照抄 收下格子表 的那几步（清图、复位、猜客户、跑一遍原文），
+     少一步都会出怪事：图不清空下次还在、不 applyGuess 就不认客户。 */
+  function 收下文字(文,怎么读的){
+    var 摊=String(文||"").trim();
+    var 老=$("raw").value.replace(/\s+$/,"");
+    var 是加单=老.length>0;
+    $("raw").value = 是加单 ? (老+"\n\n"+摊) : 摊;
+    /* 走文字这条路就没有「结构」这回事了 —— 留着旧的会让人拿过时的结构开单 */
+    ST.结构=null; ST.结构文字="";
+    clearImg(); $("imgfile").value=""; TXTS=[];
+    $("btn-ocr").disabled=false;
+    if(!是加单){ ST.manual=false; applyGuess(摊,""); }
+    if(是加单) 接一段(摊); else 跑一遍原文();
+    var 读不懂=0;
+    (ST.lines||[]).forEach(function(L){
+      (L.segs||[]).forEach(function(g){ if(g.没看清) 读不懂++; });
+    });
+    var 头=读不懂
+      ? '<span style="color:var(--warn)">⚠</span> <b>读出 '+ST.lines.length+' 样货，其中 '+
+        '<span style="color:var(--warn)">'+读不懂+' 格没读懂</span></b>'
+      : '<span style="color:var(--ok)">✅</span> <b>读出 '+ST.lines.length+' 样货</b>';
+    $("ocr-msg").innerHTML=头+
+      (ST.custOK?'':'　<span class="muted">·</span>　<b style="color:var(--acc)">下一步：选客户 ↑</b>')+
+      '<div class="muted" style="margin-top:4px;font-size:12.5px">'+esc(怎么读的||"")+'</div>';
+    走的哪条路="文字";
+  }
+
   function 收下格子表(J,怎么读的,用量,重来){
     var S=window.GM_STRUCT;
     var 摊=S.结构变文字(J);
@@ -5248,6 +5435,55 @@ window.addEventListener("unhandledrejection",function(ev){
       if(表份.length===OCR文本.length){
         $("ocr-msg").textContent="OCR 认完了，是规整表格 —— 只问 AI 哪列是什么（很省）…";
         认表跑一趟(表份,key);
+        return;
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════
+       OCR 认出字了、但不是规整表格 —— 走断句，不让 AI 碰数字　★2026-08-17
+       ═══════════════════════════════════════════════════
+       老板 8/17：「应该把它交给 AI，拆开之后再让断句继续断，
+                   所以它还是一条路，只不过加了一个东西」
+
+       原来这儿是：整张图（或 OCR 的字）交给 AI，让它连数字一起填进格子表。
+       毛病是 AI 边抄边切会【整段丢】—— 江云 8/10 丢了三段共 11 斤，
+       客户自己的总数也没算这些，两边一起错，没有一道校验拦得住。
+
+       现在分两步，AI 一个数字都不碰：
+         ① 断句先读一遍，对账（GM_PARSE.捞干净了吗）
+            捞全了 → 直接进原文框，跟人自己粘文字进来一模一样，一个 token 不花
+         ② 捞不全（一整单挤成一行那种）→ 请 AI【只拆行】，拆完还是交给断句
+
+       130 份真单实测：归这条路管的 69 份里，53 份断句直接捞全，
+       9 份挤成一行的全被拦下来交给 AI 拆，一份没漏判。 */
+    if(OCR走通&&OCR文本.length&&PDFS.length===0&&TXTS.length===0
+       &&window.GM_PARSE&&window.GM_PARSE.捞干净了吗){
+      var OCR全文=OCR文本.map(function(t){ return t.text; }).join("\n");
+      var 账=window.GM_PARSE.捞干净了吗(OCR全文);
+      if(账.够){
+        收下文字(OCR全文,"OCR 认的字，本地断句读的 —— 一个 token 都没花");
+        return;
+      }
+      if(!账.空){
+        /* 断句捞不干净 → 请 AI 拆行。它只加换行，数字还是断句读。 */
+        $("ocr-msg").textContent="这单挤成一行了（认出 "+账.原文+" 处数量，断句只切出 "+
+          账.捞到+" 处）—— 请 AI 拆一下行，数字还是本地读…";
+        打接口({ model:"claude-opus-5", max_tokens:8000,
+                 thinking:{type:"disabled"}, output_config:{effort:"low"},
+                 messages:[{role:"user",content:[
+                   {type:"text",text:(window.GM_STRUCT&&window.GM_STRUCT.拆行提示词)||"",
+                    cache_control:{type:"ephemeral"}},
+                   {type:"text",text:OCR全文}]}] },key)
+        .then(function(j){
+          var 错=挑错(j);
+          if(错){ $("btn-ocr").disabled=false; 识别败了("拆行失败："+错); return; }
+          var 拆好的=String(取文(j)||"").replace(/^```[a-z]*\s*/i,"").replace(/```\s*$/,"").trim();
+          if(!拆好的){ $("btn-ocr").disabled=false; 识别败了("AI 没拆出东西来"); return; }
+          var 账2=window.GM_PARSE.捞干净了吗(拆好的);
+          收下文字(拆好的,"AI 拆的行、本地断句读的数字（AI 没碰数字）"+
+                   (账2.够?"":"　⚠ 拆完还是有 "+(账2.原文-账2.捞到)+" 处没切出来，核一下"));
+        })
+        .catch(function(e){ $("btn-ocr").disabled=false; 识别炸了("拆行",e); });
         return;
       }
     }
@@ -5688,7 +5924,7 @@ window.addEventListener("unhandledrejection",function(ev){
       /* 选中「＋ 新增门店…」= 要加一家店，不是选了一家店 —— 弹出输入框，
          下拉自己弹回上一个选择，别让这个假选项落到单子上。 */
       if(this.value==="__新增__"){
-        if(ST.ci<0){ alert("先选客户"); fillShop(""); return; }
+        if(ST.ci<0){ 提醒("先选客户"); fillShop(""); return; }
         this.value=this.getAttribute("data-上次")||"";
         var bar=$("shop-bar");
         if(bar){ bar.hidden=false; var i=$("shop-new"); if(i){ i.value=""; i.focus(); } }
@@ -5702,7 +5938,7 @@ window.addEventListener("unhandledrejection",function(ev){
       ST.dirty=true; renderMatch();
     });
     function 记住店(){
-      if(ST.ci<0){ alert("先选客户"); return; }
+      if(ST.ci<0){ 提醒("先选客户"); return; }
       var v=$("shop-new").value.trim();
       if(!v){ $("shop-new").focus(); return; }
       shopAdd(custId(ST.ci),v);
@@ -5719,7 +5955,7 @@ window.addEventListener("unhandledrejection",function(ev){
       var v=shopNow(); if(!v||ST.ci<0) return;
       /* 观麦带过来的商户名不给删 —— 导观麦时「商户名」那列填的就是它 */
       if(是观麦的店(custId(ST.ci),v)){
-        alert("「"+v+"」是观麦那边的商户名，删不得。\n\n导观麦的时候「商户名」那一列填的就是它，\n删了这张单就导不进去了。");
+        提醒("「"+v+"」是观麦的商户名，删不得 —— 删了这张单导不进观麦","红");
         return;
       }
       if(!confirm("把「"+v+"」从这个客户的门店名单里删掉？\n（只是删名单，已经开过的单不受影响）")) return;
@@ -5809,27 +6045,18 @@ window.addEventListener("unhandledrejection",function(ev){
       return n;
     }
     function 确定订单(){
-      if(ST.ci<0||!ST.lines.length){ alert("还没有单子"); return; }
-      if(!ST.custOK){ alert("先确认是哪家客户 —— 客户没定，价格就是错的。"); return; }
+      if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
+      if(!ST.custOK){ 提醒("先确认是哪家客户"); return; }
       /* 识别没看清、还空着的必须先填 —— 空着确定，就是把一段货当 0 发出去。
          老板 2026-08-03：不确定的写 ?，我们自己输入。 */
-      var 空着=[];
-      ST.lines.forEach(function(L){
-        (L.segs||[]).forEach(function(g){
-          if(g.没看清) 空着.push((L.text||"")+(g.code?("@"+g.code):""));
-        });
-      });
-      if(空着.length){
-        alert("还有 "+空着.length+" 处识别没看清、数量空着，先填一下：\n\n"+
-          空着.slice(0,12).join("\n")+(空着.length>12?("\n…还有 "+(空着.length-12)+" 处"):"")+
-          "\n\n（表格里橙色那几行）");
-        return;
-      }
+      if(数量还空着()) return;              /* 跟「导观麦」共用同一份判断 */
       if(点名没下落()) return;              /* ★ 有行没下落 → 拦住，见 点名报告 那段 */
       /* 存疑的行也会被一起学会 —— 学会 = 以后不再问。
-         所以先说清楚还剩几行是机器自己挑的，让人有机会回去看一眼。 */
+         所以先说清楚还剩几行是机器自己挑的，让人有机会回去看一眼。
+         ⚠ 2026-08-16 改：原来问的是「先回去看一眼？」，可点【确定】却是「不看了」——
+           点头的意思是反的，最容易点错。改成问句和按钮一个方向。 */
       var 存疑=ST.lines.filter(function(L){ return L&&!L.manual&&(L.how==="fuzzy"||L.how==="cross"); }).length;
-      if(存疑&&!confirm("还有 "+存疑+" 行是存疑的（机器自己挑的）。\n\n点确定 = 就当它们是对的，并且以后照这样记住。\n先回去看一眼？"))
+      if(存疑&&!confirm(存疑+" 行是机器自己猜的，就这样出单？"))
         return;
       var msg=$("confirm-msg");
       if(msg) msg.textContent="正在存…";
@@ -5926,13 +6153,13 @@ window.addEventListener("unhandledrejection",function(ev){
       if(!needWho()){ renderCustDetail(); return; }
       if(f==="price"){
         var v=parseFloat(String(el.value).replace(/[^\d.\-]/g,""));
-        if(!(v>=0)){ alert("单价要填个数字"); renderCustDetail(); return; }
+        if(!(v>=0)){ 提醒("单价要填个数字"); renderCustDetail(); return; }
         v=Math.round(v*100)/100;
         if(v===t.price){ renderCustDetail(); return; }
         pxSet(sku,"price",v,t.prod,"单价",n2(t.price),n2(v));
       }else{
         var a=String(el.value).trim();
-        if(!a){ alert("客户叫法不能空 —— 空了下次就识别不出来了"); renderCustDetail(); return; }
+        if(!a){ 提醒("客户叫法不能空 —— 空了下次就识别不出来了"); renderCustDetail(); return; }
         if(a===t.alias){ renderCustDetail(); return; }
         pxSet(sku,"alias",a,t.prod,"客户叫法",t.alias,a);
       }
@@ -5972,7 +6199,7 @@ window.addEventListener("unhandledrejection",function(ev){
 
     $("cd-reset").addEventListener("click",function(){
       var cid=CL.cid, n=Object.keys(OV.px[cid]||{}).length;
-      if(!n){ alert("这家客户没有改过的东西"); return; }
+      if(!n){ 提醒("这家客户没有改过的东西"); return; }
       if(!confirm("把这家客户改过的 "+n+" 项全部还原成观麦的价和叫法？\n新增的品类不会删。\n\n这一步撤不回来。")) return;
       if(!needWho()) return;
       delete OV.px[cid];
@@ -6061,7 +6288,7 @@ window.addEventListener("unhandledrejection",function(ev){
       var ci=parseInt($("sp-cust").value,10);
       var codes=$("sp-code").value.split(/[,，\s\/]+/).map(function(x){return x.trim();}).filter(Boolean);
       var off=parseFloat($("sp-off").value);
-      if(!codes.length||isNaN(off)){ alert("点位号和减价额都要填"); return; }
+      if(!codes.length||isNaN(off)){ 提醒("点位号和减价额都要填"); return; }
       OV.spots.push({cust:custId(ci),codes:codes,off:off});
       ovSave(); $("sp-code").value=""; $("sp-off").value="";
       renderOverlay(); renderCustKV(); renderMatch();
@@ -6195,9 +6422,9 @@ window.addEventListener("unhandledrejection",function(ev){
     $("ov-sync").addEventListener("click",function(){ ovStatus("正在跟服务器对…"); ovSync(); });
     $("key-save").addEventListener("click",function(){
       var v=$("api-key").value.trim();
-      if(!v){ alert("先粘贴密钥"); return; }
-      try{ localStorage.setItem("gm_key",v); }catch(e){ alert("保存失败"); return; }
-      $("api-key").value=""; keyStatus(); alert("已保存到本机浏览器");
+      if(!v){ 提醒("先粘贴密钥"); return; }
+      try{ localStorage.setItem("gm_key",v); }catch(e){ 提醒("保存失败","红"); return; }
+      $("api-key").value=""; keyStatus(); 提醒("密钥存好了");
     });
     $("key-clear").addEventListener("click",function(){
       try{ localStorage.removeItem("gm_key"); }catch(e){}
