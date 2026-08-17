@@ -1,6 +1,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ricko · 开单台</title>
+<title>尝元 · 开单台</title>
 
 <style>
   :root{
@@ -373,7 +373,7 @@
 </style>
 
 <header class="topbar">
-  <div class="name">Ricko 开单台</div>
+  <div class="name">尝元 开单台</div>
   <span class="pill" id="data-pill">加载中…</span>
   <button class="who" id="who-btn" title="改价格要记是谁改的，点这里设置">操作人：<b>未设置</b></button>
   <nav class="nav" role="tablist">
@@ -874,17 +874,17 @@ window.addEventListener("unhandledrejection",function(ev){
 </script>
 
 <script src="数据-价格库.js"></script>
-<script src="对照-预置.js?v=20260802z"></script>
+<script src="对照-预置.js?v=20260817a"></script>
 <script src="数据-常用规格.js"></script>
 <script src="数据-换算.js?v=20260802z"></script>
 <script src="引擎-读文件.js?v=20260802z"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
-<script src="引擎-解析.js?v=20260811c"></script>
-<script src="引擎-读结构.js?v=20260811b"></script>
+<script src="引擎-解析.js?v=20260817a"></script>
+<script src="引擎-读结构.js?v=20260817a"></script>
 <script src="引擎-认表.js?v=20260811b"></script>
 <script src="新-按内容认单.js?v=20260812"></script>
-<script src="引擎-抓取.js?v=20260816a"></script>
+<script src="引擎-抓取.js?v=20260817a"></script>
 <script src="引擎-点位册.js?v=20260804a"></script>
 <script src="引擎-匹配.js?v=20260802z"></script>
 <script src="数据-切法规矩.js?v=20260810a"></script>
@@ -894,6 +894,15 @@ window.addEventListener("unhandledrejection",function(ev){
 <script>
 (function(){
   "use strict";
+  /* ── 版本号：改了这个页面，就把这里也改了 ──────────────────────
+     格式 v + 年月日 + 一个小写字母（同一天改第二次就 a→b→c）。
+     它显示在页头，部署脚本也靠 grep 这一串来验线上是不是最新的。
+     不改它 = 线上线下看着一模一样，出了事查不出是哪一版。
+     ⚠ 顺带：上面每个 js 标签尾巴上的 ?v= 是浏览器缓存戳，
+        改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
+        （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
+          注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
+  var 版本号 = "v20260817a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5726,7 +5735,7 @@ window.addEventListener("unhandledrejection",function(ev){
        反过来的话索引里还是观麦的老价，改了不生效。 */
     DATA=window.GM_DATA; ovLoad(); applyAdd(); applyPX(); buildIndex();
     /* 版本戳：看不到 c 就是浏览器还在跑旧代码，Ctrl+F5 强制刷新 */
-    $("data-pill").textContent=DATA.custs.length+" 客户 / "+DATA.items.length+" 条价格 · v20260811b";
+    $("data-pill").textContent=DATA.custs.length+" 客户 / "+DATA.items.length+" 条价格 · "+版本号;
     $("foot-note").textContent="价格库更新时间："+(DATA.updated||"未知")+"　·　对照和点位规则保存在本机浏览器。";
     fillCust($("cust-select"),"",true); fillCust($("sp-cust"),""); fillCust($("map-cust"),"");
     fillMapSku();
