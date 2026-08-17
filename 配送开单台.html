@@ -885,7 +885,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="引擎-读文件.js?v=20260802z"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
-<script src="引擎-解析.js?v=20260817a"></script>
+<script src="引擎-解析.js?v=20260818a"></script>
 <script src="引擎-读结构.js?v=20260817a"></script>
 <script src="引擎-认表.js?v=20260811b"></script>
 <script src="新-按内容认单.js?v=20260812"></script>
@@ -907,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260817f";
+  var 版本号 = "v20260818a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2094,7 +2094,13 @@ window.addEventListener("unhandledrejection",function(ev){
         var q=m?parseFloat(m[1]):0, u=m?(m[2]||"").trim():"";
         /* 数量单位照客户写的原样放（那是他写的，不是我们编的），两个都能在行上改。
            商品让人挑 —— manual 标着，重算不会绕开人挑的结果。 */
-        ST.lines.unshift({ text:"", unit:u, qty:q,
+        /* ★ 2026-08-18 老板：「你这个就写一个手动加的，我哪知道是啥？
+             你要把识别不出来的产品名称写出来，我才可以去做这个事情啊。」
+           原来这儿是 text:"" —— 客户写的原话在 z.原句 里躺着，却被扔掉，
+           人对着一个空行和「500 串」根本没法挑货。原话照抄，一个字不改。 */
+        var 来处=String(z.原句||"").trim() ||
+                 [z.商品, z.点位, z.写的].filter(Boolean).join(" ");   /* 老单没原句时的兜底 */
+        ST.lines.unshift({ text:来处, 只是来处:true, unit:u, qty:q,
           segs:[{ qty:q, unit:u, code:z.点位||"", note:"" }],
           i:-1, how:"none", cands:[], manual:true, forceFix:true });
       });
@@ -2287,7 +2293,17 @@ window.addEventListener("unhandledrejection",function(ev){
       tr.innerHTML='<td class="muted">'+(n+1)+'</td>'+
         /* 每一行都能删 —— 识别多了一条、客户临时说不要，直接去掉。
            原来只有「手动加的」行才有删按钮，识别出来的多余行没法处理。 */
-        '<td>'+(r.L.manual?'<span class="tag info">手动加的</span>':esc(r.L.text))+
+        /* ★ 2026-08-18：原来这里是【二选一】—— manual 为真就只显示「手动加的」标签，
+             把原文顶掉了。所以就算把原句填进 text，人还是看不见。
+             改成并排：原文照旧显示，「手动加的」缩成后面一个小角标。
+           ⚠ 老板：「我填好之后，原文就消失掉」——
+             只是来处的那种行，一旦挑好了商品（r.it 有值）就把原句收起来，
+             它的活儿干完了；没挑好之前必须一直摆着。
+           ⚠ 判据是 r.it 不是 r.i —— 这个行对象上压根没有 i（见 rows.push），
+             写 r.i>=0 会永远是 false，原句就永远收不起来。 */
+        '<td>'+
+          ((r.L.只是来处 && r.it) ? '' : esc(r.L.text))+
+          (r.L.manual?' <span class="tag info" title="这一行是系统替你加进来的，商品要你挑">手动加的</span>':'')+
           /* 调出来加单：老行冻住原样不动，新加的标出来 —— 两边一眼分得开 */
           (r.L.冻?' <span class="tag info" title="这是原单上的行，调出来之后原样不动，不会被重新识别">原单</span>':'')+
           (r.L.加单?' <span class="tag ok" title="这次新加进来的">补单</span>':'')+
@@ -3599,7 +3615,10 @@ window.addEventListener("unhandledrejection",function(ev){
         var sku=btn.getAttribute("data-sku"), n=parseFloat(btn.getAttribute("data-n"))||1;
         var k=(IDX.byCust[ST.ci]||{sku:{}}).sku[sku];
         if(k===undefined) return;
-        ST.lines.push({ text:"", unit:DATA.items[k][3], qty:n,
+        /* ★ 2026-08-18：这儿原来也是 text:"" —— 摆进单子的行必须说得清自己从哪来，
+           一处都不许留空（体检-行要有来处.js 盯着）。这一条是你点「常买」点出来的。 */
+        ST.lines.push({ text:"你点的『常买』· "+DATA.items[k][2], 只是来处:true,
+                        unit:DATA.items[k][3], qty:n,
                         segs:[{qty:n,code:"",note:""}],
                         i:k, how:"learned", cands:[k], manual:true });
         ST.dirty=true; renderMatch();
