@@ -238,6 +238,11 @@
   .muted{color:var(--ink3);font-size:12.5px}
   .arrow{color:var(--ink3);margin-right:4px}
   td input.qty{width:70px;padding:3px 7px;text-align:right;font-family:var(--figs)}
+  /* 单位框：2026-08-17 老板「单位这里不要搞这么大」。
+     它一直没有自己的样式，套的是通用 input 的 width:100%、padding:8px 11px ——
+     一个「板」字撑成半屏，比旁边 70px 的数量框还宽好几倍。
+     跟数量框对齐：一样的高矮、一样的内边距，宽度够放「公斤」两个字就行。 */
+  td input.unit-in{width:56px;padding:3px 7px;text-align:center}
   /* 无价的行就地填价：橙边提示「这里等着你填」 */
   td input.fixp{width:74px;padding:3px 7px;text-align:right;font-family:var(--figs);
     border:1px solid var(--acc-line);background:#12161A;color:var(--ink);border-radius:6px}
@@ -902,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260817d";
+  var 版本号 = "v20260817e";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
