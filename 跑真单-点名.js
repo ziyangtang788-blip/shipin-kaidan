@@ -8,6 +8,8 @@
 const fs = require("fs"), path = require("path");
 global.window = global.window || {};
 require("./引擎-解析.js");
+/* ★ 2026-08-17：抓取判品名列要拿价格库当尺子。不加载它会静默退回老办法，测了个假的。 */
+require("./数据-价格库.js");
 require("./引擎-抓取.js");
 const G = window.GM_抓取;
 
