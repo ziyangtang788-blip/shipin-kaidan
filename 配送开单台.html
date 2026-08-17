@@ -884,7 +884,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="引擎-读结构.js?v=20260817a"></script>
 <script src="引擎-认表.js?v=20260811b"></script>
 <script src="新-按内容认单.js?v=20260812"></script>
-<script src="引擎-抓取.js?v=20260817b"></script>
+<script src="引擎-抓取.js?v=20260817c"></script>
 <script src="引擎-点位册.js?v=20260804a"></script>
 <script src="引擎-匹配.js?v=20260802z"></script>
 <script src="数据-切法规矩.js?v=20260810a"></script>
@@ -902,7 +902,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260817b";
+  var 版本号 = "v20260817c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -4743,6 +4743,10 @@ window.addEventListener("unhandledrejection",function(ev){
       '<button class="btn ghost" id="pai-rq">日期</button>'+
       '<button class="btn ghost" id="pai-gg">规格</button>'+
       '<button class="btn ghost" id="pai-cc">餐次</button>'+
+      /* ★ 2026-08-17 老板：「点位还有一个东西就是没有点位的选择。」
+         只在问某一列是不是点位时给这个口子 —— 横轴那条路的一排必是四选一，
+         多给一个「都不是」反而让人犹豫。 */
+      (判.要都不是?'<button class="btn ghost" id="pai-bs">都不是</button>':'')+
       '</div>'+
       '<div class="muted" style="margin-top:8px">'+
       '点完就记住，以后这些名字不再问你。</div></div>';
@@ -4750,6 +4754,7 @@ window.addEventListener("unhandledrejection",function(ev){
     $("pai-rq").onclick=function(){回调("日期");};
     $("pai-gg").onclick=function(){回调("规格");};
     $("pai-cc").onclick=function(){回调("餐次");};
+    if(判.要都不是) $("pai-bs").onclick=function(){回调("都不是");};
   }
 
   /* ══════════════ 读法本 ★（2026-08-11）══════════════
@@ -5046,26 +5051,41 @@ window.addEventListener("unhandledrejection",function(ev){
 
      ⚠ 多张工作表都出货 = 用哪张定不下来 —— 不许自己挑，退回方法一让 AI 指认。
        认表那条路有「用第几张表」，方法二没有这个概念，硬挑就会把两张表的货加一起。 */
-  function 抓取试一把(份){
+  /* 选项.点位列 = 人在弹窗里点过「这列是送货点位」之后，原样再抓一遍。
+     ★ 只有人点过才传，机器不许自己填 —— 猜点位跟猜品名是同一个病。 */
+  function 抓取试一把(份,选项){
     var G=window.GM_抓取;
     if(!G||!G.抓) return null;
-    var 出货的表=[], 全行=[], 全问=[];
+    var 出货的表=[], 全行=[], 全问=[], 待问点位=null;
     (份||[]).forEach(function(z){
       ((z&&z.grid)||[]).forEach(function(sh){
         var rows=(sh&&sh.rows)||[];
         if(!rows.length) return;
         var r=null;
-        try{ r=G.抓(rows); }catch(e){ return; }
+        try{ r=G.抓(rows,选项||{}); }catch(e){ return; }
         if(!r||!(r.行||[]).length) return;
         出货的表.push(1);
         全行=全行.concat(r.行);
-        (r.没抓到的||[]).forEach(function(q){ if(q&&q.说) 全问.push(q.说); });
+        (r.没抓到的||[]).forEach(function(q){
+          if(!q) return;
+          /* 引擎说「这一整列没归宿、像是送货点位」—— 收集整列的原文，
+             交给下面那套【排名单】去问、去记（页面里早就有这一套，不另起一份）。 */
+          if(q.问点位&&q.列&&!待问点位){
+            var 样=[];
+            for(var i=0;i<rows.length&&样.length<40;i++){
+              var v=String(((rows[i]||[])[q.列-1])==null?"":rows[i][q.列-1]).trim();
+              if(v&&样.indexOf(v)<0) 样.push(v);
+            }
+            if(样.length) 待问点位={列:q.列, 样本:样};
+          }
+          if(q.说) 全问.push(q.说);
+        });
       });
     });
     if(!全行.length) return null;
     /* 一份文件里不止一张表出了货 —— 定不下来，交回方法一 */
     if(份.length===1&&出货的表.length>1) return null;
-    return { 抬头:{}, 行:全行, 没读懂的:全问,
+    return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位,
              表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
   }
 
@@ -5100,6 +5120,29 @@ window.addEventListener("unhandledrejection",function(ev){
     try{
       var 抓好了=抓取试一把(份);
       if(抓好了){
+        /* ★ 2026-08-17：整列没归宿、长得像送货点位 —— 停下来问一句再收单。
+           老板：「剩下那列你最后问一下他是不是点位就可以了，问完下次也不需要再问。」
+           ⚠ 走的是【排名单】那一套（问这排 / 排记），页面里早就有，不另起第二份。
+             它按【名字】记，不按表、不按客户 —— 同一个点位名换家客户也认得。
+           ⚠ 答过了就不再弹：这排是什么() 里六成名字有答案就直接用。 */
+        var 待=抓好了.待问点位;
+        if(待){
+          var 判点=这排是什么(待.样本);
+          if(判点.要问||!判点.是){
+            问这排(待.样本, {为什么:"这一整列没派上用场，看着像送货点位", 要都不是:true}, function(v){
+              排记(待.样本,v);                     /* 答完记住，以后这些名字不再问 */
+              var 再=null;
+              if(v==="点位"){ try{ 再=抓取试一把(份,{点位列:待.列}); }catch(e){ 再=null; } }
+              收尾(再||抓好了,null,"按长相直接抓的（这一列＝"+v+"，你点的，已记住）");
+            });
+            return;
+          }
+          if(判点.是==="点位"){
+            var 套=null;
+            try{ 套=抓取试一把(份,{点位列:待.列}); }catch(e){ 套=null; }
+            if(套) 抓好了=套;
+          }
+        }
         收尾(抓好了,null,"按长相直接抓的，没问 AI、没花钱");
         return;
       }
