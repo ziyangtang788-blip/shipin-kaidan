@@ -882,12 +882,12 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="对照-预置.js?v=20260817a"></script>
 <script src="数据-常用规格.js"></script>
 <script src="数据-换算.js?v=20260802z"></script>
-<script src="引擎-读文件.js?v=20260802z"></script>
+<script src="引擎-读文件.js?v=20260818m"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
-<script src="引擎-解析.js?v=20260818e"></script>
-<script src="引擎-读结构.js?v=20260817a"></script>
-<script src="引擎-认表.js?v=20260811b"></script>
+<script src="引擎-解析.js?v=20260818u"></script>
+<script src="引擎-读结构.js?v=20260818u"></script>
+<script src="引擎-认表.js?v=20260818t"></script>
 <script src="新-按内容认单.js?v=20260812"></script>
 <script src="引擎-抓取.js?v=20260818f"></script>
 <script src="引擎-点位册.js?v=20260804a"></script>
@@ -907,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260818k";
+  var 版本号 = "v20260818u";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1007,6 +1007,15 @@ window.addEventListener("unhandledrejection",function(ev){
   function ovLoad(){ try{var s=localStorage.getItem("gm_ov_v2"); if(s) OV=JSON.parse(s);}catch(e){}
     if(!OV.maps)OV.maps={}; if(!OV.spots)OV.spots=[]; if(!OV.mem)OV.mem={}; if(!OV.gmap)OV.gmap={};
     if(!OV.px)OV.px={}; if(!OV.padd)OV.padd={}; if(!OV.plog)OV.plog=[];
+    /* ★ 2026-08-18：把误记成「点位」的纯数量清出去。
+       8/18 一口气记进 12 条（4斤 1斤 3斤 / 35斤 2斤 50斤 …），还同步上了服务器。
+       在这儿清，是因为它得在【每台电脑、每次开页面】都自动生效 ——
+       靠谁手动去删，换台电脑又冒出来。 */
+    try{
+      Object.keys(OV.排名单||{}).forEach(function(n){
+        if((OV.排名单[n]||{}).是==="点位"&&像数量.test(String(n).trim())) delete OV.排名单[n];
+      });
+    }catch(e){}
     if(!OV.shops)OV.shops={};        /* 每个客户底下的门店名单 */
     if(!OV.排名单)OV.排名单={};      /* 一个名字 → 它是什么（点位/日期/规格/餐次），全网通用 */
     if(!OV.gone)OV.gone={};          /* 忘掉过的键 —— 见下面「学到的东西存服务器」 */
@@ -1092,6 +1101,58 @@ window.addEventListener("unhandledrejection",function(ev){
       if(JSON.stringify(out)!==JSON.stringify(loc)) 变++;
       OV[f]=out;
     });
+    /* ★ 2026-08-18：新建的品 / 改过的价 / 改价留痕 —— 原来这三样根本不参与同步，
+       服务器那头也不收（后端-server.js 的名单里没有）。
+       于是「客户这么叫 → 那个新品」的对照上了云，被指的那个品还留在本机 ——
+       换台电脑打开，对照指着一个不存在的商品，那行退回存疑，
+       界面还亮着「忘掉重学」。线上已经攒了 4 条这种死键。
+       ⚠ who 不同步：那是「这台机器前面坐的是谁」。 */
+    var 品价变了=0;
+    /* 新建的品：按 sku 去重收下 —— sku 带时间戳天生不撞，两台电脑各建各的都留着 */
+    if(!OV.padd) OV.padd={};
+    Object.keys(d.padd||{}).forEach(function(cid){
+      var 有={}; (OV.padd[cid]||[]).forEach(function(a){ if(a&&a.sku) 有[a.sku]=1; });
+      (d.padd[cid]||[]).forEach(function(a){
+        if(!a||!a.sku||有[a.sku]) return;
+        (OV.padd[cid]=OV.padd[cid]||[]).push(a); 变++; 品价变了++;
+      });
+    });
+    /* 改过的价：跟 maps 一个待遇 —— 服务器那份为底，本机没同步过的盖回去，忘掉的删掉 */
+    if(!OV.px) OV.px={};
+    (function(){
+      var out={};
+      Object.keys(d.px||{}).forEach(function(cid){ out[cid]=Object.assign({},d.px[cid]); });
+      Object.keys(OV.px).forEach(function(cid){
+        Object.keys(OV.px[cid]||{}).forEach(function(sku){
+          if(OV.dirty["px|"+cid+"|"+sku]){ out[cid]=out[cid]||{}; out[cid][sku]=OV.px[cid][sku]; }
+        });
+      });
+      Object.keys(OV.gone).forEach(function(g){
+        if(g.slice(0,3)!=="px|") return;
+        var rest=g.slice(3), j=rest.indexOf("|"); if(j<0) return;
+        var cid=rest.slice(0,j), sku=rest.slice(j+1);
+        if(OV.dirty["px|"+cid+"|"+sku]) return;      /* 还原之后又改了 → 听后改的 */
+        if(out[cid]) delete out[cid][sku];
+      });
+      Object.keys(out).forEach(function(cid){ if(!Object.keys(out[cid]).length) delete out[cid]; });
+      if(JSON.stringify(out)!==JSON.stringify(OV.px)){ OV.px=out; 变++; 品价变了++; }
+    })();
+    /* 改价留痕：去重追加，新的在前，留 2000 条 */
+    if(!OV.plog) OV.plog=[];
+    if((d.plog||[]).length){
+      var 见={}; OV.plog.forEach(function(l){ 见[JSON.stringify(l)]=1; });
+      (d.plog||[]).forEach(function(l){ var k=JSON.stringify(l); if(!见[k]){ 见[k]=1; OV.plog.push(l); 变++; } });
+      if(OV.plog.length>2000) OV.plog.length=2000;
+    }
+    /* 门店名单：跟 padd 一个待遇 —— 按客户去重收下，两台电脑各填各的店都留着 */
+    if(!OV.shops) OV.shops={};
+    Object.keys(d.shops||{}).forEach(function(cid){
+      var a=OV.shops[cid]=OV.shops[cid]||[];
+      (d.shops[cid]||[]).forEach(function(s){ if(s&&a.indexOf(s)<0){ a.push(s); 变++; } });
+    });
+    /* ⚠ 收下新品/新价之后必须重盖一遍、重建索引 —— 不然它们进了本子却配不上货，
+       等于白同步（页面上还是「认不出」）。 */
+    if(品价变了){ try{ applyAdd(); applyPX(); buildIndex(); }catch(e){} }
     Object.keys(d.mem||{}).forEach(function(cid){ if(OV.mem[cid]===undefined){ OV.mem[cid]=d.mem[cid]; 变++; } });
     /* 点位册：服务器那份合进来，同一个点谁见得多听谁的 */
     if(!OV.spotbook) OV.spotbook={};
@@ -1240,6 +1301,9 @@ window.addEventListener("unhandledrejection",function(ev){
     OV.px[cid]=OV.px[cid]||{};
     OV.px[cid][sku]=OV.px[cid][sku]||{};
     OV.px[cid][sku].p=p;
+    /* ★ 2026-08-18：打上「本机刚改过」的记号。不打的话，下一次跟服务器对齐时
+       以服务器那份为底，刚改的价会被悄悄冲回去。 */
+    delete OV.gone["px|"+cid+"|"+sku]; ovTouch("px",cid+"|"+sku);
     logChange(cid,name||sku,"改价",(旧===null?"—":n2(旧)),n2(p));
     ovSave(); applyPX(); buildIndex();
     return true;
@@ -1655,6 +1719,44 @@ window.addEventListener("unhandledrejection",function(ev){
       return L&&!L.manual&&norm(L.text||"")===n&&unitNorm(L.unit||"")===u;
     });
   }
+  /* ===== 人亲手拍板的，一律钉住 ★（2026-08-18）=====
+     老板当场撞到：「就是选不了品」「整个订单没法完成」。
+     在下拉里挑一个商品，点完什么都没变，点一百次都一样。
+
+     根子是 8/18 砍掉「自动折板」那一改改过头了 —— 连【人自己挑的】
+     也被当成「系统在瞎猜」拦掉。拿毅服那家真数据复现，两个方向都中：
+       客户写「板」、挑的货按「斤」卖
+         → 引擎-解析.js 那道「跨秤不许记」一个字都不写（learnWrite 直接 return），
+           rematch 当场把这一行打回原来那个 —— 人点了，系统假装没看见。
+       客户写「斤」、挑的货按「板」卖
+         → 记是记住了，可 引擎-匹配.js 那道「学过的也要过单位关」判成 fuzzy，
+           这一行永远挂「存疑」；存疑行被「确定订单」「导观麦」拦住 → 单子出不来。
+
+     ⚠ 那两道闸【不动】—— 它们管的是「系统自己猜」，8/18 老板要的就是这个。
+       但人在下拉里点的那一下不是猜，是拍板，谁都不许推翻。
+       老板定的是「系统不许替人换算」，不是「人自己挑的也不算数」。
+
+     所以这儿只做一件事：learnPair + rematch 走完，回头看一眼落没落到他挑的那个，
+     没落上就直接钉死 —— 跟「只改这一行」那支同一套写法（那支一直是好的，
+     所以才会出现「一行的时候选不动、同词好几行选『只改这一行』反而动得了」这种怪事）。
+
+     ⚠ 已经落对了、又不存疑的行一个字都不许动：不然每挑一次就把正常行全钉死，
+       以后教什么都跟不上了。
+     ⚠ 钉完要再跑一遍 换到计价单位 —— 换了个按别的单位卖的货，数量得跟着重算。
+       跨秤换不出来的，它自己会清数、标「没看清」让人填（老板 8/16 定的），
+       这一步照旧一个数都不许替人编。 */
+  function 钉住人挑的(行s,sku){
+    var b=IDX.byCust[ST.ci], k=b&&b.sku[sku];
+    if(k===undefined) return;                       /* 不在这家价格表里 —— 不许瞎钉 */
+    (行s||[]).forEach(function(x){
+      if(!x) return;
+      if(x.i===k&&window.GM_MATCH.commits(x.how)) return;   /* 本来就对，别动 */
+      x.i=k; x.how="learned"; x.cands=[k];
+      x.forceFix=false; x.pinned=true; x.冻=false;
+      换到计价单位(x);
+    });
+  }
+
   function 这词教不得(text,unit,sku){
     var 同=同词几行(text,unit);
     if(同.length<2) return false;
@@ -1739,7 +1841,10 @@ window.addEventListener("unhandledrejection",function(ev){
     /* 挑完就收起来 —— 不清掉 forceFix 的话，点过「改」的行会一直挂着下拉框，
        看不到「→ 商品名」那个确认好的样子，人会以为没生效。 */
     if(L) L.forceFix=false;
-    rematch(); renderMatch(); renderOverlay(); renderCustKV();
+    rematch();
+    /* ★ 人挑的必须留住 —— rematch 有可能刚把它打回去了，见上面 钉住人挑的 */
+    钉住人挑的(同.concat(L?[L]:[]),sku);
+    renderMatch(); renderOverlay(); renderCustKV();
   }
   /* 当前展开的那个框。滚动/缩放的监听只挂一次 ——
      每行挂一个的话，renderMatch 每重画一次就多几十个，一天下来能堆上千个。 */
@@ -2258,9 +2363,21 @@ window.addEventListener("unhandledrejection",function(ev){
                       (r.L.how==="cross"?'<span class="tag info">别家这么叫</span>':'<span class="tag warn">存疑</span>'))
                    :'<span class="tag sale">认不出</span>';
         var da=' data-text="'+esc(r.L.text)+'" data-unit="'+esc(lu)+'" data-li="'+li+'"';
+        /* ★ 2026-08-18：把【它现在指着哪个货】摆出来。
+           老板原话：「选择之后也没显示」。
+           原来这一支从头到尾只画标签和按钮，一个商品名都没有 ——
+           右边单价、金额明明已经按某个货算出来了，人却看不见那是哪个货，
+           只能拿单价倒着猜。存疑不是「什么都不知道」，是「拿不准该不该拍板」，
+           拿不准的那个是什么，必须让人看见。
+           ⚠ 只是把已经算好的 r.it 显示出来，一个数、一条规矩都没碰。 */
+        var 现在指着=r.it?('<div class="muted" style="margin:3px 0 5px">现在按 <b style="color:var(--ink)">'+
+              esc(r.it.alias)+'</b>['+esc(r.it.unit)+'] ¥'+n2(r.it.price)+' 算的'+
+              (r.it.prod&&r.it.prod!==r.it.alias?('　<span style="opacity:.75">'+esc(r.it.prod)+'</span>'):'')+
+              '　—— 对就点「对，记住」，不对就在下面挑</div>'):'';
         to=lbl+(r.it?' <button class="btn sm okfix"'+da+' data-sku="'+esc(r.it.sku)+'">✓ 对，记住</button>':'')+
            (had?' <button class="btn ghost sm forget"'+da+'>✕ 忘掉重学</button>':'')+
            ' <button class="btn ghost sm newp"'+da+' data-li="'+li+'">＋ 库里没有，新建</button>'+
+           现在指着+
            '<div class="cb"'+da+' data-cands="'+esc(cs.join(","))+'">'+
              '<input class="cb-in" autocomplete="off" placeholder="'+
                (r.it?"打字换一个商品…":"打字搜索商品…")+'">'+
@@ -2400,7 +2517,11 @@ window.addEventListener("unhandledrejection",function(ev){
         if(li>=0&&ST.lines[li]) 同词几行(ST.lines[li].text,ST.lines[li].unit)
           .forEach(function(x){ x.pinned=false; });
         ST.dirty=true;
-        rematch(); renderMatch(); renderOverlay(); renderCustKV();
+        rematch();
+        /* ★「✓ 对，记住」也是人拍板 —— 记不住的时候（跨秤那种）至少这一单得留住他点的 */
+        if(li>=0&&ST.lines[li])
+          钉住人挑的(同词几行(ST.lines[li].text,ST.lines[li].unit),btn.getAttribute("data-sku"));
+        renderMatch(); renderOverlay(); renderCustKV();
       });
     });
     /* 「改」：把认对了的行重新变回可选状态 */
@@ -2457,7 +2578,11 @@ window.addEventListener("unhandledrejection",function(ev){
         if(!sku){ msg.textContent="没加成，检查商品名和单价"; return; }
         /* 加完顺手把「下单表这个词 → 这个新品」也记住，下次不用再问 */
         learnPair(ST.ci,box.getAttribute("data-text"),sku,box.getAttribute("data-unit")||"");
-        rematch(); renderMatch(); renderOverlay(); renderCustKV(); renderCustCards();
+        rematch();
+        /* ★ 刚建的品就是他要的那个，一样不许被 rematch 打回去 */
+        var li4=parseInt(box.getAttribute("data-li"),10);
+        if(li4>=0&&ST.lines[li4]) 钉住人挑的(同词几行(ST.lines[li4].text,ST.lines[li4].unit),sku);
+        renderMatch(); renderOverlay(); renderCustKV(); renderCustCards();
       });
     });
     /* 「忘掉重学」：把教错的那条对照删掉，回到没学过的状态 */
@@ -3075,6 +3200,10 @@ window.addEventListener("unhandledrejection",function(ev){
     if(val===orig) delete e[PXKEY[field]]; else e[PXKEY[field]]=val;
     if(Object.keys(e).length) OV.px[cid][sku]=e; else delete OV.px[cid][sku];
     if(!Object.keys(OV.px[cid]||{}).length) delete OV.px[cid];
+    /* ★ 2026-08-18：改了就打记号，改回观麦原样（这条覆盖被删掉）就记一笔「忘掉」——
+       不记的话，下次跟服务器对齐又把它拉回来，「还原」等于没点。 */
+    if(OV.px[cid]&&OV.px[cid][sku]){ delete OV.gone["px|"+cid+"|"+sku]; ovTouch("px",cid+"|"+sku); }
+    else ovForget("px",cid+"|"+sku);
     logChange(cid,label,what,fromTxt,toTxt);
     pxCommit(); renderCustDetail();
   }
@@ -3083,6 +3212,7 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!(OV.px[cid]&&OV.px[cid][sku])) return;
     delete OV.px[cid][sku];
     if(!Object.keys(OV.px[cid]).length) delete OV.px[cid];
+    ovForget("px",cid+"|"+sku);        /* ★ 记一笔，免得下次同步又拉回来 */
     logChange(cid,label,"改动","已改","还原成观麦的");
     pxCommit(); renderCustDetail();
   }
@@ -4620,10 +4750,32 @@ window.addEventListener("unhandledrejection",function(ev){
     var t=new Date().toISOString();
     (名们||[]).forEach(function(n){
       n=String(n==null?"":n).trim(); if(!n) return;
+      /* ★ 2026-08-18：数字＋单位绝不许记成点位。人点错一下，
+         这条会跟着同步到服务器，所有电脑一起错（8/18 就这么中了 12 条）。 */
+      if(是什么==="点位"&&像数量.test(n)) return;
       OV.排名单[n]={是:是什么,时间:t};
       ovTouch("排名单",n);
     });
     ovSave(); 画排名单();
+  }
+
+  /* ★ 2026-08-18：纯数量的东西，永远不可能是送货点位。
+     老板当天撞到：朱鲜生那张表，系统把一整列纯数量拿去问「这是不是点位」，
+     他答了「是」—— 一口气记住 12 条，全是数量，还同步到了服务器：
+       「4斤 1斤 3斤」→ 点位　「35斤 2斤 50斤」→ 点位　「1板」→ 点位
+     记住之后每张表都照着错，而且换台电脑一样错。
+
+     老板原话：「你如果不确定这个是不是就可以问，但是你不能去这样子乱抓。」
+     —— 这一条根本不该问：数字＋单位就是数量，问了等于把「我不知道」推给人，
+     还诱导他答错。所以：不问、不记、已经记住的一律作废。
+
+     ⚠ 只挡「点位」这一个答案。是数量还是规格（比如整列「400g」）这儿不判 ——
+       那两个都不改数量和点位，判错了也不伤人。 */
+  var 像数量=/^(\d+(\.\d+)?\s*(斤|板|盒|包|箱|袋|件|条|串|个|块|桶|扎|把|瓶|罐|支|kg|g|克|公斤|斤装)\s*[+,，、\/]?\s*)+$/i;
+  function 纯数量(名们){
+    var v=(名们||[]).map(function(s){return String(s==null?"":s).trim();}).filter(Boolean);
+    if(!v.length) return false;
+    return v.filter(function(s){ return 像数量.test(s); }).length/v.length>=0.6;
   }
 
   /* 三种最危险的长相，各给一道网 */
@@ -4637,6 +4789,10 @@ window.addEventListener("unhandledrejection",function(ev){
   function 这排是什么(名们){
     var v=(名们||[]).map(function(s){return String(s==null?"":s).trim();}).filter(Boolean);
     if(!v.length) return {是:"点位"};
+
+    /* ★ 排在人答过的【前面】—— 这样 8/18 之前误记的那 12 条纯数量自动作废，
+       不用等谁去清，换哪台电脑都一样。 */
+    if(纯数量(v)) return {是:"数量"};
 
     /* ① 人答过的占多数 → 听答过的。这就是「别每天问同一句」 */
     var 票={}, 认识=0;
@@ -4807,6 +4963,92 @@ window.addEventListener("unhandledrejection",function(ev){
     };
     /* 「先不管」也要收窗 —— 留着一个点不动的窗，人只会以为页面卡死了 */
     $("qie-no").onclick=function(){ $("ocr-msg").innerHTML=""; 回调([]); };
+  }
+
+  /* ════════════════════════════════════════════════════════════════
+     明细格里客户留的那句话：要不要各加一行货　★（2026-08-18）
+     ════════════════════════════════════════════════════════════════
+     8/17 广东朱鲜生那张采购表：明细格里「盒装山水豆腐500g」「要10板，5斤/板」
+     各自占一行、没写数量。引擎当空格子扔了（引擎-读结构.js 那个 return），
+     而且客户自己写的总数也没把它们算进去（水豆腐 19=5+10+4、南江 87=35+2+50），
+     两边一起错、对得上 —— 四道校验全绿，一声不吭少开 8 块。
+
+     老板 8/18 原话：「不要丢了，然后就直接跳出来一个弹窗，看需不需要添加。添加手动添加。」
+
+     所以这个窗只干三件事，一件都不多：
+       ① 把话原样摆出来　② 问加不加　③ 加就走 addBlankLine，商品还是人自己用搜索框挑
+     ⛔ 不替人认商品、不替人填数量、不折算单位 —— 猜出来的数没人查得出来。
+     ⛔ 也不许「看着像货就自动加一行」：那就是拿特例改全局规则。
+
+     默认是「不加」，一下都不点也不会改坏任何东西 —— 话照样进备注。 */
+  var 话答过=[];                       /* 这张单里已经问过的，别问第二遍（选完客户会重读一趟）*/
+
+  /* 把没加成货的那几句贴进整单备注。
+     ⚠ 跟 填单据备注（8/12 那条，只在框里空着时才填、不覆盖人写的）故意不一样：
+       那条是可有可无的整单交代；这几句是【差点被弄丢的客户原文】，
+       丢一次就是今天这种事故，所以框里有字也要往后接，绝不许因为「有人写过了」就算了。 */
+  function 备注添上(话们){
+    if(!话们||!话们.length) return;
+    var box=$("order-note"); if(!box) return;
+    var 有=String(box.value||"").trim();
+    var 添=话们.filter(function(t){ return t && 有.indexOf(t)<0; });
+    if(!添.length) return;
+    box.value=(有?有+"；":"")+添.join("；");
+  }
+
+  function 问要不要加(话们){
+    话们=(话们||[]).filter(function(x){ return x&&x.话&&话答过.indexOf(x.话)<0; });
+    if(!话们.length) return;
+    var h='<div class="alert sale" id="jhw-box" style="font-size:15px;margin-top:10px">'+
+          '<b>明细格里这几句话没写数量，要不要各加一行货？</b>'+
+          '　<span class="muted">不点也行 —— 都会写进备注，不会丢</span>';
+    话们.forEach(function(x,i){
+      h+='<div style="margin:10px 0;padding:10px;background:rgba(0,0,0,.18);border-radius:8px;'+
+         'display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+         '<span class="muted">'+esc(x.商品||"")+'</span>'+
+         '<b style="flex:1 1 200px;color:#E8A33D;word-break:break-all">'+esc(x.话)+'</b>'+
+         '<select class="jhw" data-i="'+i+'" style="width:150px">'+
+           '<option value="不加">不加，只进备注</option>'+
+           '<option value="加">加一行货 →</option></select>'+
+         '<input class="jhq" id="jhq'+i+'" type="number" step="0.01" placeholder="要多少"'+
+         ' style="width:100px;display:none"></div>';
+    });
+    h+='<div id="jhw-why" class="muted" style="margin-top:6px"></div>'+
+       '<div style="margin-top:10px"><button class="btn" id="jhw-ok">就这样</button></div>'+
+       '<div class="muted" style="margin-top:8px">加进来的行摆在最上面，商品用搜索框自己挑。'+
+       '客户写什么单位就填什么，别替他折算。</div></div>';
+    $("ocr-msg").innerHTML=$("ocr-msg").innerHTML+h;
+
+    Array.prototype.forEach.call(document.querySelectorAll(".jhw"),function(s){
+      s.onchange=function(){
+        var q=$("jhq"+s.getAttribute("data-i"));
+        if(q) q.style.display=(s.value==="加")?"":"none";
+      };
+    });
+    $("jhw-ok").onclick=function(){
+      var 加=[], 剩=[];
+      话们.forEach(function(x,i){
+        var s=document.querySelector('.jhw[data-i="'+i+'"]');
+        if(s&&s.value==="加") 加.push({x:x, n:parseFloat(($("jhq"+i)||{}).value||"")});
+        else 剩.push(x.商品?(x.商品+"："+x.话):x.话);
+      });
+      /* 选了「加」却没填数量 —— 窗留着，把话说明白，绝不许悄悄按 1 加进去。
+         写死的默认值是隐患（8/11 老板点过 `||1` 那条），这儿宁可卡住人。 */
+      var 没填=加.filter(function(a){ return !(a.n>0); });
+      if(没填.length){
+        $("jhw-why").innerHTML='<span style="color:#E5674B">⚠ 「'+
+          没填.map(function(a){ return esc(a.x.话); }).join("」「")+
+          '」要几多？填了数量才加得进去 —— 不填的话我不会替你猜一个。</span>';
+        return;
+      }
+      话们.forEach(function(x){ 话答过.push(x.话); });
+      var box=$("jhw-box"); if(box&&box.parentNode) box.parentNode.removeChild(box);
+      备注添上(剩);
+      /* 加进来的话当行的「来处」，人一眼知道这行是哪句话变的（体检-行要有来处.js 盯着）。
+         数量是人刚填的，商品让 addBlankLine 那条老路去认／让人挑 —— 不在这儿抄第二份。 */
+      加.forEach(function(a){ addBlankLine({text:a.x.话, qty:a.n, note:a.x.话}); });
+      if(加.length) 提醒("加了 "+加.length+" 行，摆在最上面 —— 挑一下商品对不对");
+    };
   }
 
   /* 只把可疑的那一块抠出来问一句。字要少 —— 弹得看不懂，
@@ -5138,7 +5380,7 @@ window.addEventListener("unhandledrejection",function(ev){
   function 抓取试一把(份,选项){
     var G=window.GM_抓取;
     if(!G||!G.抓) return null;
-    var 出货的表=[], 全行=[], 全问=[], 待问点位=null;
+    var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 硬伤=[];
     (份||[]).forEach(function(z){
       ((z&&z.grid)||[]).forEach(function(sh){
         var rows=(sh&&sh.rows)||[];
@@ -5161,12 +5403,38 @@ window.addEventListener("unhandledrejection",function(ev){
             if(样.length) 待问点位={列:q.列, 样本:样};
           }
           if(q.说) 全问.push(q.说);
+          /* ★★ 2026-08-18 帐要销平 ★★
+             老板原话：「你如果不确定这个是不是就可以问，但是你不能去这样子乱抓。」
+
+             朱鲜生那张表撞出来的：明细那一格是
+               「点位1 点位2 点位3　2板 1板 1板　午餐 午餐」
+             抓取自己【记了帐】——「这一格里像有送货点和数量，一段都没切出来」，
+             可页面只把它当一句提示显示出来，照样收单，数量退回去拿「总数」那列顶包。
+             结果：24 板该分 6 个点位，全压在一个点位上。钱不错，货发错。
+
+             所以这儿不是给那张表写一条读法（那是打补丁，换张表照样再犯），
+             而是给整条近道立一条帐：
+               近道记下的每一笔「读不懂」，都必须有下文 ——
+                 · 问点位   → 有下文（下面那套排名单会问、会记）
+                 · 要手工填 → 有下文（空着让人填，老板 8/16 定的）
+                 · 别的     → 【没有下文】= 这张表近道没走通，作废，退回认表那条正路
+             默认是拦，不是放。将来再加任何一种「读不懂」，忘了给下文也会自动拦住。
+
+             ⚠ 代价老板自己选的（8/18「A」）：本来能闷头读完的表，
+               以后可能多花一次 AI。准确率优先。 */
+          /* ⚠ 只拦【可能动到那四样】的（什么东西／多少／什么单位／送去哪里）。
+             规格、备注读不懂不影响开单 —— 那是 CLAUDE.md 头一条铁律画的线，
+             这儿复用它，不另画一条。拦它们等于白花一次 AI。 */
+          if(!q.问点位&&!q.要手工填&&["规格","备注","别的"].indexOf(q.类型)<0)
+            硬伤.push(q.说||q.为什么||q.类型||"没读懂");
         });
       });
     });
     if(!全行.length) return null;
     /* 一份文件里不止一张表出了货 —— 定不下来，交回方法一 */
     if(份.length===1&&出货的表.length>1) return null;
+    /* ★ 帐没销平 —— 近道不算数。带着已知的错交差，比多花一次 AI 贵得多。 */
+    if(硬伤.length) return null;
     return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位,
              表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
   }
@@ -5432,6 +5700,11 @@ window.addEventListener("unhandledrejection",function(ev){
     var 补=(怎么读的&&!/照格子表读的/.test(怎么读的))
       ? ('　<span class="muted">· '+esc(怎么读的)+'</span>') : '';
     $("ocr-msg").innerHTML=头+下一步+补;
+    /* 明细格里客户留的话 → 问一次要不要加行。★2026-08-18
+       重来（选完客户那一趟）不清 话答过 —— 人刚答过的不能再问一遍。
+       ⚠ 图片那条路有一模一样的两行，在「识别完成」那个 ocr-msg 下面，改这儿记得看那儿。 */
+    if(!重来) 话答过=[];
+    问要不要加(结构报告&&结构报告.只有话);
     if(!重来) (ST.custOK?$("card-match"):$("auto-cust")).scrollIntoView({behavior:"smooth",block:"center"});
   }
 
@@ -5787,6 +6060,10 @@ window.addEventListener("unhandledrejection",function(ev){
           +(hint?("，表上写的客户是「"+hint+"」"):""))
           +(ST.custOK?"":" —— <b>先确认是哪家客户 ↑</b>");
         $("ocr-msg").innerHTML=底;
+        /* 跟 收下格子表 里那两行是同一件事 —— 改一处记得改另一处。★2026-08-18
+           加单不清 话答过：老行的话人已经答过了，别因为补了一段又问一遍。 */
+        if(!是加单) 话答过=[];
+        问要不要加(结构报告&&结构报告.只有话);
         (ST.custOK?$("card-match"):$("auto-cust")).scrollIntoView({behavior:"smooth",block:"center"});
 
         /* 回头核对：把原图和刚读出来的字再发一次，只问哪个数字跟图上对不上。

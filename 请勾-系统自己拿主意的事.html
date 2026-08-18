@@ -1,0 +1,74 @@
+<title>系统自己拿主意的 22 件事 —— 请勾</title>
+<style>
+:root{--bg:#14100B;--card:#1E1811;--line:#3A2E20;--amber:#E8A33D;--txt:#EDE3D4;--muted:#9A8A74;--ok:#5FBF7F}
+*{box-sizing:border-box}body{margin:0;padding:22px;background:var(--bg);color:var(--txt);
+font:15px/1.65 "Microsoft YaHei",system-ui,sans-serif}
+h1{font-size:20px;color:var(--amber);margin:0 0 4px}
+h2{font-size:16px;color:var(--amber);margin:22px 0 8px;border-left:3px solid var(--amber);padding-left:9px}
+.muted{color:var(--muted);font-size:13.5px}
+.it{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+border-radius:9px;padding:11px 13px;margin:7px 0;cursor:pointer}
+.it:hover{border-color:var(--amber)}
+.it.on{border-color:var(--ok);background:rgba(95,191,127,.09)}
+input{width:21px;height:21px;margin-top:3px;accent-color:#E8A33D;flex:none;cursor:pointer}
+.t{font-weight:600}.t .s{color:var(--amber)}
+.w{color:var(--muted);font-size:13.5px;margin-top:3px}
+.d{color:#E5674B;font-size:13.5px;margin-top:2px}
+.tip{background:rgba(232,163,61,.10);border:1px solid var(--line);border-radius:9px;padding:11px 13px;margin:8px 0;font-size:13.5px}
+#out{position:sticky;bottom:0;background:#1A1510;border-top:2px solid var(--amber);padding:13px;
+margin-top:22px;font-size:15px}
+#lst{color:var(--ok);margin-top:6px;font-size:14px}
+</style>
+<h1>系统自己拿主意的 22 件事</h1>
+<div class="muted">勾上 = 以后这种情况<b>弹出来让你选</b>，不许它自己办。绿色的是我建议勾的，已经先替你勾好，你改。</div><h2>格子路　<span class="muted" style="font-weight:400">5 件</span></h2><div class="tip">Excel / 图片 / PDF 都走这条。<b>格子已经分好了还在靠长相猜 —— 这两天错得最多就是这里，建议全勾。</b></div><label class="it on"><input type="checkbox" checked data-n="一格是什么">
+    <div><div class="t">一格是什么</div>
+    <div class="w">什么时候：格子里写着「6」</div><div class="d">现在它自己做了：五选一：规格/数量/点位/别的</div></div></label><label class="it on"><input type="checkbox" checked data-n="一整列是什么">
+    <div><div class="t">一整列是什么</div>
+    <div class="w">什么时候：整列都是数字</div><div class="d">现在它自己做了：看大多数格子长相定这列是什么</div></div></label><label class="it on"><input type="checkbox" checked data-n="从第几行开始是货">
+    <div><div class="t">从第几行开始是货</div>
+    <div class="w">什么时候：表上有抬头、说明、空行</div><div class="d">现在它自己做了：靠表头词表猜数据从哪行起</div></div></label><label class="it on"><input type="checkbox" checked data-n="哪列是品名/数量/单位">
+    <div><div class="t">哪列是品名/数量/单位</div>
+    <div class="w">什么时候：表头写「预定数」「订菜总数」</div><div class="d">现在它自己做了：靠字眼配到角色上</div></div></label><label class="it on"><input type="checkbox" checked data-n="是不是矩阵表">
+    <div><div class="t">是不是矩阵表</div>
+    <div class="w">什么时候：一列一个门店那种</div><div class="d">现在它自己做了：自己试着横过来读</div></div></label><h2>文字路　<span class="muted" style="font-weight:400">12 件</span></h2><div class="tip">你直接粘一段字进来时走这条。<b>没有格子，不猜就读不出来</b> —— 建议只勾会动到钱的那几件。</div><label class="it"><input type="checkbox"  data-n="常见错字">
+    <div><div class="t">常见错字</div>
+    <div class="w">什么时候：客户写「盒鲜豆腐3合」</div><div class="d">现在它自己做了：把「合」当错字改成「盒」</div></div></label><label class="it"><input type="checkbox"  data-n="当成标题不是货">
+    <div><div class="t">当成标题不是货</div>
+    <div class="w">什么时候：一行短中文、整行没数字</div><div class="d">现在它自己做了：整行不当货，不进单</div></div></label><label class="it"><input type="checkbox"  data-n="品名尾巴当点位">
+    <div><div class="t">品名尾巴当点位</div>
+    <div class="w">什么时候：「老豆腐 K53」</div><div class="d">现在它自己做了：把 K53 摘出去当点位</div></div></label><label class="it"><input type="checkbox"  data-n="字被拉开了粘回去">
+    <div><div class="t">字被拉开了粘回去</div>
+    <div class="w">什么时候：「( 2 1 7 # 0 1 )」</div><div class="d">现在它自己做了：自动粘成「(217#01)」</div></div></label><label class="it"><input type="checkbox"  data-n="一格里怎么断句">
+    <div><div class="t">一格里怎么断句</div>
+    <div class="w">什么时候：「50串**E028+25串**E002」</div><div class="d">现在它自己做了：自己决定在哪儿切开</div></div></label><label class="it"><input type="checkbox"  data-n="行尾的钱当单价">
+    <div><div class="t">行尾的钱当单价</div>
+    <div class="w">什么时候：行尾写着「¥3.4」</div><div class="d">现在它自己做了：当单价剥掉，不当数量</div></div></label><label class="it on"><input type="checkbox" checked data-n="★板跟块（数量写0）">
+    <div><div class="t"><span class="s">★</span>板跟块（数量写0）</div>
+    <div class="w">什么时候：「(B182 维比奇#教师-6块)0斤」</div><div class="d">现在它自己做了：斤那栏的0不算，拿「6块」当数量</div></div></label><label class="it on"><input type="checkbox" checked data-n="★板跟块（补救）">
+    <div><div class="t"><span class="s">★</span>板跟块（补救）</div>
+    <div class="w">什么时候：同上，块换算成斤</div><div class="d">现在它自己做了：1块当1斤直接算</div></div></label><label class="it on"><input type="checkbox" checked data-n="兜底硬找一个数">
+    <div><div class="t">兜底硬找一个数</div>
+    <div class="w">什么时候：前面所有写法都没配上</div><div class="d">现在它自己做了：像人一样在行里挑一个数当数量</div></div></label><label class="it on"><input type="checkbox" checked data-n="★备注里的数顶掉数量">
+    <div><div class="t"><span class="s">★</span>备注里的数顶掉数量</div>
+    <div class="w">什么时候：数量栏写5，备注栏写「要8」</div><div class="d">现在它自己做了：按8算，不按5</div></div></label><label class="it"><input type="checkbox"  data-n="单位空着自己推">
+    <div><div class="t">单位空着自己推</div>
+    <div class="w">什么时候：单位列空的，规格写「7斤/板」</div><div class="d">现在它自己做了：推出单位是板</div></div></label><label class="it on"><input type="checkbox" checked data-n="【丢】有字没数字整行扔">
+    <div><div class="t">【丢】有字没数字整行扔</div>
+    <div class="w">什么时候：一行有文字、没有数量</div><div class="d">现在它自己做了：整行丢掉，不吭声</div></div></label><h2>配货　<span class="muted" style="font-weight:400">1 件</span></h2><div class="tip">读完之后，把客户的叫法配到你库里的货。</div><label class="it on"><input type="checkbox" checked data-n="一个叫法配到好几个货">
+    <div><div class="t">一个叫法配到好几个货</div>
+    <div class="w">什么时候：「水豆腐」在库里有4个</div><div class="d">现在它自己做了：挑一个当默认</div></div></label><h2>认表　<span class="muted" style="font-weight:400">4 件</span></h2><div class="tip">第一次见的新表，先认它怎么排的。</div><label class="it"><input type="checkbox"  data-n="是不是Excel截图">
+    <div><div class="t">是不是Excel截图</div>
+    <div class="w">什么时候：图片长得像表格</div><div class="d">现在它自己做了：按截图处理</div></div></label><label class="it"><input type="checkbox"  data-n="哪一行像表头">
+    <div><div class="t">哪一行像表头</div>
+    <div class="w">什么时候：没有明显表头的表</div><div class="d">现在它自己做了：靠长相挑一行当表头</div></div></label><label class="it"><input type="checkbox"  data-n="自己找分布列">
+    <div><div class="t">自己找分布列</div>
+    <div class="w">什么时候：没有读法本的新表</div><div class="d">现在它自己做了：自己找哪列是点位明细</div></div></label><label class="it"><input type="checkbox"  data-n="哪列是序号">
+    <div><div class="t">哪列是序号</div>
+    <div class="w">什么时候：第一列都是1,2,3</div><div class="d">现在它自己做了：当序号，不当数量</div></div></label><div id="out"><b>勾了 <span id="n">0</span> 件</b> —— 念给我听就行<div id="lst"></div></div>
+<script>
+function up(){var a=[].slice.call(document.querySelectorAll("input:checked")).map(function(x){return x.dataset.n});
+document.getElementById("n").textContent=a.length;
+document.getElementById("lst").textContent=a.join("、");}
+document.addEventListener("change",function(e){if(e.target.type==="checkbox"){
+e.target.closest(".it").classList.toggle("on",e.target.checked);up();}});up();
+</script>

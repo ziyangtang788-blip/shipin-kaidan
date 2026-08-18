@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>试补丁 —— 明细格里「只有字、没数字」的那行</title>
+<style>
+  :root{ --bg:#14100B; --card:#1E1811; --line:#3A2E20; --amber:#E8A33D;
+         --txt:#EDE3D4; --muted:#9A8A74; --bad:#E5674B; --ok:#5FBF7F; }
+  *{box-sizing:border-box}
+  body{margin:0;padding:24px;background:var(--bg);color:var(--txt);
+       font:14px/1.7 "Microsoft YaHei",system-ui,sans-serif}
+  h1{font-size:19px;margin:0 0 4px;color:var(--amber)}
+  h2{font-size:15px;margin:26px 0 10px;color:var(--amber);
+     border-left:3px solid var(--amber);padding-left:9px}
+  .muted{color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin:10px 0}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border:1px solid var(--line);padding:5px 8px;text-align:left}
+  th{background:rgba(232,163,61,.10);color:var(--amber);font-weight:600}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .bad{color:var(--bad)} .ok{color:var(--ok)} .amber{color:var(--amber)}
+  .btn{background:var(--amber);color:#241A0C;border:0;border-radius:7px;
+       padding:8px 15px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line)}
+  input,select{background:#120E09;color:var(--txt);border:1px solid var(--line);
+               border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit}
+  input:focus,select:focus{outline:0;border-color:var(--amber)}
+  pre{background:#120E09;border:1px solid var(--line);border-radius:8px;padding:12px;
+      overflow-x:auto;font:12px/1.6 Consolas,monospace;color:#C9BCA6}
+  .ask{border:1px solid var(--amber);border-radius:10px;padding:14px;background:rgba(232,163,61,.06)}
+  .row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+       padding:10px;margin:8px 0;background:rgba(0,0,0,.22);border-radius:8px}
+  .say{flex:1 1 260px;color:var(--amber);font-family:Consolas,monospace;word-break:break-all}
+  .add{display:none;gap:7px;flex-wrap:wrap;width:100%;padding-top:8px;border-top:1px dashed var(--line)}
+  .add.on{display:flex}
+  .tag{display:inline-block;padding:1px 7px;border-radius:4px;font-size:12px;
+       background:rgba(232,163,61,.14);color:var(--amber)}
+</style>
+</head>
+<body>
+
+<h1>试补丁 —— 明细格里「只有字、没数字」的那行</h1>
+<div class="muted">拿 8/17 广东朱鲜生那张采购表跑。<b class="amber">只读，不改开单台、不改引擎。</b>
+关掉这个网页什么都不会留下。</div>
+
+<!-- 真引擎，一个字没动 -->
+<script src="引擎-解析.js"></script>
+<script src="引擎-读结构.js"></script>
+
+<h2>① 现在跑出来是什么样</h2>
+<div class="card" id="现在"></div>
+
+<h2>② 补丁捡回来的话 —— 一个窗一次问完</h2>
+<div class="card"><div id="窗"></div></div>
+
+<h2>③ 你点完之后</h2>
+<div class="card" id="结果"><span class="muted">上面点一下「就这样」再看这里。</span></div>
+
+<h2>④ 补丁本身（要并进 引擎-读结构.js 第 216 行）</h2>
+<div class="card">
+<pre id="补丁码"></pre>
+<div class="muted" style="margin-top:8px">
+原来那一行 <code>return</code> 一执行，那句话就跟着没了，
+而且<b class="bad">四道校验一道都不会响</b>——因为客户自己写的总数也没算它。</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════
+   这张单：8/17 广东朱鲜生的采购表，照 AI 该填的样子填进模板。
+   两句被丢掉的话就在第 7 行和第 11 行的分布最后一项 —— 没有「数」。
+   ══════════════════════════════════════════════════════════════ */
+var 单 = {
+  抬头:{ 客户:"广东朱鲜生餐饮有限公司", 下单日期:"2026-08-17", 表上条数:12 },
+  行:[
+    { 品名:"小豆泡", 单位:"斤", 表上总数:8, 分布:[
+      {号:"11-10",名:"佛山支队高明中队",数:4,注:"小"},
+      {号:"17-1", 名:"肇庆端州武装部",  数:1},
+      {号:"2-5",  名:"西樵派出所（西樵本部）",数:3} ]},
+    { 品名:"千张豆皮", 单位:"斤", 表上总数:5, 分布:[
+      {号:"4-3",名:"妇幼保健院天河院区",数:3},
+      {号:"4-1",名:"广东省妇幼保健院",  数:2} ]},
+    { 品名:"中板豆腐", 规格:"7斤/板", 单位:"板", 表上总数:24, 分布:[
+      {号:"13-2",名:"广州市天河区人民政府沙河街道（执法队饭堂）",数:1},
+      {号:"13-1",名:"广州市天河区人民政府沙河街道（机关饭堂）",数:1},
+      {号:"5-9", 名:"广州市老人院上水院区（老人碎菜）",数:2,注:"午餐"},
+      {号:"5-5", 名:"广州市老人院（上水院区）（老人糊配）",数:1,注:"午餐"},
+      {号:"5-6", 名:"广州市老人院（上水院区）（老人菜泥）",数:1,注:"午餐"},
+      {号:"5-3", 名:"广州市老人院（上水院区）（老人餐）",数:18,注:"午餐"} ]},
+    { 品名:"水豆腐", 规格:"4.5斤/板", 单位:"板", 表上总数:1, 分布:[
+      {号:"2-8",名:"西樵派出所（战训）",数:1} ]},
+    { 品名:"炸豆腐", 单位:"斤", 表上总数:15, 分布:[
+      {号:"4-1",名:"广东省妇幼保健",数:15} ]},
+    { 品名:"花泉山水豆腐400g", 单位:"盒", 表上总数:10, 分布:[
+      {号:"11-7",名:"佛山支队执勤一中队",数:10,注:"400g"} ]},
+    { 品名:"水豆腐", 单位:"斤", 表上总数:19, 分布:[
+      {号:"11-8",名:"佛山支队执勤二中队",数:5},
+      {号:"11-9",名:"佛山支队机动中队",  数:10,注:"8斤/板"},
+      {号:"2-3", 名:"西樵派出所（民乐）",数:4},
+      {名:"盒装山水豆腐500g"} ]},                    /* ← 没有「数」，今天就是这一项被扔了 */
+    { 品名:"百页", 单位:"斤", 表上总数:6, 分布:[
+      {号:"11-6",名:"佛山支队执勤四中队",数:1},
+      {号:"11-9",名:"佛山支队机动中队",  数:2},
+      {号:"11-10",名:"佛山支队高明中队", 数:3} ]},
+    { 品名:"老豆腐", 单位:"斤", 表上总数:17, 分布:[
+      {号:"11-6",名:"佛山支队执勤四中队",数:17} ]},
+    { 品名:"攸县香干", 单位:"斤", 表上总数:12, 分布:[
+      {号:"26-2",名:"佛山市南海区财政局（午餐）",数:8},
+      {号:"11-6",名:"佛山支队执勤四中队",数:4} ]},
+    { 品名:"南江豆腐", 单位:"斤", 表上总数:87, 分布:[
+      {号:"27-3",名:"佛山市顺德区机关服务中心-市监饭堂午餐",数:35},
+      {号:"27-5",名:"佛山市顺德区机关服务中心-纪委饭堂",    数:2},
+      {号:"27-2",名:"佛山市顺德区机关服务中心-西座午餐",    数:50},
+      {名:"要10板，5斤/板"} ]},                      /* ← 没有「数」，今天就是这一项被扔了 */
+    { 品名:"干豆结4KG", 单位:"箱", 表上总数:1, 分布:[
+      {号:"4-1",名:"广东省妇幼保健院",数:1} ]}
+  ]
+};
+
+/* 这家今天这张单上的价 —— 拿来给「手动添加」当可打字搜索的候选。
+   ⚠ 只是这个试验页的样例，真并进去要走价格库那一份，不许在这儿留第二份。 */
+var 候选 = [
+  ["尝元山水豆腐（500g/盒）","盒",3.50],
+  ["花泉山水豆腐（400g/盒）","盒",3.50],
+  ["水豆腐（斤）","斤",1.50],
+  ["水豆腐（4.5斤）","板",4.70],
+  ["浓浆豆腐（斤）","斤",1.60],
+  ["尝元中板豆腐（7斤）","板",7.70],
+  ["老豆腐（斤）","斤",1.70]
+];
+
+/* ══════════════════════════════════════════════════════════════
+   补丁本体 —— 就这一个函数，将来并进 引擎-读结构.js 第 216 行那个 return 前面。
+
+   判据卡死，只有这一种情况才捡：
+     这一项【一个数字都没写】，但是号/名/原文/注 里有汉字
+   → 那就不是「这个点今天不要货」，是客户在明细格里留的一句话。
+
+   ⚠ 捡起来【不进数量、不进金额】，只交给上面弹窗问人。
+     所以最坏的结果 = 跟今天算出来一模一样，改不乱任何东西。
+   ⚠ 数量写着 0 的不归这儿管 —— 那是「点位名尾巴带 -N块」那条老规矩，
+     引擎里 名带数 那段已经在捞，别在这儿抄第二份。
+   ══════════════════════════════════════════════════════════════ */
+function 捡话(j){
+  var 出=[];
+  (j&&j.行||[]).forEach(function(R,ri){
+    (R&&R.分布||[]).forEach(function(d,di){
+      if(!d||typeof d!=="object") return;
+      var q = d.数!==undefined?d.数 : (d.数量!==undefined?d.数量 : d.qty);
+      /* 写了数（包括 0）就不关这儿的事，照旧走原来的路 */
+      if(q!==undefined&&q!==null&&String(q).trim()!=="") return;
+      var 话=[d.名||d.点位名||"", d.号||d.点位号||"", d.原文||"", d.注||d.备注||""]
+             .join(" ").replace(/\s+/g," ").trim();
+      if(!/[一-龥]/.test(话)) return;      /* 没汉字 → 照旧丢，不吵人 */
+      出.push({ 行号:ri+1, 段:di, 商品:R.品名||"", 话:话 });
+    });
+  });
+  return 出;
+}
+
+/* ────────── 页面 ────────── */
+var $=function(id){return document.getElementById(id);};
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+
+var 合 = window.GM_STRUCT.读结构(单);      /* ← 真引擎，一个字没动 */
+var 话们 = 捡话(单);
+var 决定 = 话们.map(function(){ return {怎么办:"不管"}; });
+
+/* ① 现在跑出来什么样 */
+(function(){
+  var h='<table><tr><th>#</th><th>品名</th><th class="n">数量</th><th>单位</th>'+
+        '<th>备注</th><th>总数账</th></tr>';
+  合.lines.forEach(function(L,i){
+    var 对 = !L.总数 || Math.abs((L.qty||0)-L.总数.qty)<0.001;
+    h+='<tr><td>'+(i+1)+'</td><td>'+esc(L.text)+'</td>'+
+       '<td class="n">'+(L.qty||0)+'</td><td>'+esc(L.unit||"")+'</td>'+
+       '<td>'+esc((L.segs||[]).map(function(g){return g.note||"";})
+                  .filter(Boolean).join(" ")||(L.行备注||""))+'</td>'+
+       '<td class="'+(对?"ok":"bad")+'">'+(对?"✔ 对得上":"✘ 对不上")+'</td></tr>';
+  });
+  h+='</table>';
+  h+='<div style="margin-top:12px" class="bad"><b>丢了 '+话们.length+' 句话：</b>'+
+     话们.map(function(x){return "「"+esc(x.话)+"」（第 "+x.行号+" 行 "+esc(x.商品)+"）";}).join("、")+
+     '</div>'+
+     '<div class="muted" style="margin-top:6px">注意最右边那一列 —— <b class="ok">12 行全绿</b>。'+
+     '客户自己写的总数（19、87）也没把这两句算进去，'+
+     '<b class="bad">两边一起错、对得上，现有的校验一道都拦不住。</b></div>';
+  $("现在").innerHTML=h;
+})();
+
+/* ② 弹窗 —— 一个窗一次问完，默认全是「不管」 */
+(function(){
+  if(!话们.length){ $("窗").innerHTML='<span class="muted">这张单没有这种行。</span>'; return; }
+  var h='<div class="ask"><b class="amber">明细格里这几句话没有数量，要不要各加一行货？</b>'+
+        '　<span class="muted">默认都是「不管」，不点也不会改坏任何东西</span>';
+  话们.forEach(function(x,i){
+    h+='<div class="row"><span class="tag">第 '+x.行号+' 行 '+esc(x.商品)+'</span>'+
+       '<span class="say">'+esc(x.话)+'</span>'+
+       '<select class="pick" data-i="'+i+'">'+
+         '<option value="不管">不管</option>'+
+         '<option value="备注">只放进备注</option>'+
+         '<option value="加">加一行货 →</option>'+
+       '</select>'+
+       '<div class="add" id="add'+i+'">'+
+         '<input list="货单" id="p'+i+'" placeholder="打字搜商品名" style="width:210px">'+
+         '<input id="q'+i+'" type="number" step="0.01" placeholder="数量" style="width:88px">'+
+         '<input id="u'+i+'" placeholder="单位" style="width:64px">'+
+         '<input id="v'+i+'" type="number" step="0.01" placeholder="单价" style="width:88px">'+
+         '<span class="muted">客户写什么单位就填什么，不许折算</span>'+
+       '</div></div>';
+  });
+  h+='<datalist id="货单">'+候选.map(function(c){
+       return '<option value="'+esc(c[0])+'">'+esc(c[1]+" ¥"+c[2].toFixed(2))+'</option>';}).join('')+'</datalist>'+
+     '<div style="display:flex;gap:10px;margin-top:12px">'+
+     '<button class="btn" id="ok">就这样</button>'+
+     '<button class="btn ghost" id="no">全都不管</button></div></div>';
+  $("窗").innerHTML=h;
+
+  /* 选「加一行货」才把那排输入框放出来；选中商品自动带出单位和价，人可以改 */
+  Array.prototype.forEach.call(document.querySelectorAll(".pick"),function(s){
+    s.onchange=function(){
+      var i=s.getAttribute("data-i");
+      $("add"+i).className="add"+(s.value==="加"?" on":"");
+    };
+  });
+  话们.forEach(function(x,i){
+    $("p"+i).oninput=function(){
+      候选.forEach(function(c){
+        if(c[0]===$("p"+i).value){ $("u"+i).value=c[1]; $("v"+i).value=c[2].toFixed(2); }
+      });
+    };
+  });
+  $("no").onclick=function(){
+    Array.prototype.forEach.call(document.querySelectorAll(".pick"),function(s){
+      s.value="不管"; $("add"+s.getAttribute("data-i")).className="add"; });
+    出结果();
+  };
+  $("ok").onclick=出结果;
+})();
+
+/* ③ 结果 —— 加的那几行摆出来，钱重新算一遍 */
+function 出结果(){
+  话们.forEach(function(x,i){
+    var s=document.querySelector('.pick[data-i="'+i+'"]');
+    决定[i]={ 怎么办:s?s.value:"不管",
+              品名:($("p"+i)||{}).value||"", 数量:parseFloat(($("q"+i)||{}).value||"")||0,
+              单位:($("u"+i)||{}).value||"", 单价:parseFloat(($("v"+i)||{}).value||"")||0 };
+  });
+  var 加=[], 注=[];
+  决定.forEach(function(d,i){
+    if(d.怎么办==="加"&&d.品名&&d.数量>0) 加.push({来自:话们[i],d:d});
+    else if(d.怎么办==="备注") 注.push(话们[i]);
+    else 注.push(话们[i]);      /* 「不管」也照样进备注 —— 捡回来就绝不能再弄丢一次 */
+  });
+  var h='';
+  if(加.length){
+    h+='<div class="ok" style="margin-bottom:8px"><b>手动加了 '+加.length+' 行：</b></div>'+
+       '<table><tr><th>品名</th><th class="n">数量</th><th>单位</th>'+
+       '<th class="n">单价</th><th class="n">金额</th><th>从哪来的</th></tr>';
+    var 增=0;
+    加.forEach(function(a){
+      var 钱=Math.round(a.d.数量*a.d.单价*100)/100; 增+=钱;
+      h+='<tr><td>'+esc(a.d.品名)+'</td><td class="n">'+a.d.数量+'</td>'+
+         '<td>'+esc(a.d.单位)+'</td><td class="n">'+a.d.单价.toFixed(2)+'</td>'+
+         '<td class="n">'+钱.toFixed(2)+'</td>'+
+         '<td class="muted">「'+esc(a.来自.话)+'」</td></tr>';
+    });
+    h+='</table><div style="margin-top:8px">金额多了 <b class="amber">'+
+       (Math.round(增*100)/100).toFixed(2)+'</b> 元</div>';
+  }else{
+    h+='<div class="muted">一行都没加 —— 金额跟今天<b class="ok">一模一样</b>，一分钱没动。</div>';
+  }
+  h+='<div style="margin-top:14px"><b>下面这几句话进备注，跟着销售单印出去：</b><br>'+
+     (注.length?注.map(function(x){
+        return '<span class="amber">第 '+x.行号+' 行 '+esc(x.商品)+'：「'+esc(x.话)+'」</span>';
+      }).join("<br>"):'<span class="muted">（没有）</span>')+'</div>'+
+     '<div class="muted" style="margin-top:10px">'+
+     '不管你怎么点，那两句话都不会再凭空消失 —— 要么变成一行货，要么留在备注上。</div>';
+  $("结果").innerHTML=h;
+}
+
+/* ④ 把补丁码摆出来 */
+$("补丁码").textContent=
+"// 引擎-读结构.js  第 216 行，现在是这样：\n"+
+"if(!名带数 && r.空 && !r.没看清) return;   /* 空格子跳过，那是这个点今天不要 */\n"+
+"\n"+
+"// 改成这样（上面加 4 行，原来那行一个字不动）：\n"+
+"if(!名带数 && r.空 && !r.没看清){\n"+
+"  /* 这一项一个数字都没写，可号/名/原文里却有汉字 ——\n"+
+"     那不是「这个点今天不要」，是客户在明细格里留的一句话。\n"+
+"     捡起来交给页面问人，【不进数量、不进金额】。 */\n"+
+"  var 话 = 拼话(d);\n"+
+"  if(话) 只有话.push({行:ri+1, 商品:名原, 话:话});\n"+
+"  return;                                  // ← 原来这一行，一个字没动\n"+
+"}\n"+
+"\n"+
+"// 然后 return 的时候多带一样出去（第 359 行那个 return）：\n"+
+"return { lines:lines, 抬头:整抬头(H), 校验:报, 只有话:只有话,\n"+
+"         没写数量的:没写数量的, 没读懂的:… };";
+</script>
+</body>
+</html>
