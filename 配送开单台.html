@@ -907,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260818f";
+  var 版本号 = "v20260818g";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2678,6 +2678,33 @@ window.addEventListener("unhandledrejection",function(ev){
     return String(a==null?"":a).replace(/\r\n/g,"\n").trim()
         === String(b==null?"":b).replace(/\r\n/g,"\n").trim();
   }
+  /* ══════════════ 有结构就把原文框锁上 ★（2026-08-18）══════════════
+     老板 8/18：「框里的字锁掉，我不需要改单，我从来没有动过框里的字，
+                 我只需要改下面的表格里面的某个东西就可以了。」
+                 「第一条就是第一条，第二条就是第二条。」
+
+     为什么非锁不可 —— 这是「同一张单两个答案」的根子：
+       文件/图片认完 → 有了结构（那张四样表）→ 走【格子路】，按列取值
+       可只要框里的字被动一下，解析原文() 里 同一份() 就对不上，
+       整张单当场退回【文字路】，改用「从字里猜」那套规矩。
+       53 张真单实测：两条路有 8 张数量对不上，一共差 113。
+       人根本看不出自己碰了一下键盘就换了套算法。
+
+     ⚠ 只在【有结构的时候】锁 —— 框空着照旧能打字、能粘微信文字，
+       那是第二条路的正经入口，不能堵。
+     ⚠ 点「清空」就解锁（resetOrder 里）。 */
+  /* ⚠ 整段包起来：这只是个「上把锁」的小动作，它自己出毛病绝不许拖累主流程。
+     2026-08-18 就撞了一次 —— 假 DOM 里没有 style，一个 TypeError 把
+     整个「收下格子表」打断了，货都没进原文框。 */
+  function 锁框(锁){
+    try{
+      var t=$("raw"); if(!t) return;
+      t.readOnly=!!锁;
+      t.title=锁?"这一单是文件/图片认出来的，原文锁住了 —— 要改就改下面表格里的数量、单位、商品":"";
+      if(t.style){ t.style.opacity=锁?"0.75":""; t.style.cursor=锁?"default":""; }
+    }catch(e){}
+  }
+
   function 解析原文(text){
     结构报告=null; 走的哪条路="文字"; 点名报告=null;
     if(ST.结构&&ST.结构文字&&同一份(text,ST.结构文字)&&window.GM_STRUCT){
@@ -5310,14 +5337,48 @@ window.addEventListener("unhandledrejection",function(ev){
     摊=摊.replace(/^#\s*客户\s*[:：]\s*(.+)$/m,function(m,p1){ hint=p1.trim(); return ""; }).trim();
     var 老=$("raw").value.replace(/\s+$/,"");
     var 是加单=!重来&&老.length>0;
-    $("raw").value = 是加单 ? (老+"\n\n"+摊) : 摊;
-    if(!是加单){ ST.结构=J; ST.结构文字=$("raw").value; }
-    else { ST.结构=null; ST.结构文字=""; }
+
+    /* ⛔ 2026-08-18 老板：「加单是两张表不一样，不能添加。
+         让他新开一个，或者手动添加。」
+       原来加单一律把结构丢掉（ST.结构=null），整张单当场退回【文字路】——
+       同一张单，只因为你多传了一张，就换了一套规矩。
+       现在：两张表【读法一样】才合并，仍旧走格子路；不一样就拦下来，不许混。 */
+    if(是加单 && ST.结构){
+      /* 上面那单也是文件/图片认出来的 —— 只有【读法一样】才准并进来。
+         ⚠ 上面是手打/粘的文字（没有结构）不走这条：那本来就在文字路上，
+           拦下来只会挡住「先打几样、再传一张」这种正经用法。 */
+      var 老读法=JSON.stringify(ST.结构.表怎么读的||{});
+      var 新读法=JSON.stringify((J&&J.表怎么读的)||{});
+      if(老读法!==新读法){
+        $("btn-ocr").disabled=false;
+        clearImg(); $("imgfile").value=""; TXTS=[];
+        识别败了("这张表跟上面那张读法不一样，不能加在同一单里 —— " +
+                 "点「清空」新开一单，或者在下面用「手动加一行」补。");
+        return;
+      }
+      /* 读法一样 → 把货并进原来那份结构里，结构【不丢】，路不跳 */
+      try{ ST.结构.行 = (ST.结构.行||[]).concat((J&&J.行)||[]); }catch(e){}
+      $("raw").value = 老+"\n\n"+摊;
+      ST.结构文字 = $("raw").value;
+      锁框(true);
+    } else if(是加单){
+      /* 上面是手打的文字 —— 照旧按文字加一段，不动结构（本来也没有） */
+      $("raw").value = 老+"\n\n"+摊;
+      ST.结构=null; ST.结构文字=""; 锁框(false);
+    } else {
+      $("raw").value = 摊;
+      ST.结构=J; ST.结构文字=$("raw").value; 锁框(true);
+    }
     clearImg(); $("imgfile").value=""; TXTS=[];
     $("btn-ocr").disabled=false;
     ST.hint=hint||ST.hint;
     if(!是加单&&!重来){ ST.manual=false; applyGuess(摊,hint); }
-    if(是加单) 接一段(摊); else 跑一遍原文();
+    /* ★ 2026-08-18：加单如果并进了同一份结构（上面那段），就整份重读一遍 ——
+       读的是合并后的结构，还在格子路上。
+       原来一律走 接一段(摊)：那是拿【文字】去解析新来的那一截，
+       等于加一次单就把这一截扔进文字路。
+       上面是手打文字的那种加单，照旧走 接一段。 */
+    if(是加单 && !ST.结构) 接一段(摊); else 跑一遍原文();
     /* ★ 识别完这一片，2026-08-11 按老板定的方案 A 重做（设计-识别完那一片.html）。
        老板原话：「这个问法太复杂了，整个界面太复杂了，这我不需要。」
        砍掉的：
@@ -5675,7 +5736,7 @@ window.addEventListener("unhandledrejection",function(ev){
       $("raw").value = 是加单 ? (老的+"\n\n"+txt) : txt;
       /* 只有「这一整框就是这份格子表」时才认结构 —— 加单之后框里混着两份，
          对不上了，宁可退回文字那条老路。 */
-      if(结构&&!是加单){ ST.结构=结构; ST.结构文字=$("raw").value; }
+      if(结构&&!是加单){ ST.结构=结构; ST.结构文字=$("raw").value; 锁框(true); }
       else { ST.结构=null; ST.结构文字=""; }
       /* 图片用过就清掉。不清的话，下次再贴一张点识别，
          上一张会跟着一起重发，行数直接翻倍。 */
@@ -6070,7 +6131,7 @@ window.addEventListener("unhandledrejection",function(ev){
       $("raw").value=""; ST.lines=[]; ST.manual=false; ST.hint=""; ST.custOK=false;
       核对结果=[]; 核对中=false; 已处理={}; 判过的=[];
       ST.savedNo=""; ST.no="待出号"; ST.dirty=false;   /* 新的一单，重新出号 */
-      ST.结构=null; ST.结构文字="";
+      ST.结构=null; ST.结构文字=""; 锁框(false);
       ST.调出来的=false; ST.加单模式=false; 画模式条();
       /* ★ 2026-08-09 老板：「点清空的时候应该被清空，这样就不会默认的」
          —— 清空 = 真的从头开始：客户、门店、备注全清掉。
