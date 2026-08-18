@@ -891,7 +891,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="新-按内容认单.js?v=20260812"></script>
 <script src="引擎-抓取.js?v=20260818f"></script>
 <script src="引擎-点位册.js?v=20260804a"></script>
-<script src="引擎-匹配.js?v=20260818i"></script>
+<script src="引擎-匹配.js?v=20260802z"></script>
 <script src="数据-切法规矩.js?v=20260810a"></script>
 <script src="引擎-断句规矩.js?v=20260811a"></script>
 <script src="引擎-OCR.js?v=20260809a"></script>
@@ -907,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260818i";
+  var 版本号 = "v20260818h";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2704,16 +2704,22 @@ window.addEventListener("unhandledrejection",function(ev){
        53 张真单实测：两条路有 8 张数量对不上，一共差 113。
        人根本看不出自己碰了一下键盘就换了套算法。
 
-     ⚠ 只在【有结构的时候】锁 —— 框空着照旧能打字、能粘微信文字，
-       那是第二条路的正经入口，不能堵。
-     ⚠ 点「清空」就解锁（resetOrder 里）。 */
+     ⛔ 2026-08-18 当天就改了做法：原来是把框设成 readOnly，结果
+       【文件拖不进来了】—— 浏览器把只读的框当成「不接受输入」，老板当场撞到。
+       现在不锁框，改成【有结构就一直用结构】（见下面 解析原文）：
+       框照旧能拖、能粘、能打字，但只要这一单是文件/图片认出来的，
+       读的永远是那份结构，框里的字变不变都不影响 —— 路一样不会跳。
+     ⚠ 框空着照旧是第二条路的正经入口，不能堵。
+     ⚠ 点「清空」结构就没了（resetOrder 里），从头再来。 */
   /* ⚠ 整段包起来：这只是个「上把锁」的小动作，它自己出毛病绝不许拖累主流程。
      2026-08-18 就撞了一次 —— 假 DOM 里没有 style，一个 TypeError 把
      整个「收下格子表」打断了，货都没进原文框。 */
   function 锁框(锁){
     try{
       var t=$("raw"); if(!t) return;
-      t.readOnly=!!锁;
+      /* ⛔ 2026-08-18 不再设 readOnly：设了之后浏览器把这个框当成
+         「不接受输入」，【文件拖不进来了】（老板当场撞到）。
+         路不跳这件事改在下面 解析原文 里办：有结构就一直用结构。 */
       t.title=锁?"这一单是文件/图片认出来的，原文锁住了 —— 要改就改下面表格里的数量、单位、商品":"";
       if(t.style){ t.style.opacity=锁?"0.75":""; t.style.cursor=锁?"default":""; }
     }catch(e){}
@@ -2721,7 +2727,7 @@ window.addEventListener("unhandledrejection",function(ev){
 
   function 解析原文(text){
     结构报告=null; 走的哪条路="文字"; 点名报告=null;
-    if(ST.结构&&ST.结构文字&&同一份(text,ST.结构文字)&&window.GM_STRUCT){
+    if(ST.结构&&window.GM_STRUCT){
       try{
         var r=window.GM_STRUCT.读结构(ST.结构);
         if(r&&r.lines&&r.lines.length){
