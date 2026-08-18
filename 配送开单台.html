@@ -907,7 +907,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260818g";
+  var 版本号 = "v20260818h";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2629,12 +2629,26 @@ window.addEventListener("unhandledrejection",function(ev){
     $("s-d1").textContent=$("d1").value;
     $("s-d2").textContent=$("d2").value;
     var tb=$("s-rows"); tb.innerHTML="";
+    var 纸行=出行(R);
+    /* ★ 2026-08-18 老板：「我导出的图片或者文件，要有这个整行合计的体现，
+         而且要比较明显的那一种。」
+       一样货送四个点位就是四行，各行是各点位的量；送货的人要知道
+       这一样货【一共】要装多少。屏幕上有这个数（小灰字），导出的纸上原来没有。
+       判据跟屏幕那份一模一样：同一个 L 有几行 —— 别另算一套。 */
+    function 整行合计(r){
+      var 几行=纸行.filter(function(x){ return x.L===r.L; }).length;
+      return 几行>1 ? r.L.qty : null;
+    }
     出行(R).forEach(function(r,n){
       var tr=document.createElement("tr");
+      var 合=整行合计(r);
       tr.innerHTML='<td>'+(n+1)+'</td><td>'+esc(sheetName(r))+
         (sheetOurs(r)?'<br><span style="font-size:11px;color:#8A9199">'+esc(sheetOurs(r))+'</span>':'')+'</td>'+
         '<td>'+esc(r.it?r.it.unit:(r.L.unit||""))+'</td>'+
-        '<td class="num">'+qty(r.qty)+'</td>'+
+        '<td class="num">'+qty(r.qty)+
+          (合!==null?'<div style="margin-top:2px;font-size:12px;font-weight:700;color:#B4531A;'+
+            'background:#FDF0E4;border:1px solid #E7B98C;border-radius:4px;padding:1px 5px;'+
+            'display:inline-block;white-space:nowrap">整行合计 '+qty(合)+'</div>':'')+'</td>'+
         '<td class="num">'+(r.price===null?"":n2(r.price))+'</td>'+
         '<td class="num">'+(r.price===null?"":n2(r.price*r.qty))+'</td>'+
         '<td>'+(sheetSpot(r)?esc(sheetSpot(r)):'<span class="muted">-</span>')+'</td>'+
@@ -3220,12 +3234,13 @@ window.addEventListener("unhandledrejection",function(ev){
   function exportCsv(){
     var R=compute();
     /* 商品名称 = 客户自己写的；后面两列留着我们的叫法和品名，对账/拣货用 */
-    var head=["单据编号","客户名称","销售日期","送货日期","序号","商品名称","我们的叫法","你的商品名","单位","数量","单价","金额","客户点位","备注","单据备注"];
+    var head=["单据编号","客户名称","销售日期","送货日期","序号","商品名称","我们的叫法","你的商品名","单位","数量","整行合计","单价","金额","客户点位","备注","单据备注"];
     var rows=[head], on=($("order-note").value||"").trim();
     出行(R).forEach(function(r,i){
       rows.push([ST.no,custName(ST.ci),$("d1").value,$("d2").value,i+1,
         sheetName(r),(r.it?r.it.alias:""),(r.it?r.it.prod:""),(r.it?r.it.unit:r.L.unit||""),
-        qty(r.qty),(r.price===null?"":n2(r.price)),(r.price===null?"":n2(r.price*r.qty)),r.code,r.note,on]);
+        qty(r.qty),(出行(R).filter(function(x){return x.L===r.L;}).length>1?qty(r.L.qty):""),
+        (r.price===null?"":n2(r.price)),(r.price===null?"":n2(r.price*r.qty)),r.code,r.note,on]);
     });
     var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(",");}).join("\r\n");
     var a=document.createElement("a");
@@ -3304,13 +3319,23 @@ window.addEventListener("unhandledrejection",function(ev){
 
   /* 表体：跟屏幕上那张销售单一模一样的 8 列 */
   function sheetBody(R){
-    return 出行(R).map(function(r,i){
+    var 全=出行(R);
+    /* ★ 2026-08-18 老板：「导出的图片或者文件，要有这个整行合计的体现，
+         而且要比较明显的那一种。」
+       一样货送四个点位就是四行，各行是各点位的量。送货的人要知道
+       这一样货【一共】装多少 —— 写进数量格里，八列不变，图片/xls/打印全带上。
+       判据跟屏幕那份一样：同一个 L 有几行。 */
+    function 合(r){
+      return 全.filter(function(x){ return x.L===r.L; }).length>1 ? r.L.qty : null;
+    }
+    return 全.map(function(r,i){
       /* 商品名称印客户自己的叫法；我们的品名跟在后面括号里，仓库照它拣货 */
       var nm=sheetName(r), ours=sheetOurs(r);
+      var h=合(r);
       return [String(i+1),
         nm+(ours?("（"+ours+"）"):""),
         (r.it?r.it.unit:(r.L.unit||"")),
-        qty(r.qty),
+        qty(r.qty)+(h!==null?("　整行合计 "+qty(h)):""),
         (r.price===null?"":n2(r.price)),
         (r.price===null?"":n2(r.price*r.qty)),
         sheetSpot(r), sheetNote(r)];
