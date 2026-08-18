@@ -1,0 +1,104 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>诊断 · 文件拖不进来</title>
+<!-- 单文件、离线、跟开单台完全隔离 —— 双击就能开，不用装任何东西。
+     用的是开单台里【一模一样】那段拖拽代码 + 【同一个】读文件引擎，
+     只是把每一步都摊在屏幕上说出来。
+     它只诊断，一个字都不会改到开单台。 -->
+<script src="引擎-读文件.js"></script>
+<style>
+  body{background:#15181d;color:#e8eaed;font:15px/1.7 system-ui,"Microsoft YaHei",sans-serif;
+       margin:0;padding:22px}
+  h1{font-size:19px;margin:0 0 4px}
+  .sub{color:#9aa0a6;font-size:13.5px;margin-bottom:16px}
+  #zone{border:3px dashed #e0ba5e;border-radius:16px;padding:46px 20px;text-align:center;
+        font-size:22px;font-weight:700;color:#e0ba5e;background:#1b1f26}
+  #log{margin-top:18px;background:#0f1216;border:1px solid #2a2f38;border-radius:10px;
+       padding:14px 16px;white-space:pre-wrap;word-break:break-all;
+       font:13.5px/1.75 ui-monospace,Consolas,monospace;min-height:80px}
+  .ok{color:#7bd88f}.bad{color:#ff8a80}.warn{color:#e0ba5e}.dim{color:#9aa0a6}
+  b.step{color:#8ab4f8}
+</style>
+
+<h1>诊断 · 文件拖不进来</h1>
+<div class="sub">把那个拖不进去的文件，拖到下面这个框里。<b>整页哪儿松手都行。</b>
+  然后把这一页截图发回来。</div>
+
+<div id="zone">把文件拖到这里 📥</div>
+<div id="log" class="dim">还没有任何动静 —— 拖一个文件进来。
+
+如果拖进来之后<b>这里一个字都不多</b>，那就说明浏览器压根没把文件交给页面，
+问题在浏览器/来源那一头（比如从微信、QQ 里直接拖），不在代码里。</div>
+
+<script>
+(function(){
+  var log=document.getElementById("log"), 空=true;
+  function say(s,cls){
+    if(空){ log.textContent=""; log.className=""; 空=false; }
+    var d=document.createElement("div");
+    if(cls) d.className=cls;
+    d.innerHTML=s;
+    log.appendChild(d);
+  }
+  function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+
+  /* ===== 下面这三段跟 配送开单台.html 里【一字不差】 ===== */
+  function hasFiles(e){
+    var t=e.dataTransfer&&e.dataTransfer.types;
+    return !!t&&Array.prototype.indexOf.call(t,"Files")>=0;
+  }
+  ["dragenter","dragover"].forEach(function(ev){
+    document.addEventListener(ev,function(e){
+      e.preventDefault();
+      try{ e.dataTransfer.dropEffect="copy"; }catch(err){}
+    });
+  });
+  document.addEventListener("drop",function(e){
+    e.preventDefault();
+    say("<b class='step'>① 收到 drop 事件了</b>","ok");
+
+    var t=e.dataTransfer&&e.dataTransfer.types;
+    say("　　dataTransfer.types = " + (t?esc(Array.prototype.slice.call(t).join(" , ")):"（没有）"));
+    say("　　types 里有没有 Files：" + (hasFiles(e)?"有":"❌ 没有"), hasFiles(e)?"ok":"bad");
+
+    var fs=e.dataTransfer&&e.dataTransfer.files;
+    if(!fs||!fs.length){
+      say("<b class='step'>② 拿不到文件实体（files.length = 0）</b>","bad");
+      say("　　→ 这就是「拖不进来」的原因：浏览器根本没给页面文件。","bad");
+      say("　　　 常见于从<b>微信 / QQ 聊天窗口</b>直接拖。","warn");
+      say("　　　 办法：在微信里右键<b>复制</b>，回页面按 <b>Ctrl+V</b>；或先<b>另存为</b>到桌面再拖。","warn");
+      return;
+    }
+    say("<b class='step'>② 拿到 "+fs.length+" 个文件</b>","ok");
+
+    Array.prototype.forEach.call(fs,function(f,k){
+      say("　　["+(k+1)+"] 名字：" + esc(f.name));
+      say("　　　  大小：" + f.size + " 字节" + (f.size===0?"　❌ 是 0 字节，文件是空的/没读到":""), f.size?"":"bad");
+      say("　　　  浏览器认的类型：" + (esc(f.type)||"（空）"));
+      if(!window.GM_FILE){ say("　　　  ❌ 引擎-读文件.js 没加载上","bad"); return; }
+      var 类=window.GM_FILE.类型(f);
+      say("　　　  <b class='step'>③ 开单台会把它当成：</b>" + esc(String(类)),
+          类?"ok":"bad");
+      if(!类) say("　　　  → 认不出这个类型，开单台会原样丢掉，看着就像没反应。","bad");
+      if(类==="图片"){ say("　　　  → 走识别那条路（缩略图里等着，要点「识别这张图」）","warn"); return; }
+
+      say("　　　  <b class='step'>④ 试着真读一遍…</b>");
+      window.GM_FILE.readOne(f).then(function(r){
+        say("　　　  ✅ 读成功　kind=" + esc(r.kind) +
+            (r.text!==undefined?("　读出 "+String(r.text).length+" 个字"):"") +
+            (r.grid?("　带格子表 "+(r.grid.length||0)+" 行"):""),"ok");
+        if(r.kind==="文字"&&!String(r.text||"").trim())
+          say("　　　  ⚠ 读是读到了，但内容是空的 —— 这也会看着像「拖进去没反应」","warn");
+        say("　　　  → 到这一步为止，开单台该做的就是：把它摆进缩略图那一排，"+
+            "等你点「<b>识别这张图</b>」。<b>它不会自动跑</b>。","warn");
+      }).catch(function(err){
+        say("　　　  ❌ 读失败：" + esc(err&&err.message||err),"bad");
+        say("　　　  → 这就是原因。把这行发我。","bad");
+      });
+    });
+  });
+
+  say && null;
+})();
+</script>

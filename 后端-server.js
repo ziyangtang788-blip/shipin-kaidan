@@ -183,7 +183,7 @@ function findOrder(no) {
    「来新表得先调 AI 识别正确之后交给人去判断，好了之后给他一个专注的表。」
    ⚠ 合并这儿【必须列出来】：这个 out 是白名单，漏掉一个字段，
      换台电脑一同步就被整份抹掉，人还以为是自己没教过。 */
-const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {} };
+const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, px: {}, padd: {}, plog: [] };
 
 function loadOverlay() {
   const o = readJSON(OVERLAY_FILE, null);
@@ -206,8 +206,49 @@ function mergeOverlay(base, incoming) {
        两台电脑各教了不同的名字，两边都留着。 */
     排名单: Object.assign({}, base.排名单, incoming.排名单 || {}),
     /* 读法本：一张表样一条，后确认的盖前面的（表改版了就该听新的那份）。 */
-    读法本: Object.assign({}, base.读法本, incoming.读法本 || {})
+    读法本: Object.assign({}, base.读法本, incoming.读法本 || {}),
+    /* ★ 2026-08-18：px / padd / plog 原来【不在这张名单里】，
+       页面推上来整份被丢掉 —— 老板 8/18 撞了一天的那个洞。
+
+       后果不是「少存一样」那么轻：
+         · 「＋ 库里没有，新建」建的品（padd）只活在那一台浏览器里
+         · 可「客户这么叫 → 那个新品」的对照（maps）【会】上服务器
+         → 词上了云，货没上云。换台电脑打开，对照指着一个不存在的商品，
+           那一行退回「存疑」，界面还亮着「忘掉重学」，看着像学过了。
+           线上已经攒了 4 条这种死键（轩宝「云元韧豆腐」）。
+         · 改过的价（px）同理，只在一台电脑上；清一次缓存就没了。
+       ⚠ who 故意不同步 —— 那是「这台机器前面坐的是谁」，每台不一样。 */
+    px: {}, padd: {}, plog: [],
+    /* 门店名单：一个客户底下好几家店，人一家家填进去的。同样不在原来那张名单上。
+       丢了不会报错 —— 只是下拉框里那几家店悄悄没了，人得重填一遍。 */
+    shops: {}
   };
+  /* shops：按客户合并，店名去重（两台电脑各填各的店，都留着） */
+  for (const cid of new Set([].concat(Object.keys(base.shops || {}), Object.keys(incoming.shops || {}))))
+    out.shops[cid] = Array.from(new Set([].concat((base.shops || {})[cid] || [], (incoming.shops || {})[cid] || [])));
+  /* px：按客户合并，同一个规格后改的盖前面（跟 maps 一个待遇） */
+  for (const cid of new Set([].concat(Object.keys(base.px || {}), Object.keys(incoming.px || {}))))
+    out.px[cid] = Object.assign({}, (base.px || {})[cid], (incoming.px || {})[cid]);
+  /* padd：按 sku 去重追加。sku 带时间戳天生不撞，
+     所以两台电脑各建各的都留着，谁的都不丢 —— 这是「新建」最要紧的一条。 */
+  for (const cid of new Set([].concat(Object.keys(base.padd || {}), Object.keys(incoming.padd || {})))) {
+    const 见 = new Set(), 出 = [];
+    for (const a of [].concat((base.padd || {})[cid] || [], (incoming.padd || {})[cid] || [])) {
+      if (!a || !a.sku || 见.has(a.sku)) continue;
+      见.add(a.sku); 出.push(a);
+    }
+    out.padd[cid] = 出;
+  }
+  /* plog：改价留痕，老板要的「改价要留痕」。去重追加，新的在前，留最近 2000 条。 */
+  {
+    const 见 = new Set(), 全 = [];
+    for (const l of [].concat(incoming.plog || [], base.plog || [])) {
+      const k = JSON.stringify(l);
+      if (见.has(k)) continue;
+      见.add(k); 全.push(l);
+    }
+    out.plog = 全.slice(0, 2000);
+  }
   /* 点位册：按客户合并，同一个点谁见得多听谁的（别让偶尔读飘的那次顶掉常见写法） */
   const 客 = new Set([].concat(Object.keys(base.spotbook || {}), Object.keys(incoming.spotbook || {})));
   for (const cid of 客) {
@@ -252,6 +293,11 @@ function mergeOverlay(base, incoming) {
     if (i < 0) continue;
     const f = g.slice(0, i), key = g.slice(i + 1);
     if ((f === "maps" || f === "gmap") && out[f]) delete out[f][key];
+    /* 改价「还原成观麦的」也要跟着删，不然下次同步又被拉回来 —— 键是 px|客户号|规格编码 */
+    else if (f === "px" && out.px) {
+      const j = key.indexOf("|");
+      if (j > 0 && out.px[key.slice(0, j)]) delete out.px[key.slice(0, j)][key.slice(j + 1)];
+    }
   }
   // 忘掉名单只留最近 800 条，再多就没意义了 —— 那些键早被重教覆盖过
   const gk = Object.keys(out.gone);
