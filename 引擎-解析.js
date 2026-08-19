@@ -1551,7 +1551,12 @@
     return c;
   }
 
-  root.GM_PARSE={ parseOrder:parseOrder, 收尾:收尾, 摘总数:摘总数, 拼名字:拼名字,
+  /* 加总 导出给 引擎-抓取.js 用 ★2026-08-19 —— 表格路抄「表上总数」那一格时要它。
+     客户常年把总数写成一串加法（分几次报数）：「51.3斤+13斤」「93斤+14斤」。
+     只 match 第一个数字就会漏掉后半截，明细明明剪对了却报「对不上」，天天假警报。
+     ⚠ 只准调这一份，别在抓取那边抄第二份 —— 单位打架不许加（「10斤+4块」）这条
+       只有这儿写着，抄漏了就会把两样货加成一样。 */
+  root.GM_PARSE={ parseOrder:parseOrder, 收尾:收尾, 摘总数:摘总数, 拼名字:拼名字, 加总:加总,
                   norm:norm, bare:bare, toHalf:toHalf, unitNorm:unitNorm,
                   散称:散称, 论斤的:论斤的, 板当斤:板当斤,
                   convFind:convFind, convApply:convApply,
