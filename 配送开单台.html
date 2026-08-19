@@ -886,7 +886,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="引擎-读文件.js?v=20260818m"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
-<script src="引擎-解析.js?v=20260819g"></script>
+<script src="引擎-解析.js?v=20260819i"></script>
 <script src="引擎-读结构.js?v=20260819h"></script>
 <script src="引擎-认表.js?v=20260819d"></script>
 <script src="新-按内容认单.js?v=20260819e"></script>
@@ -908,7 +908,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260819h";
+  var 版本号 = "v20260819i";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2055,6 +2055,17 @@ window.addEventListener("unhandledrejection",function(ev){
     if(R.al.none.length) h+='<div class="alert sale"><b>✕ 认不出 '+R.al.none.length+' 项：</b>'+R.al.none.map(esc).join("、")+'　—— 在那一行的下拉里指一次，以后自动记住。</div>';
     if(R.al.zero.length) h+='<div class="alert sale"><b>✕ 没有价 '+R.al.zero.length+' 项：</b>'+[...new Set(R.al.zero)].map(esc).join("、")+'　—— 观麦里这个客户的这个商品价格是 0。</div>';
     if(R.al.doubt.length) h+='<div class="alert warn"><b>? 存疑 '+R.al.doubt.length+' 项：</b>'+R.al.doubt.map(esc).join("、")+'　—— 核对一下，不对就在下拉里换。</div>';
+    /* ★ 2026-08-19 碧源 8-20：客户在明细里写了「(256#05-1砖)0斤」，
+       总数那栏也特意写着「12板+0斤」—— 可那一段原来【一声不吭就扔了】。
+       老板：「这个没有弹出来，为什么？…这种一个零的话，特别要注意的都是要弹出来的。」
+       0 = 今天不要，照旧不进单子（老板 8/2 的老规矩不动），但必须让人看见：
+       客户特意写的 0，悄悄扔掉就是把他的话当没说；万一是他填漏了，谁都发现不了。
+       ⚠ 只摆出来，不拦确定订单 —— 有 0 的单子天天有，拦住就没法出单了。
+       ⚠ 整行全 0 的不在这儿报（下面「没放进来」已经报过），免得同一件事说两遍。 */
+    var 零段=(window.GM_PARSE.零数量的?window.GM_PARSE.零数量的():[]);
+    if(零段.length) h+='<div class="alert warn"><b>0 有 '+零段.length+' 个点位写的是 0：</b>'+
+      零段.map(function(z){ return esc(z.商品)+(z.点位?'（'+esc(z.点位)+'）':''); }).join("、")+
+      '　—— 客户写 0 就是这个点今天不要，这几段没放进单子。<b>特意写的 0，看一眼是不是漏填了。</b></div>';
     /* 只有名字、没写数量的整行不放进来（老板 8/2 定的）。
        但一定要摆出来 —— 丢得不声不响就是漏发，人得能一眼看见丢了哪些。 */
     /* ===== 两道自动对账 —— 老板 2026-08-03：「像识别错误这种应该怎么去避免」 =====
