@@ -908,7 +908,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260819k";
+  var 版本号 = "v20260819l";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2730,13 +2730,20 @@ window.addEventListener("unhandledrejection",function(ev){
      ⛔ 合并【只是换个看法】，底下存的永远是拆开的那份：
        · ST.lines / compute() 一个字不动
        · 随时点一下切回去核对
-       · 确定订单、导观麦，走的还是【拆开】那份
+       · 存到服务器的订单记录，走的还是【拆开】那份
      为什么这么定：江云 8/3 那张单，(A002)3板 + (A002)2板 里第二个号
      其实是 A056 看错了。当时要是把数据也合了 → 一行 5 板，
      「号看错了」这件事就被永远盖住。现在合并只在屏幕上，原始那份还在。
 
      ⛔ 单位不一样不合 —— 老板 2026-08-09：「单位不同就不能合并」。
-       19 板 + 3 斤 不是 22，硬加就是错货。价不一样也不合（改过价的那种）。 */
+       19 板 + 3 斤 不是 22，硬加就是错货。价不一样也不合（改过价的那种）。
+
+     ★ 2026-08-19 老板加了一条：【导观麦跟着屏幕走】
+       「一整个页面就不会变，只不过是从合并跟导入那里去区分而已。
+         合并了导出来就是合并的，拆开了导出来就是拆开的明细。
+         合并导出来，就不需要有点位了，全部留空就行了。」
+       所以 8/9 那句「导观麦走拆开那份」只剩【服务器订单记录】还成立 ——
+       底账要能查回哪个点要了多少，那份永远存拆开的。 */
   var 合并模式=false;
 
   function 合并行(rows){
@@ -2755,7 +2762,16 @@ window.addEventListener("unhandledrejection",function(ev){
       g._并++;
       var sp=sheetSpot(r); if(sp) g._点位.push(sp);
     });
-    return 序.map(function(k){ return 组[k]; });
+    return 序.map(function(k){
+      var g=组[k];
+      /* ★ 真合起来的行（并了两段以上），点位和备注一律清空 —— 老板 2026-08-19。
+         组是拿【第一段】当底子建的，不清就等于拿第一段的点位和备注去代表三段，
+         张冠李戴。屏幕上本来就没印它俩（sheetSpot 印「合并 N 个点」、sheetNote 印空），
+         导出去也得一样，不然屏幕干净、导出去带着一个莫名其妙的点位号。
+         只出现一次的（_并===1）不算合并，它自己的点位备注照旧留着。 */
+      if(g._并>1){ g.code=""; g.note=""; }
+      return g;
+    });
   }
 
   /* 销售单上到底出哪几行 —— 拆开的还是合并的 */
@@ -3450,6 +3466,13 @@ window.addEventListener("unhandledrejection",function(ev){
 
      列名照观麦的导入模板走，改的是 导出-观麦.js 顶上那张「列名」表，
      这里一个字都不用动。 */
+  /* 存疑 = 机器自己挑的、人还没点过 —— 这种一律不许导。
+     抽成一份是因为现在有两处要用它：①填进导出表的 存疑 列 ②合并之前先探一遍。
+     ⛔ 别在别处抄第二份判断，抄了就会出现「这边拦、那边放」。 */
+  function 行存疑(r){
+    return !!(r&&r.L&&(r.L.how==="fuzzy"||r.L.how==="cross"||r.L.how==="gmap"||r.L.how==="none"));
+  }
+
   function 导观麦(){
     if(ST.ci<0||!ST.lines.length){ 提醒("还没有单子"); return; }
     if(!ST.custOK){ 提醒("先确认是哪家客户"); return; }
@@ -3461,17 +3484,27 @@ window.addEventListener("unhandledrejection",function(ev){
     var E=window.GM_EXPORT;
     if(!E){ 提醒("导出模块没加载（导出-观麦.js）","红"); return; }
     var R=compute();
+    /* ★ 老板 2026-08-19：屏幕上什么样，导出去就什么样 —— 点了合并就导合并单。
+       走的是【跟屏幕、跟 Excel 同一个口子】出行(R)，不许在这儿另判一次合并模式。
+
+       ⛔ 命门：存疑得按【拆开的】那份判。
+         三段并成一行、里头夹着一段存疑的 —— 合并行是拿第一段当底子建的，
+         第一段干净就把那段存疑盖住了，闷声导进观麦。
+         所以：只要还有一行存疑，就退回拆开的那份 —— 反正存疑一行都导不出去，
+         用拆开的那份还能把是哪几行报准。干净了才合并出表。 */
+    var 拆=R.rows, 有存疑=拆.some(行存疑);
+    var 出=有存疑?拆:出行(R);
     /* 把屏幕上这张单摊成「一行一个商品」，跟存进订单记录的那份同一个形状 */
-    var lines=R.rows.map(function(r,i){
+    var lines=出.map(function(r,i){
       return { i:i+1, name:sheetName(r), ours:(r.it?r.it.alias:""),
                unit:(r.it?r.it.unit:(r.L.unit||"")), qty:r.qty,
                price:(r.price===null?null:r.price),
+               /* 合并出来的行，合并行()里已经把这俩清空了 —— 老板要「点位全部留空」 */
                code:r.code||"", note:r.note||"",
                ok:!!r.it, sku:(r.it?r.it.sku:""),
                /* 观麦的商品本体 ID（C 开头）—— 价格库第 8 个字段就是它 */
                spuId:(r.it&&DATA.items[r.it.i]?(DATA.items[r.it.i][7]||""):""),
-               /* 存疑 = 机器自己挑的、人还没点过 —— 这种一律不许导 */
-               存疑:!!(r.L&&(r.L.how==="fuzzy"||r.L.how==="cross"||r.L.how==="gmap"||r.L.how==="none")) };
+               存疑:行存疑(r) };
     });
     var 单={ customer_id:custId(ST.ci), customer_name:custName(ST.ci),
              order_date:$("d1").value||today(), deliver_date:$("d2").value||"",
