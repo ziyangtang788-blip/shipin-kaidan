@@ -886,7 +886,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="引擎-读文件.js?v=20260818m"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
-<script src="引擎-解析.js?v=20260819i"></script>
+<script src="引擎-解析.js?v=20260819j"></script>
 <script src="引擎-读结构.js?v=20260819h"></script>
 <script src="引擎-认表.js?v=20260819d"></script>
 <script src="新-按内容认单.js?v=20260819e"></script>
@@ -908,7 +908,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260819i";
+  var 版本号 = "v20260819j";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1973,6 +1973,9 @@ window.addEventListener("unhandledrejection",function(ev){
           /* 按客户量纲乘过的（好好多 公斤→斤 ×2）—— 必须摆出来。
              不摆的话人看到的就是个普通数字，「表上写 1、我按 2 斤发」这件事没人知道。 */
           量纲:L.量纲说明||"",
+          /* 客户自己写 0 的那一段（碧源「(256#05-1砖)0斤」）。
+             老板 8/19：不要提示条，要把这一行摆出来 —— 自己选货、自己填数、不要就删。 */
+          零数量:!!g.零数量,
           flag:off>0?"spot":(it.price>0?"ok":"zero")});
       });
     });
@@ -2055,17 +2058,13 @@ window.addEventListener("unhandledrejection",function(ev){
     if(R.al.none.length) h+='<div class="alert sale"><b>✕ 认不出 '+R.al.none.length+' 项：</b>'+R.al.none.map(esc).join("、")+'　—— 在那一行的下拉里指一次，以后自动记住。</div>';
     if(R.al.zero.length) h+='<div class="alert sale"><b>✕ 没有价 '+R.al.zero.length+' 项：</b>'+[...new Set(R.al.zero)].map(esc).join("、")+'　—— 观麦里这个客户的这个商品价格是 0。</div>';
     if(R.al.doubt.length) h+='<div class="alert warn"><b>? 存疑 '+R.al.doubt.length+' 项：</b>'+R.al.doubt.map(esc).join("、")+'　—— 核对一下，不对就在下拉里换。</div>';
-    /* ★ 2026-08-19 碧源 8-20：客户在明细里写了「(256#05-1砖)0斤」，
-       总数那栏也特意写着「12板+0斤」—— 可那一段原来【一声不吭就扔了】。
-       老板：「这个没有弹出来，为什么？…这种一个零的话，特别要注意的都是要弹出来的。」
-       0 = 今天不要，照旧不进单子（老板 8/2 的老规矩不动），但必须让人看见：
-       客户特意写的 0，悄悄扔掉就是把他的话当没说；万一是他填漏了，谁都发现不了。
-       ⚠ 只摆出来，不拦确定订单 —— 有 0 的单子天天有，拦住就没法出单了。
-       ⚠ 整行全 0 的不在这儿报（下面「没放进来」已经报过），免得同一件事说两遍。 */
-    var 零段=(window.GM_PARSE.零数量的?window.GM_PARSE.零数量的():[]);
-    if(零段.length) h+='<div class="alert warn"><b>0 有 '+零段.length+' 个点位写的是 0：</b>'+
-      零段.map(function(z){ return esc(z.商品)+(z.点位?'（'+esc(z.点位)+'）':''); }).join("、")+
-      '　—— 客户写 0 就是这个点今天不要，这几段没放进单子。<b>特意写的 0，看一眼是不是漏填了。</b></div>';
+    /* ★ 2026-08-19 碧源 8-20：客户写的 0（如「(256#05-1砖)0斤」）原来一声不吭就扔了。
+       ⚠ 这儿【故意不做提醒条】—— 老板看过提醒条的做法，明确说：
+         「我不要一个提示。我需要的是，你把他写明的那一行整一行拉出来，做一个品类，
+           让他自己在这个品类里面去选东西，然后自己填数量，不要就自己删掉。」
+       所以改成：那一段【留在单子里】当一行（引擎-解析.js 收尾里挂 零数量 记号），
+       商品照旧能选、数量框空着等人填、不要就点这一行的「删」。
+       行上怎么摆见下面数量那一格和备注那一格。 */
     /* 只有名字、没写数量的整行不放进来（老板 8/2 定的）。
        但一定要摆出来 —— 丢得不声不响就是漏发，人得能一眼看见丢了哪些。 */
     /* ===== 两道自动对账 —— 老板 2026-08-03：「像识别错误这种应该怎么去避免」 =====
@@ -2352,6 +2351,12 @@ window.addEventListener("unhandledrejection",function(ev){
            跟表上总数量对不上   → 红色，回去核那几段
          填好了 / 对上了，class 自然就不加了，颜色跟着回去。 */
       var 本行没看清=(r.segs||[]).some(function(g){ return g.没看清; });
+      /* ★ 客户自己写 0 的那一行（碧源「(256#05-1砖)0斤」）。
+         数量框跟「没看清」一样空着等人填 —— 摆个 0 在那儿人会当成已经填好了，
+         一路点过去就把这一段当成「今天不要」放走了，客户到底要不要没人问过。
+         老板 8/19：「让他自己在这个品类里面去选东西，然后自己填数量，
+                     如果他觉得不要，就自己删掉就可以了。」 */
+      var 本行是零=!本行没看清&&(r.segs||[]).some(function(g){ return g.零数量; });
       var 本行对不上=false;
       if(r.L&&r.L.总数&&r.L.总数.qty>0&&!本行没看清){
         本行对不上=Math.abs(Math.round((r.L.qty||0)*1000)/1000
@@ -2365,6 +2370,7 @@ window.addEventListener("unhandledrejection",function(ev){
          ⚠ 一个数字都不改：这只是「以各段为准」这个判断被人拍板了，留痕在 判过的 里。 */
       if(本行对不上&&已处理["总数|"+r.L.text]) 本行对不上=false;
       if(本行没看清) tr.className="q-blur";
+      else if(本行是零) tr.className="q-blur";   /* 跟没看清同一档：橙色，一眼看得见要处理 */
       else if(本行对不上) tr.className="q-diff";
       /* forceFix：认对了的行点「改」也能调出下拉 —— 教错了得能改回来 */
       var need=(!window.GM_MATCH.commits(r.L.how)||r.L.forceFix), to;
@@ -2457,6 +2463,10 @@ window.addEventListener("unhandledrejection",function(ev){
              只写「×2」人还得自己反推原数；把原数摆出来，一眼就能跟客户的表对。 */
           (r.量纲?'<br><span class="tag warn">'+esc(r.量纲)+'　表上写的是 '+
             qty(Math.round((r.qty/(r.L.量纲乘过||1))*1000)/1000)+'</span>':'')+
+          /* ★ 客户自己写 0 的那一行 —— 把话说明白，人才知道该干嘛。
+             不写这句的话，人看到的就是一行空数量，不知道是识别没读到还是客户真写了 0。 */
+          (r.零数量?'<br><span class="tag warn">客户在这一格写的是 <b>0</b> —— '+
+            '要发就填个数量，确定不要就点左边的「删」</span>':'')+
           '</td>'+
         '<td>'+to+'</td>'+
         /* 每一行管自己的数量。原来是第一行放个框、里面填「整行合计」，
@@ -2464,9 +2474,11 @@ window.addEventListener("unhandledrejection",function(ev){
            一个商品送四个点位就是四行，各改各的才符合分货的实际。 */
         '<td class="num">'+
           /* 没看清的：框空着 + 提示，等人填。不许摆一个猜出来的数在那儿。 */
-          '<input class="qty'+(本行没看清?' blur':'')+'" data-row="'+n+'" value="'+
-            (本行没看清?"":qty(r.qty))+'"'+
-            (本行没看清?' placeholder="填数量" title="识别时这个数字没看清，填一下">':'>')+
+          '<input class="qty'+(本行没看清||本行是零?' blur':'')+'" data-row="'+n+'" value="'+
+            (本行没看清||本行是零?"":qty(r.qty))+'"'+
+            (本行没看清?' placeholder="填数量" title="识别时这个数字没看清，填一下">'
+             :本行是零?' placeholder="填数量" title="客户在这一格写的是 0 —— 要发就填个数，不要就点左边的「删」">'
+             :'>')+
           (multi?'<br><span class="muted">整行合计 '+qty(r.L.qty)+'</span>':'')+
         '</td>'+
         /* ★ 2026-08-17 老板：「单位也要可以改的那一种」
