@@ -882,6 +882,7 @@ window.addEventListener("unhandledrejection",function(ev){
 <script src="对照-预置.js?v=20260817a"></script>
 <script src="数据-常用规格.js"></script>
 <script src="数据-换算.js?v=20260802z"></script>
+<script src="数据-客户量纲.js?v=20260819f"></script>
 <script src="引擎-读文件.js?v=20260818m"></script>
 <script src="数据-商户名.js?v=20260805a"></script>
 <script src="导出-观麦.js?v=20260805a"></script>
@@ -907,7 +908,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260819e";
+  var 版本号 = "v20260819f";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1969,6 +1970,9 @@ window.addEventListener("unhandledrejection",function(ev){
           qtyWas:(g.qtyWas===undefined?null:g.qtyWas),
           /* 客户写成一串加法的（「1+3+2+4+2+1」），把原式摆出来给人核一眼 */
           sumOf:g.sumOf||"",
+          /* 按客户量纲乘过的（好好多 公斤→斤 ×2）—— 必须摆出来。
+             不摆的话人看到的就是个普通数字，「表上写 1、我按 2 斤发」这件事没人知道。 */
+          量纲:L.量纲说明||"",
           flag:off>0?"spot":(it.price>0?"ok":"zero")});
       });
     });
@@ -2438,6 +2442,10 @@ window.addEventListener("unhandledrejection",function(ev){
           (r.sumOf?'<br><span class="tag info">'+esc(r.sumOf)+' = '+qty(r.qty)+'</span>':'')+
           (r.fromNote?'<br><span class="tag warn">数量取自备注「'+esc(r.fromNote)+'」'+
             (r.qtyWas?('，表上数量列写的是 '+qty(r.qtyWas)):'')+'，核一下</span>':'')+
+          /* ★ 按客户量纲乘过的（好好多 公斤→斤 ×2）—— 表上写多少也一并摆出来。
+             只写「×2」人还得自己反推原数；把原数摆出来，一眼就能跟客户的表对。 */
+          (r.量纲?'<br><span class="tag warn">'+esc(r.量纲)+'　表上写的是 '+
+            qty(Math.round((r.qty/(r.L.量纲乘过||1))*1000)/1000)+'</span>':'')+
           '</td>'+
         '<td>'+to+'</td>'+
         /* 每一行管自己的数量。原来是第一行放个框、里面填「整行合计」，
@@ -3066,6 +3074,24 @@ window.addEventListener("unhandledrejection",function(ev){
       /* 手动加的、「只钉这一行」的、调出来冻住的，都不许被重算冲掉 ——
          冲掉就等于人白点了一次，或者悄悄改了已经出过的单。 */
       if(L.manual||L.pinned||L.冻) return;
+      /* ★ 客户量纲（2026-08-19 老板：好好多按公斤下单，仓库按斤，数量 ×2，豆腐串不动）。
+         ⚠⚠ 这里【必须幂等】—— rematch 换客户、改单位、重画都会跑，
+            不打标记的话乘一次就翻一倍，跑四次就是 16 倍，而且金额跟着翻、
+            单据上打出来还是个数字，肉眼看不出。所以认 L.量纲乘过 这个标记。
+            标记跟着行走：行被重新识别（整份重建）时标记自然没了，那时候该乘一次。
+         ⚠ 只动数量，不动单位 —— 库里就是斤，乘完本来就是斤数。
+         ⚠ 分布里每一段都要乘：整行 qty 是各段之和，只乘整行的话
+            页面上各点位摆出来的数还是原来的，两边对不上。 */
+      if(cid&&window.GM_客户量纲&&!L.量纲乘过){
+        var 量=window.GM_客户量纲.该乘几(cid,L.text);
+        if(量){
+          var 倍=量.乘;
+          (L.segs||[]).forEach(function(g){ if(typeof g.qty==="number"&&g.qty>0) g.qty*=倍; });
+          if(typeof L.qty==="number"&&L.qty>0) L.qty*=倍;
+          L.量纲乘过=倍;                /* 幂等闸 */
+          L.量纲说明=量.从+"→"+量.到+" ×"+倍;   /* 页面上要摆出来，不许悄悄改 */
+        }
+      }
       /* ★ 2026-08-04 停用「硬编码单位换算」（件→斤 ×10、斤→串 ×20 那一套）。
          老板原话：「不要去换算这种有问题的，就找仓库有对应的产品，大部分都是有的。
                    如果没有的话，就让他自己单独加一个产品……你换算又换算错了呢。」
