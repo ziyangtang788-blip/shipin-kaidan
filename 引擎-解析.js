@@ -36,6 +36,13 @@
   /* 「底」＝「板」（2026-08-09，拿真实惠那张观麦真单对出来的：1底 → 凉粉（板）1板 ¥20）。
      只归一这一个字，不做通用推测 —— 别的口语单位等碰到了、对过真单再加。 */
   function unitNorm(u){ u=u||""; if(u==="底") return "板"; return /板$/.test(u)?"板":u; }
+  /* 这几个字算不算单位 —— 拿的就是上面那份 U1，不许在别处再抄一份
+     （2026-08-19：交叉表格子里写「20大」，要判断那个「大」是单位还是备注。
+       抄第二份的下场是「这条路认得、那条路不认」，查都查不动）。
+     ⚠ unitNorm 是【归一化】不是【判断】—— 它对「大」也原样返回「大」，
+       拿它当判断用会把备注当成单位。这两件事别混。 */
+  var 是单位正则=new RegExp("^"+U1+"$");
+  function 是单位(s){ return 是单位正则.test(String(s==null?"":s).trim()); }
 
   /* ===== 散称 vs 整份 =====
      散称（斤/公斤/克）跟整份（板/件/包/盒…）之间必然有倍数：一板 ≠ 一斤，
@@ -1557,7 +1564,7 @@
      ⚠ 只准调这一份，别在抓取那边抄第二份 —— 单位打架不许加（「10斤+4块」）这条
        只有这儿写着，抄漏了就会把两样货加成一样。 */
   root.GM_PARSE={ parseOrder:parseOrder, 收尾:收尾, 摘总数:摘总数, 拼名字:拼名字, 加总:加总,
-                  norm:norm, bare:bare, toHalf:toHalf, unitNorm:unitNorm,
+                  norm:norm, bare:bare, toHalf:toHalf, unitNorm:unitNorm, 是单位:是单位,
                   散称:散称, 论斤的:论斤的, 板当斤:板当斤,
                   convFind:convFind, convApply:convApply,
                   lkey:lkey, keyParts:keyParts, learnedLookup:learnedLookup, learnWrite:learnWrite,
