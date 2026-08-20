@@ -295,6 +295,18 @@
   tr.q-blur{box-shadow:inset 3px 0 0 var(--acc)}
   tr.q-diff td{background:rgba(224,92,92,.10)}
   tr.q-diff{box-shadow:inset 3px 0 0 #E05C5C}
+  /* ===== 你亲手动过的行 =====
+     老板 2026-08-20：「有问题的行做个特别的标注，就是我手动改的那些，但是不要标红」，
+     样式他选的是「左边一道竖条」。
+     ⚠ 这是【留痕】不是【待办】：处理完了也不消失，好让你交单前扫一眼
+       「今天这张单我动过哪几行」。上面那两个是待办，填好了自己就没了 —— 两回事。
+     ⚠ 颜色特意避开琥珀和红：那两个是「要你处理」，这条是「已经处理过」。
+       用青（--info），跟「已学会」的绿也分得开。
+     ⚠ 用 inset 6px 而不是 3px：一行可能【既动过、又还对不上总数】，
+       两道条并排显示（3px 红 + 6px 青），不会互相盖掉。 */
+  tr.q-hand{box-shadow:inset 6px 0 0 var(--info)}
+  tr.q-hand.q-blur{box-shadow:inset 3px 0 0 var(--acc), inset 6px 0 0 var(--info)}
+  tr.q-hand.q-diff{box-shadow:inset 3px 0 0 #E05C5C, inset 6px 0 0 var(--info)}
   td input.qty.blur{border-color:var(--acc);background:rgba(232,163,61,.10)}
   td input.qty.blur::placeholder{color:var(--acc);opacity:.8}
   .who{font:inherit;font-size:12.5px;cursor:pointer;background:none;color:var(--ink3);
@@ -908,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260819l";
+  var 版本号 = "v20260820a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2336,10 +2348,11 @@ window.addEventListener("unhandledrejection",function(ev){
 
     var tb=$("match-rows"); tb.innerHTML="";
     var seenL=[];
-    /* ★ 上下两块 —— 老板 2026-08-04 选的：「先确认有问题的，再列没问题的」。
-       只改【贴的顺序】，每一行怎么画一个字没动 —— 改渲染风险太大。
-       data-row 用的还是 R.rows 的原下标，所以换顺序不影响改数量。 */
-    var 待排=[];
+    /* ★ 2026-08-20 改：一行都不挪，照客户单子的原顺序摆。
+       原来是「上下两块」（8/4 定的：先确认有问题的、再列没问题的），
+       老板 8/20：「我想全部按照我给系统的单的顺序出。」
+       理由是屏幕跟客户那张对不上，打印出来的单子也跟着乱（打印印的就是屏幕）。
+       找问题行改为靠颜色（琥珀=要填、红=对不上、青=你动过），详见下面贴 class 那几行。 */
     R.rows.forEach(function(r,n){
       var first=seenL.indexOf(r.L)<0; if(first) seenL.push(r.L);
       var multi=R.rows.filter(function(x){return x.L===r.L;}).length>1;
@@ -2372,6 +2385,15 @@ window.addEventListener("unhandledrejection",function(ev){
       if(本行没看清) tr.className="q-blur";
       else if(本行是零) tr.className="q-blur";   /* 跟没看清同一档：橙色，一眼看得见要处理 */
       else if(本行对不上) tr.className="q-diff";
+      /* ★ 2026-08-20 老板：「有问题的行做个特别的标注，就是我手动改的那些，但是不要标红」。
+         三种痕迹都算「动过」：
+           手改   改过数量（含给客户写 0 的那行填数）、改过单位
+           pinned 在下拉里挑了商品、点过「对，记住」
+           manual 自己加的行
+         ⚠ 这是【留痕】不是【待办】—— 处理完也不消失，交单前扫一眼就知道今天动过哪几行。
+         ⚠ 用 add 不用赋值：上面那几个 class 是待办，这条要跟它们【叠加】，
+           一行可能既动过、又还对不上总数。 */
+      if(r.L&&(r.L.手改||r.L.pinned||r.L.manual)) tr.classList.add("q-hand");
       /* forceFix：认对了的行点「改」也能调出下拉 —— 教错了得能改回来 */
       var need=(!window.GM_MATCH.commits(r.L.how)||r.L.forceFix), to;
       var lu=r.L.unit||"";
@@ -2497,32 +2519,24 @@ window.addEventListener("unhandledrejection",function(ev){
         '<td class="num">'+(r.price===null?'<span class="muted">—</span>':n2(r.price*r.qty))+'</td>'+
         '<td class="muted">'+esc(r.code)+'</td>'+
         '<td>'+esc(r.note)+'</td>';
-      /* 要你拿主意的三种：识别没看清 / 跟表上总数对不上 / 商品挑不准（存疑） */
-      待排.push({tr:tr,要:(本行没看清||本行对不上||need)});
+      /* ★★ 2026-08-20 老板：「我想全部按照我给系统的单的顺序出。」
+         原来这儿把「要你拿主意的」整批提到最前面、剩下的收进一个
+         「▾ 下面 N 行没问题（点一下收起来）」的折叠段里。
+         那是 8/3 定的（「有问题的那几行变个色，我好一下找到」），
+         可它把客户单子的行序切成了两段 —— 屏幕跟客户那张对不上，
+         打印出来的单子也跟着乱（打印印的就是屏幕）。
+
+         现在一行都不挪，照客户写的顺序摆。找问题行靠颜色：
+           琥珀条 = 识别没看清 / 客户写的 0（要你填）
+           红条   = 跟表上总数对不上（要你核）
+           青条   = 你自己动过的（留痕，见上面 edited）
+         顶上那几条横幅（存疑 N 项 / 认不出 N 项）照旧摆着，也能一眼看见有几处。
+
+         ⚠ 那个折叠条跟着没了 —— 它是靠这个分组实现的，老板知道并同意。
+         ⚠ 导观麦和订单记录本来就是原顺序（走的是 compute() 的 rows），
+           这一改之后【四处终于一致】：屏幕、打印、导观麦、订单记录。 */
+      tb.appendChild(tr);
     });
-    var 要=待排.filter(function(x){ return x.要; }),
-        闲=待排.filter(function(x){ return !x.要; });
-    要.forEach(function(x){ tb.appendChild(x.tr); });
-    if(要.length&&闲.length){
-      /* 分隔行：点一下把「没问题的」收起来/摊开。默认摊开 ——
-         收起来是给"处理完了想看干净单"的时候用的，不是一上来就藏。 */
-      var sp=document.createElement("tr");
-      sp.className="rowsplit";
-      sp.innerHTML='<td colspan="9" style="padding:7px 10px;cursor:pointer;'+
-        'background:rgba(255,255,255,.04);border-top:2px solid var(--acc-soft)">'+
-        '<b id="okhead">▾ 下面 '+闲.length+' 行没问题</b>'+
-        '<span class="muted">　（点一下收起来）</span></td>';
-      tb.appendChild(sp);
-      闲.forEach(function(x){ x.tr.classList.add("okrow"); tb.appendChild(x.tr); });
-      sp.addEventListener("click",function(){
-        var 藏=!闲[0].tr.hidden;
-        闲.forEach(function(x){ x.tr.hidden=藏; });
-        var hd=$("okhead");
-        if(hd) hd.textContent=(藏?"▸ ":"▾ ")+"下面 "+闲.length+" 行没问题";
-      });
-    }else{
-      闲.forEach(function(x){ tb.appendChild(x.tr); });
-    }
 
     /* 无价的行就地填价：回车或离开输入框就存进价格库 */
     Array.prototype.forEach.call(tb.querySelectorAll("input.fixp"),function(inp){
