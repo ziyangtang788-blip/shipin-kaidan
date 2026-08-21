@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821a";
+  var 版本号 = "v20260821b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1930,8 +1930,9 @@ window.addEventListener("unhandledrejection",function(ev){
             调出来的:false,加单模式:false};
   /* 提醒条上那几个「＋ 加进来」按钮的预填数据 —— renderMatch 每次重画时刷新 */
   var ADD_BUF=[], NOQ_BUF=[];
-  /* 回头核对的结果：[{名,文本,图上}]。识别完跑一遍，只报不改。 */
-  var 核对结果=[], 核对中=false;
+  /* 回头核对的结果：{改:[],漏:[],多:[]}；null = 这一遍没核成（没回话／看不懂）。
+     ⚠ 「没核成」跟「全对」是两回事，别合成一个 —— 合了就会把没核过的单子显示成绿的。 */
+  var 核对结果=null, 核对中=false;
   /* 提醒条上处理过的，别再摆出来 —— 老板 8/3：「这个已经解决了，提示要消失啊」。
      一直挂着等于狼来了，看多了就不看了。 */
   var 已处理={};
@@ -2061,12 +2062,29 @@ window.addEventListener("unhandledrejection",function(ev){
 
     /* 回头核对报出来的：数字跟图上对不上。放最前面 —— 数字错了整行的钱都错。 */
     if(核对中) h+='<div class="alert info">正在回头核对图上的数字…</div>';
-    if(核对结果.length) h+='<div class="alert sale"><b>⛔ 回头核对：'+核对结果.length+
-      ' 处数字可能读错</b>　—— 对着原图看一眼，是识别读错就在那一行直接改数量。<br>'+
-      核对结果.map(function(x){
-        return '<span style="display:inline-block;margin:6px 14px 0 0">'+esc(x.名)+
-          '：识别成 <b>'+esc(x.文本)+'</b>，图上像是 <b style="color:#E0A33E">'+esc(x.图上)+'</b></span>';
-      }).join('')+'</div>';
+    /* ★ 2026-08-21：只弹【一个】窗，一次点完。
+       老板原话：「如果有那么多弹窗，我就没有意义了做这个事情」——
+       所以不许每处一个按钮，只有下面这一个「改过来」。
+       点了之后：点位直接补回、数量填好，改过的行框起来（青竖条）让他照单对一遍。 */
+    if(核对结果&&核对结果.改&&(核对结果.改.length+核对结果.漏.length+核对结果.多.length)){
+      var 改n=核对结果.改.length, 漏n=核对结果.漏.length, 多n=核对结果.多.length;
+      var 说=[];
+      if(改n) 说.push(改n+' 处数量／点位不对');
+      if(漏n) 说.push(漏n+' 段漏了没抄进来');
+      if(多n) 说.push(多n+' 行图上没有');
+      h+='<div class="alert sale"><b>⛔ 回头核对：'+说.join('、')+'</b>'+
+        '<button class="btn sm" id="btn-核对改" style="margin-left:12px">改过来</button>'+
+        '<div class="muted" style="margin-top:4px">改完那几行会框起来，照着原图对一眼。'+
+        (多n?'多出来的行不会自动删，自己看着删。':'')+'</div>'+
+        核对结果.改.slice(0,12).map(function(x){
+          return '<span style="display:inline-block;margin:6px 14px 0 0">第'+x.行+'行'+x.项+
+            '：现在 <b>'+esc(x.原)+'</b>，图上像是 <b style="color:#E0A33E">'+esc(x.新)+'</b></span>';
+        }).join('')+
+        核对结果.漏.slice(0,12).map(function(x){
+          return '<span style="display:inline-block;margin:6px 14px 0 0">漏了：'+esc(x.品名)+
+            ' <b style="color:#E0A33E">'+esc(x.数+x.位)+'</b> '+esc(x.点位)+'</span>';
+        }).join('')+'</div>';
+    }
     if(R.al.none.length) h+='<div class="alert sale"><b>✕ 认不出 '+R.al.none.length+' 项：</b>'+R.al.none.map(esc).join("、")+'　—— 在那一行的下拉里指一次，以后自动记住。</div>';
     if(R.al.zero.length) h+='<div class="alert sale"><b>✕ 没有价 '+R.al.zero.length+' 项：</b>'+[...new Set(R.al.zero)].map(esc).join("、")+'　—— 观麦里这个客户的这个商品价格是 0。</div>';
     if(R.al.doubt.length) h+='<div class="alert warn"><b>? 存疑 '+R.al.doubt.length+' 项：</b>'+R.al.doubt.map(esc).join("、")+'　—— 核对一下，不对就在下拉里换。</div>';
@@ -2259,6 +2277,20 @@ window.addEventListener("unhandledrejection",function(ev){
          '　—— 当 0，没放进来。要发就在下面「加一行」补。</div>';
     }
     $("match-alerts").innerHTML=h;
+    /* ★ 2026-08-21「改过来」：一次点完，不是一处一个按钮。
+       点位直接补回、数量填好；改过的段挂 核改过 → 行上留一道青竖条给他对。
+       ⛔ 「多出来的行」只标出来，绝不自动删 —— 删错一行货没人看得出来。 */
+    if($("btn-核对改")) $("btn-核对改").addEventListener("click",function(){
+      var 果=window.GM_STRUCT.照核对改(ST.lines,核对结果);
+      var 话=[];
+      if(果.改过.length) 话.push("改了 "+果.改过.length+" 行");
+      if(果.补了) 话.push("补了 "+果.补了+" 段");
+      if(果.没处放.length) 话.push("有 "+果.没处放.length+" 段找不着对应的商品，没敢补");
+      if(果.多.length) 话.push("另有 "+果.多.length+" 行图上没有，自己看着删");
+      核对结果=null;                      /* 改过就别再挂着那条了（老板 8/3：解决了提示要消失） */
+      ST.dirty=true; rematch(); renderMatch();
+      提醒(话.join("；")+"　—— 框起来那几行照原图对一眼");
+    });
     /* 「＋ 加进来 / 不用管」这两个按钮 2026-08-17 拿掉了。
        老板 8/3 原话是「弹出来让我去选择，不要我自己单独加」——
        8/17 他又往前推了一步：「你直接加进来就行啦，然后让他自己去选择数量，
@@ -2393,7 +2425,12 @@ window.addEventListener("unhandledrejection",function(ev){
          ⚠ 这是【留痕】不是【待办】—— 处理完也不消失，交单前扫一眼就知道今天动过哪几行。
          ⚠ 用 add 不用赋值：上面那几个 class 是待办，这条要跟它们【叠加】，
            一行可能既动过、又还对不上总数。 */
-      if(r.L&&(r.L.手改||r.L.pinned||r.L.manual)) tr.classList.add("q-hand");
+      /* ★ 2026-08-21 回头核对改过的段也算「动过」—— 同一道青竖条。
+         老板要的就是「框起来，下一张单我再去对一遍」：数量是 AI 核出来填的，
+         不留记号他就不知道该盯哪几行。 */
+      if((r.L&&(r.L.手改||r.L.pinned||r.L.manual))||
+         (r.segs&&r.segs.length&&r.segs.some(function(g){ return g&&g.核改过; })))
+        tr.classList.add("q-hand");
       /* forceFix：认对了的行点「改」也能调出下拉 —— 教错了得能改回来 */
       var need=(!window.GM_MATCH.commits(r.L.how)||r.L.forceFix), to;
       var lu=r.L.unit||"";
@@ -4519,19 +4556,9 @@ window.addEventListener("unhandledrejection",function(ev){
      而且只需要报「哪里不对」，输出很短，多花的钱主要是图片那部分。
 
      只报不改（老板定的规矩）—— 报出来让人对着原图定。 */
-  var 核对提示=
-"下面这段文本是从上面这张（些）单据图片里转写出来的。请你逐行核对，"+
-"只挑【数字和单位】的出入，别的一概不管。\n\n"+
-"重点看这几对最容易看花的：0/6/8、1/7、3/8、4/5、2/3。\n"+
-"还要看单位有没有串：斤 / 板 / 盒 / 包 / 件 各是各的。\n\n"+
-"规矩：\n"+
-"1. 只有【你在图上看得很清楚、而且跟文本不一样】的才报。看不清的不要报。\n"+
-"2. 不要因为「这个数看着不合理」就报 —— 只比图和字，不做推理。\n"+
-"3. 每处一行，格式（用 | 隔开，不要别的字）：\n"+
-"   那一行的商品名|文本里写的|图上其实是\n"+
-"   例：靓胶板豆腐7斤|5板|4板\n"+
-"4. 全都对得上就只输出两个字：全对\n\n"+
-"要核对的文本：\n";
+  /* 提示词、怎么摆行、怎么读回复、怎么照着改 —— 全在 引擎-读结构.js 里一份。
+     页面抄第二份就会出现「测试全绿、页面上没改」这种查不动的怪事。 */
+  var 核对提示=(window.GM_STRUCT&&window.GM_STRUCT.核对提示)||"";
 
   /* 对账只用来【找出哪一行可疑】，绝不拿它去改数字。
      老板 2026-08-03 原话：
@@ -4653,9 +4680,9 @@ window.addEventListener("unhandledrejection",function(ev){
 
   /* 发一次核对请求。失败一概不吭声 —— 核对是加分项，不能反过来拖累识别。 */
   function 核对一遍(图们,文本,收到){
-    if(!图们||!图们.length||!文本||!文本.trim()){ 收到([]); return; }
+    if(!图们||!图们.length||!文本||!文本.trim()){ 收到(null); return; }
     var key=getKey();
-    if(!ORD.online&&!key){ 收到([]); return; }
+    if(!ORD.online&&!key){ 收到(null); return; }
     /* 核对提示才三百来字，够不到缓存最低门槛（1024 token），挂了也白挂 —— 不挂 */
     var content=图们.filter(function(x){ return x.type!=="text"; })
                     .concat([{type:"text",text:核对提示+文本+重点核哪几行()}]);
@@ -4672,17 +4699,10 @@ window.addEventListener("unhandledrejection",function(ev){
           body:JSON.stringify(payload)});
     call.then(function(r){ return r.json(); }).then(function(j){
       var out=(j&&j.content&&j.content[0]&&j.content[0].text)||"";
-      if(!out||/^\s*全对/.test(out.trim())){ 收到([]); return; }
-      var 列=[];
-      out.split(/\r?\n/).forEach(function(线){
-        var p=线.split("|").map(function(x){ return x.trim(); });
-        /* 三段才算数：商品名 | 文本里写的 | 图上其实是 */
-        if(p.length<3||!p[0]||!p[1]||!p[2]) return;
-        if(p[1]===p[2]) return;                       /* 一样的就别报了 */
-        if(列.length<12) 列.push({名:p[0],文本:p[1],图上:p[2]});
-      });
-      收到(列);
-    }).catch(function(){ 收到([]); });
+      /* 读不懂、回空的一律当【这一遍没核成】——【绝不能当成「全对」】，
+         那等于替 AI 说了句它没说过的话，单子照错不误还显示绿的。 */
+      收到(window.GM_STRUCT.读核对回复(out));
+    }).catch(function(){ 收到(null); });
   }
 
   /* ============================================================
@@ -6209,17 +6229,23 @@ window.addEventListener("unhandledrejection",function(ev){
              实测江云 8/4 那张：原图 755px 漏了 A859 那一段，放大到 2500px 就读出来了。
              只在这一步放大（不是每次都放大）：10 家 A/B 实测全放大只帮到 1 家却多花 25%。 */
           放大图(这批图,function(大图){
-          核对一遍(大图,txt,function(列){
+          /* ⛔ 送去核的是【单子上现在这些行】，不是 OCR 转写的原文（老板 8/21 那条命门）：
+             朱鲜生 8-19 那张，转写的原文本身没写错、只是少抄了一整列，
+             拿原文去核，AI 一定答「全对」，这一遍就白跑了。
+             错是在【转写 → 单据行】那一步才发生的，所以要核的是单据行。 */
+          核对一遍(大图,window.GM_STRUCT.摆行给核对(ST.lines),function(果){
             核对中=false;
-            核对结果=列;
-            $("ocr-msg").innerHTML=底+'<br>'+(列.length
-              ? '<span style="color:#E0A33E">⚠ 核对发现 '+列.length+' 处数字可能读错，看下面红条</span>'
-              : '<span style="color:#6FBF73">✓ 放大重看过一遍，没发现读错的</span>');
+            核对结果=果;
+            var n=果?(果.改.length+果.漏.length+果.多.length):0;
+            $("ocr-msg").innerHTML=底+'<br>'+(!果
+              ? '<span style="color:#E0A33E">⚠ 这一遍没核成（没回话或看不懂）—— 单子没动，自己核一下</span>'
+              : (n?'<span style="color:#E0A33E">⚠ 核对发现 '+n+' 处对不上，看下面那条</span>'
+                  :'<span style="color:#6FBF73">✓ 放大重看过一遍，没发现读错的</span>'));
             renderMatch();
           });
           });
         } else {
-          核对结果=[];
+          核对结果=null;
           if(有账&&这批图.length)
             $("ocr-msg").innerHTML=底+
               '<br><span class="muted">这张单表上带着合计、每一行都对得上，也没有看不清的 —— 不用再花钱回头核。</span>';
@@ -6549,7 +6575,7 @@ window.addEventListener("unhandledrejection",function(ev){
     })();
     function resetOrder(){
       $("raw").value=""; ST.lines=[]; ST.manual=false; ST.hint=""; ST.custOK=false;
-      核对结果=[]; 核对中=false; 已处理={}; 判过的=[];
+      核对结果=null; 核对中=false; 已处理={}; 判过的=[];
       ST.savedNo=""; ST.no="待出号"; ST.dirty=false;   /* 新的一单，重新出号 */
       ST.结构=null; ST.结构文字=""; 锁框(false);
       ST.调出来的=false; ST.加单模式=false; 画模式条();
