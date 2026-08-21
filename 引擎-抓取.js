@@ -1179,6 +1179,32 @@
       .filter(function (s) { return s.charAt(0) === "|" && !/^\|\s*-{2,}/.test(s); });
     if (!行.length) return false;
     var 中了 = false;
+
+    /* ── 写法二：【续行】。品名和总数空着，一行一个点位（2026-08-21 那张 12 行的单）
+         | 5 | 白豆干 | 30.7斤 | …（老人碎菜）5-9 | 16斤  | 午餐/切碎 |
+         |   |        |        | …（老人糊餐）5-5 | 6斤   | 午餐/切碎 |   ← 续行
+       OCR 抄得完美，可数量那一列【表头上没名字】，认表时被当成了「总数列」——
+       续行取不到数量，四段只剩一段，30.7 斤全安在第一个点头上。
+       跟朱鲜生 8-19 是同一个老毛病：表头没名字的列被无视。
+       这种也交给 AI 看图，别在认表那儿赌。 */
+    var 数量g = new RegExp("(" + 切_数 + ")\\s*(?:" + 切_单位 + ")");
+    行.forEach(function (r) {
+      if (中了) return;
+      var 格们 = r.replace(/^\|/, "").replace(/\|$/, "").split("|").map(function (x) { return x.trim(); });
+      if (格们.length < 3) return;
+      /* 前两格都空 = 这一行没有品名（表头行第一格是「序号」，不会空） */
+      if (格们[0] || 格们[1]) return;
+      var 有号 = false, 有量 = false;
+      格们.forEach(function (v) {
+        if (!v) return;
+        点位号g.lastIndex = 0;
+        if ((v.match(点位号g) || []).length) 有号 = true;
+        else if (数量g.test(v)) 有量 = true;
+      });
+      if (有号 && 有量) 中了 = true;
+    });
+    if (中了) return true;
+
     行.forEach(function (r) {
       if (中了) return;
       r.replace(/^\|/, "").replace(/\|$/, "").split("|").forEach(function (c) {
