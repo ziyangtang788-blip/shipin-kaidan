@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260820a";
+  var 版本号 = "v20260821a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5996,6 +5996,22 @@ window.addEventListener("unhandledrejection",function(ev){
     if(OCR走通&&OCR文本.length&&PDFS.length===0&&TXTS.length===0
        &&window.GM_PARSE&&window.GM_PARSE.捞干净了吗){
       var OCR全文=OCR文本.map(function(t){ return t.text; }).join("\n");
+
+      /* ★ 2026-08-21：明细一格挤一串的表（朱鲜生 8-20 那种）
+         　 序号│商品名│总数│明细    明细那一格里把好几个送货点挤成一串：
+         　 白豆干 34.6斤 │ 老人院(碎菜)5-9 16斤 午餐/切碎 老人院(糊餐)5-5 6.6斤 …
+         OCR 把字抄全了，可下面那条老路是把这一格当【一句话】扫数字的：
+         白豆干 5 段只读出 1 段（少发 29.8 斤）、「13-2 3斤」读成 13 斤（多开 22 斤）。
+         所以先让引擎按【点位号+数量】切一刀 —— 切得开就走格子路，一分钱不花。
+         ⛔ 采用规矩在引擎里：每一行都切得出、每行的和都跟总数一分不差才返回东西，
+            差一条它自己返回 null，这儿就当没发生过，原样掉进下面的老路。 */
+      var 明细格子表=(window.GM_抓取&&window.GM_抓取.OCR表切格子表)
+                     ? window.GM_抓取.OCR表切格子表(OCR全文) : null;
+      if(明细格子表){
+        收下格子表(明细格子表,"OCR 认的字，明细一格切开读的 —— 一个 token 都没花");
+        return;
+      }
+
       var 账=window.GM_PARSE.捞干净了吗(OCR全文);
       if(账.够){
         收下文字(OCR全文,"OCR 认的字，本地断句读的 —— 一个 token 都没花");

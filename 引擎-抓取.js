@@ -1011,5 +1011,147 @@
     return o;
   }
 
-  root.GM_抓取 = { 抓: 抓, 认一格: 认一格, 认一列: 认一列, 找数据起点: 找数据起点 };
+  /* ══════════ 明细一格挤一串 ★（2026-08-21）══════════
+     朱鲜生 8-20 那张单撞出来的。这种表长这样：
+
+       序号 │ 商品名   │ 总数   │ 明细
+        4   │ 白豆干   │ 34.6斤 │ 老人院(碎菜)5-9 16斤 午餐/切碎 老人院(糊餐)5-5 6.6斤 …
+
+     OCR 把整格原样抄下来了、一个字没错，可原来是把这一格当【一句话】去扫数字的：
+       · 白豆干 5 段只读出 1 段 4.8斤        —— 少发 29.8 斤
+       · 炸腐竹「13-2 3斤 / 13-1 1斤」读成 13+13 —— 多开 22 斤（跟 8/19 那笔 ¥443 同一个形状）
+       · 「西樵派出所(官山)2-6(2) 2板」拆成两行 —— 重复算
+
+     现在：按【点位号 + 数量】把那一格切开，一格有几段就出几段。
+
+     ⛔ 采用规矩（比切得准更要紧）：
+       每一行都切得出、每一行的各段之和都跟总数列一分不差 —— 才采用。
+       差一条【整张退回老路】。半张用新的半张用旧的，比全用旧的还危险。
+
+     ⛔ 按内容认，不看表头叫什么（老板 2026-08-11：不许把表结构写死）：
+       哪一列的格子里反复出现「点位号+数量」，哪一列就是明细；
+       哪一列整格就是一个「数量+单位」，哪一列就是总数。列叫什么名字一个字不看。
+
+     47 张真表实测：46 张连门都进不去，2 张进了自查没过退回，只有朱先 8-20 那张采用。 */
+  var 切_单位 = "板|斤|公斤|千克|kg|KG|盒|包|箱|件|块|串|袋|个|只|条|扎|把|瓶|支|桶|份";
+  /* 点位号：1~3 位 - 1~2 位，后面可以再跟 (数字)，例如 2-6(2)。
+     ⚠ 位数卡死是为了排掉日期：2026-08-01 那种四位年份进不来（一分利的标题栏踩过）。 */
+  var 切_号 = "\\d{1,3}-\\d{1,2}(?:\\(\\d+\\))?";
+  var 切_数 = "\\d+(?:\\.\\d+)?";
+  function 段正则() { return new RegExp("(" + 切_号 + ")\\s*(" + 切_数 + ")\\s*(" + 切_单位 + ")", "g"); }
+  function 纯数量正则() { return new RegExp("^\\s*(" + 切_数 + ")\\s*(" + 切_单位 + ")\\s*$"); }
+  function 任数量正则() { return new RegExp("(" + 切_数 + ")\\s*(" + 切_单位 + ")", "g"); }
+
+  /* 两段之间那一截字里，前面可能挂着【上一段的备注】，后面才是【下一段的点位名】。
+     备注长这样：午餐/切碎、晚餐/切丝、400g、白 —— 带斜杠的、数字+字母的、一两个字的。
+     ⚠ 分不干净也不要紧：号和数才是钱，名字和备注只是给人看的。 */
+  function 拆备注和名(s) {
+    var 注 = [], t = String(s || "").trim();
+    while (t) {
+      var m = /^(\S+)\s+(.+)$/.exec(t);
+      if (!m) break;
+      var 头 = m[1];
+      var 像备注 = /[\/／]/.test(头) || /^\d+[a-zA-Z]+$/.test(头) || (/^[一-龥]{1,2}$/.test(头));
+      if (!像备注) break;
+      注.push(头); t = m[2].trim();
+    }
+    return { 注: 注.join(" "), 名: t.replace(/^[\s\/、,，]+/, "") };
+  }
+
+  /* markdown 表格 → 一格一格的二维数组。不是表格就返回 null。 */
+  function 表变格(md) {
+    var 行 = String(md || "").split("\n").map(function (s) { return s.trim(); })
+      .filter(function (s) { return s.charAt(0) === "|" && !/^\|\s*-{2,}/.test(s); });
+    if (行.length < 2) return null;
+    return 行.map(function (r) {
+      return r.replace(/^\|/, "").replace(/\|$/, "").split("|").map(function (c) { return c.trim(); });
+    });
+  }
+
+  function OCR表切格子表(md) {
+    var 格 = 表变格(md);
+    if (!格) return null;
+    var 列数 = 0;
+    格.forEach(function (r) { if (r.length > 列数) 列数 = r.length; });
+
+    /* 逐列数长相：几格有「点位号+数量」、几格是纯数量、几格是文字 */
+    var 计 = [], c, 纯re = 纯数量正则();
+    for (c = 0; c < 列数; c++) {
+      var 段 = 0, 纯 = 0, 字 = 0;
+      /* eslint-disable no-loop-func */
+      (function (cc) {
+        格.forEach(function (r) {
+          var v = (r[cc] || "").trim(); if (!v) return;
+          var re = 段正则();
+          if (re.test(v)) 段++;
+          else if (纯re.test(v)) 纯++;
+          else if (/[一-龥A-Za-z]/.test(v)) 字++;
+        });
+      })(c);
+      计.push({ c: c, 段: 段, 纯: 纯, 字: 字 });
+    }
+    var 明细列 = 计.slice().sort(function (a, b) { return b.段 - a.段; })[0];
+    if (!明细列 || 明细列.段 < 1) return null;          /* 没有「一格挤一串」这回事 → 老路 */
+    var 总数列 = 计.filter(function (x) { return x.c !== 明细列.c; })
+      .sort(function (a, b) { return b.纯 - a.纯; })[0];
+    if (!总数列 || !总数列.纯) return null;              /* 没有总数就没有尺子 → 老路 */
+    var 品名列 = 计.filter(function (x) { return x.c !== 明细列.c && x.c !== 总数列.c; })
+      .sort(function (a, b) { return (b.字 - a.字) || (a.c - b.c); })[0];
+    if (!品名列 || !品名列.字) return null;
+
+    var 出 = [];
+    for (var i = 0; i < 格.length; i++) {
+      var r = 格[i];
+      var 品 = (r[品名列.c] || "").trim(), cell = (r[明细列.c] || "").trim();
+      if (!品 || !cell) continue;
+      /* 先量总数 —— 它同时也是「这一行到底是不是货」的判据。
+         表头那一行（商品名 / 总数 / 明细）总数格里不是数量、明细格里也没数量，跳过。
+         可要是明细格里明明有数量、总数格却读不出来 —— 那是真没尺子，整张退回。 */
+      var t = 纯数量正则().exec((r[总数列.c] || "").trim());
+      if (!t) {
+        if (!(cell.match(任数量正则()) || []).length) continue;
+        return null;
+      }
+      var segs = [], m, 上 = 0, re2 = 段正则();
+      while ((m = re2.exec(cell)) !== null) {
+        var 前 = 拆备注和名(cell.slice(上, m.index));
+        if (segs.length && 前.注) segs[segs.length - 1].注 = 前.注;
+        segs.push({ 号: m[1], 名: 前.名, 数: parseFloat(m[2]), 位: m[3] });
+        上 = m.index + m[0].length;
+      }
+      if (segs.length) {
+        var 尾 = 拆备注和名(cell.slice(上));
+        if (尾.注) segs[segs.length - 1].注 = 尾.注;
+      } else {
+        /* 没有点位号、但整格明明白白就一个数量 → 整格当一段，点位就是那串名字。
+           「佛山市瀚华高级中学- 2板」就是这种：原单上点位号本来就空着。
+           ⚠ 只认【整格就一个数量】的；有两个数就说不清哪个是哪个，老实退回老路。 */
+        var 全 = cell.match(任数量正则()) || [];
+        if (全.length !== 1) return null;
+        var g1 = new RegExp("(" + 切_数 + ")\\s*(" + 切_单位 + ")").exec(全[0]);
+        segs.push({ 号: "", 名: cell.replace(全[0], "").replace(/[-—\s]+$/, "").trim(),
+                    数: parseFloat(g1[1]), 位: g1[2] });
+      }
+      var 和 = 0;
+      segs.forEach(function (s) { 和 += s.数; });
+      和 = Math.round(和 * 1000) / 1000;
+      if (Math.abs(和 - parseFloat(t[1])) >= 0.001) return null;   /* 有一行对不上 → 整张退回 */
+      出.push({ 品名: 品, 单位: t[2] || (segs[0] && segs[0].位) || "",
+                表上总数: parseFloat(t[1]), 分布: segs });
+    }
+    if (!出.length) return null;
+    return {
+      抬头: {},
+      行: 出,
+      表怎么读的: {
+        版式: "一行一个商品，「明细」那一栏里把好几个送货点挤成一串（点位名+点位号 数量 备注）",
+        列: ["品名（第" + (品名列.c + 1) + "列）", "总数（第" + (总数列.c + 1) + "列）",
+             "明细一格挤一串（第" + (明细列.c + 1) + "列）"],
+        校验码在哪: "每行的「总数」列 —— 各段之和必须跟它一分不差，否则整张不采用"
+      }
+    };
+  }
+
+  root.GM_抓取 = { 抓: 抓, 认一格: 认一格, 认一列: 认一列, 找数据起点: 找数据起点,
+                   OCR表切格子表: OCR表切格子表 };
 })(typeof window !== "undefined" ? window : globalThis);
