@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821g";
+  var 版本号 = "v20260821h";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6061,6 +6061,27 @@ window.addEventListener("unhandledrejection",function(ev){
         识别败了("这张是 Excel 截图，"+界面+"，认不了 —— 麻烦直接发 Excel 文件，"+
                  "或者只截表格那一块（别带工具栏和行号）。硬读会把行号当成数量。");
         return;
+      }
+    }
+
+    /* ★★ 2026-08-21：一个商品底下列着好几个送货点的表 —— OCR 抄这种表靠不住。
+       朱鲜生同一种表，OCR 三张单三种坏法：
+         8-01  点位排一堆、数量排一堆，两边脱节（谁配谁得靠猜）
+         8-19  数量那一整列一个字都没抄
+         8-20  点位和数量穿插着（这种配对是明写的，代码切得对，不归这条管）
+
+       老板 2026-08-21：「你是一张表读得全不能代表什么东西，不用担心钱，我只担心准确率」
+       ★ 这句戳中要害：「各段之和 = 总数」证明不了【每个点发多少】是对的 ——
+         三个点位、数量 2/1/1，不管配给谁加起来都是 4，总数永远绿灯。
+         所以不拿代码去赌，这种表把【图】交给 AI 看（实测 8-19 那张三遍全对）。
+
+       ⚠ 必须排在【认表】和【断句】前面 —— 排后面就先被那两条路截走了，判了也白判。 */
+    if(OCR走通&&OCR文本.length&&imgs.length&&window.GM_抓取&&window.GM_抓取.一行好几个点位){
+      var 多点=OCR文本.some(function(t){ return window.GM_抓取.一行好几个点位(t.text); });
+      if(多点){
+        /* 丢掉 OCR 那份，下面就会拿【图】去问 AI（content 那儿按 OCR走通 分岔） */
+        OCR走通=false; OCR文本=[];
+        $("ocr-msg").textContent="这张表一个商品底下列着好几个送货点 —— OCR 抄这种表不稳，交给 AI 看图读…";
       }
     }
 
