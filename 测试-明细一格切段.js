@@ -169,6 +169,43 @@ L("═══ ⑤ 页面真接上了没 ═══");
   ok("页面调了 OCR表切格子表", /GM_抓取[\s\S]{0,80}OCR表切格子表/.test(H));
   ok("★ 切成了就走格子路（收下格子表），不是文字路", /OCR表切格子表[\s\S]{0,400}收下格子表\(/.test(H));
   ok("⛔ 引擎里只有一份，页面里没抄第二份", !/function\s+OCR表切格子表/.test(H));
+  /* ★★ 2026-08-21 夜：8-20 那张单在页面上仍然读不出来 —— 引擎是对的，页面没叫它。
+     OCR 抄出来的就是一张规整 markdown 表，`markdown转表` 一转就成，
+     于是先撞上【认表】那条路、当场 return，切段那段代码永远走不到。
+     跟「一行好几个点位」是同一条规矩：判据必须排在认表/断句【前面】。 */
+  ok("★ 切段判据排在【认表】前面（排后面就先被认表截走了）",
+     H.indexOf("OCR表切格子表") < H.indexOf("认表跑一趟(表份"),
+     "OCR表切格子表@" + H.indexOf("OCR表切格子表") + " 认表@" + H.indexOf("认表跑一趟(表份"));
+}
+
+L("═══ ⑥ 拿真表原样跑一遍（不是手打的样本）═══");
+{
+  const fs = require("fs");
+  const 真 = path.resolve(__dirname, "调试-导入订单OCR",
+                          "8cc3684e1f483a9077df97bed131539b.png.ocr.json");
+  if (!fs.existsSync(真)) {
+    L("  （没有 " + path.basename(真) + "，跳过）");
+  } else {
+    const j = JSON.parse(fs.readFileSync(真, "utf8"));
+    const md = (j.pages || []).map(p => {
+      let s = p.markdown || "";
+      (p.tables || []).forEach(t => { s = s.replace("[" + t.id + "](" + t.id + ")", t.content); });
+      return s;
+    }).join("\n");
+    /* 这一份跟【走AI】那条判据不许打架：它每段都带着自己的数量，配对是明写的，归代码路 */
+    ok("★ 这张不归「走AI」那条管（每段都带着量）",
+       !global.window.GM_抓取.一行好几个点位(md));
+    const J = 切(md);
+    ok("真表切得出来（14 行）", J && J.行.length === 14, J ? "行" + J.行.length : "null");
+    const 白 = J && J.行.find(x => x.品名 === "白豆干");
+    ok("★ 白豆干 34.6 斤 → 5 段 16/6.6/2.4/4.8/4.8",
+       白 && 白.分布.map(d => d.数).join(",") === "16,6.6,2.4,4.8,4.8",
+       白 ? JSON.stringify(白.分布.map(d => d.号 + ":" + d.数)) : "没这行");
+    const 竹 = J && J.行.find(x => x.品名 === "炸腐竹");
+    ok("★ 炸腐竹 4 斤 → 13-2 拿 3、13-1 拿 1（不许读成 13 斤）",
+       竹 && 竹.分布.map(d => d.号 + ":" + d.数).join(" ") === "13-2:3 13-1:1",
+       竹 ? JSON.stringify(竹.分布.map(d => d.号 + ":" + d.数)) : "没这行");
+  }
 }
 
 L(挂 ? "\n❌ 挂了 " + 挂 + " 项（过 " + 过 + "）" : "\n✅ 全过 " + 过 + " 项");
