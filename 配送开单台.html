@@ -891,23 +891,23 @@ window.addEventListener("unhandledrejection",function(ev){
 </script>
 
 <script src="数据-价格库.js"></script>
-<script src="对照-预置.js?v=20260821s"></script>
+<script src="对照-预置.js?v=20260821t"></script>
 <script src="数据-常用规格.js"></script>
-<script src="数据-换算.js?v=20260821s"></script>
-<script src="数据-客户量纲.js?v=20260821s"></script>
-<script src="引擎-读文件.js?v=20260821s"></script>
-<script src="数据-商户名.js?v=20260821s"></script>
-<script src="导出-观麦.js?v=20260821s"></script>
-<script src="引擎-解析.js?v=20260821s"></script>
-<script src="引擎-读结构.js?v=20260821s"></script>
-<script src="引擎-认表.js?v=20260821s"></script>
-<script src="新-按内容认单.js?v=20260821s"></script>
-<script src="引擎-抓取.js?v=20260821s"></script>
-<script src="引擎-点位册.js?v=20260821s"></script>
-<script src="引擎-匹配.js?v=20260821s"></script>
-<script src="数据-切法规矩.js?v=20260821s"></script>
-<script src="引擎-断句规矩.js?v=20260821s"></script>
-<script src="引擎-OCR.js?v=20260821s"></script>
+<script src="数据-换算.js?v=20260821t"></script>
+<script src="数据-客户量纲.js?v=20260821t"></script>
+<script src="引擎-读文件.js?v=20260821t"></script>
+<script src="数据-商户名.js?v=20260821t"></script>
+<script src="导出-观麦.js?v=20260821t"></script>
+<script src="引擎-解析.js?v=20260821t"></script>
+<script src="引擎-读结构.js?v=20260821t"></script>
+<script src="引擎-认表.js?v=20260821t"></script>
+<script src="新-按内容认单.js?v=20260821t"></script>
+<script src="引擎-抓取.js?v=20260821t"></script>
+<script src="引擎-点位册.js?v=20260821t"></script>
+<script src="引擎-匹配.js?v=20260821t"></script>
+<script src="数据-切法规矩.js?v=20260821t"></script>
+<script src="引擎-断句规矩.js?v=20260821t"></script>
+<script src="引擎-OCR.js?v=20260821t"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821s";
+  var 版本号 = "v20260821t";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5510,7 +5510,18 @@ window.addEventListener("unhandledrejection",function(ev){
 
      ⚠ 这个函数必须待在 IIFE 顶层：认表再摊平、认表跑一趟 都要用它。
        2026-08-11 之前它写在 runOcr 肚子里，害得认表那条路一失败就是死机。 */
-  function 识别败了(话){
+  /* ★★ 2026-08-21 老板：交叉表读不出来，【什么都不出】，不许退回文字倒推。
+       他拖广泰粉面 8.22 进来，看到的是一屏「总店 1.5」「图强 1」「横江 5」——
+       店名全变成了商品，数字是随手抓的那行最后一个。
+       那不是认错列，是这张表根本没走通交叉表那条路，退回了「文字倒推」老路：
+       那条路只会一行行扫数字，见数就抓，交叉表一扫必散。
+     ⛔ 而且这不是新发现 —— 代码里 8/03 就写着一句，点名的就是这张表：
+          「广泰粉面那种矩阵表当场就散了（店名变商品、「公斤」变商品）」
+        知道会散，还把这条路留给交叉表走，才有了那一屏垃圾。
+     按 §0.1：一屏看着像模像样的假单，比什么都不出更糟。
+     ⚠ 只掐【交叉表】这一种。余额不足、明细表读不出来那些照旧给按钮 ——
+       明细表走文字倒推本来就是正经退路，一路用到今天。 */
+  function 识别败了(话,不许硬读){
     $("btn-ocr").disabled=false;
     if(TXTS.length){
       var 老=$("raw").value.replace(/\s+$/,"");
@@ -5521,7 +5532,12 @@ window.addEventListener("unhandledrejection",function(ev){
         '<br><span class="muted">文件内容已经放进原文框了（一个字没丢），'+
         '但<b>没有解析</b> —— 下面这张表是空的，别当成识别结果。'+
         '<br>余额不足的话去充值，充完再点一次「识别并计价」。</span><br>'+
-        '<button class="btn ghost sm" id="btn-raw-parse" style="margin-top:6px">照老办法硬读一遍（数字要自己核）</button>';
+        (不许硬读
+          ? '<span class="muted">这是一张<b>交叉表</b>（一行一个店、一列一样货）—— '+
+            '「照老办法硬读」那条路只会一行行扫数字，把店名当成商品，'+
+            '<b>读出来的整屏都是错的</b>，所以这儿不给这个按钮。'+
+            '<br>把上面说的那处改一下再点「识别并计价」，或者直接截图发我。</span>'
+          : '<button class="btn ghost sm" id="btn-raw-parse" style="margin-top:6px">照老办法硬读一遍（数字要自己核）</button>');
       var pb=$("btn-raw-parse");
       if(pb) pb.addEventListener("click",function(){
         ST.结构=null; ST.结构文字=""; 跑一遍原文();
@@ -5753,7 +5769,9 @@ window.addEventListener("unhandledrejection",function(ev){
         var 认=N.认((头张&&(头张.rows||头张))||[], 答);
         if(认.要问的){
           $("btn-ocr").disabled=false;
-          识别败了("这张表有几处定不下来，得你看一眼：\n・"+认.要问的.join("\n・"));
+          /* 交叉表定不下来 → 不给「硬读」那条路（见 识别败了 那段：它一扫必散） */
+          识别败了("这张表有几处定不下来，得你看一眼：\n・"+认.要问的.join("\n・"),
+                   答.版式==="矩阵");
           return;
         }
         读法=认.读法; 记下的=(认.要紧的||[]).concat(认.记下的||[]);
