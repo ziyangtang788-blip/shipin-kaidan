@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821b";
+  var 版本号 = "v20260821c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -4705,6 +4705,66 @@ window.addEventListener("unhandledrejection",function(ev){
     }).catch(function(){ 收到(null); });
   }
 
+  /* ★ 识别完要不要回头核一遍 —— 【三条路共用这一份】。
+     ⛔ 2026-08-21 踩到的坑：这段原来只长在「AI 填格子表」那条路上。
+        朱鲜生 8-19 走的是「OCR 认字 + 本地断句」那条省钱路，读完就出单、当场 return，
+        根本到不了这儿 —— 第三步做好了却一次都没跑过，页面上看着跟没改一样。
+        凡是「识别完了」的出口，都得叫这一份。
+
+     什么时候核（老板 2026-08-04：「只读有问题那一部分，没问题就不用读」）：
+       · 账对不上、或者有段没看清 —— 一律核
+       · 这张单压根没有合计可对 —— 也核（那道账是空的，只能靠核）
+       · 账全对得上又没看不清的 —— 省这笔钱
+
+     ⚠ 图必须是【真图】。OCR 走通那条路上，发出去的 content 里全是文字块、一张图都没有，
+       拿它去核等于让 AI 闭着眼睛看图。所以这儿一律用原始 imgs 重新拼。 */
+  /* 这一趟识别用的原图。runOcr 一开始就存进来，回头核 用完就作废 ——
+     不作废的话，下次人自己往框里粘一段文字，会拿上一张图去核，驴唇不对马嘴。 */
+  var 本次核对图=null;
+
+  function 回头核(图们,底,结构报告){
+    图们=(图们&&图们.length)?图们:(本次核对图||[]);
+    本次核对图=null;
+    var 有账=ST.lines.some(function(L){ return L&&L.总数&&L.总数.qty>0; })
+          || !!(结构报告&&结构报告.抬头&&(结构报告.抬头.表上条数||结构报告.抬头.表上数量小计));
+    var 对不上了=!!重点核哪几行();
+    var 有没看清=ST.lines.some(function(L){
+      return (L&&L.segs||[]).some(function(g){ return g&&g.没看清; }); });
+    var 要核=!有账||对不上了||有没看清;
+    if(!(要核&&图们&&图们.length)){
+      核对结果=null;
+      if(有账&&图们&&图们.length&&底)
+        $("ocr-msg").innerHTML=底+
+          '<br><span class="muted">这张单表上带着合计、每一行都对得上，也没有看不清的 —— 不用再花钱回头核。</span>';
+      return;
+    }
+    核对中=true;
+    if(底) $("ocr-msg").innerHTML=底+'<br><span class="muted">'+
+      (对不上了||有没看清
+        ? '账对不上／有看不清的，正在<b>把图放大</b>、回头把那几行重看一遍…（十几秒）'
+        : '正在回头核对数字…（十几秒）')+'</span>';
+    renderMatch();
+    /* ★ 重看这一遍用【放大过的图】——
+       实测江云 8/4 那张：原图 755px 漏了 A859 那一段，放大到 2500px 就读出来了。
+       只在这一步放大（不是每次都放大）：10 家 A/B 实测全放大只帮到 1 家却多花 25%。 */
+    放大图(图们,function(大图){
+      /* ⛔ 送去核的是【单子上现在这些行】，不是 OCR 转写的原文（老板 8/21 那条命门）：
+         朱鲜生 8-19 那张，转写的原文本身没写错、只是少抄了一整列，
+         拿原文去核，AI 一定答「全对」，这一遍就白跑了。
+         错是在【转写 → 单据行】那一步才发生的，所以要核的是单据行。 */
+      核对一遍(大图,window.GM_STRUCT.摆行给核对(ST.lines),function(果){
+        核对中=false;
+        核对结果=果;
+        var n=果?(果.改.length+果.漏.length+果.多.length):0;
+        if(底) $("ocr-msg").innerHTML=底+'<br>'+(!果
+          ? '<span style="color:#E0A33E">⚠ 这一遍没核成（没回话或看不懂）—— 单子没动，自己核一下</span>'
+          : (n?'<span style="color:#E0A33E">⚠ 核对发现 '+n+' 处对不上，看下面那条</span>'
+              :'<span style="color:#6FBF73">✓ 放大重看过一遍，没发现读错的</span>'));
+        renderMatch();
+      });
+    });
+  }
+
   /* ============================================================
      新提示词 ★ —— 让 AI 往【定死的格子表】里填，不让它猜
      ============================================================
@@ -5743,6 +5803,12 @@ window.addEventListener("unhandledrejection",function(ev){
       (ST.custOK?'':'　<span class="muted">·</span>　<b style="color:var(--acc)">下一步：选客户 ↑</b>')+
       '<div class="muted" style="margin-top:4px;font-size:12.5px">'+esc(怎么读的||"")+'</div>';
     走的哪条路="文字";
+    /* ★ 2026-08-21：识别完的【总出口】叫一次回头核。
+       ⛔ 原来这一步只长在「AI 填格子表」那条路上，OCR 断句这条省钱路读完就走人 ——
+          朱鲜生 8-19 那张四行错数，从来没人回去看一眼原图。
+       挂在出口上是为了以后【再加一条路也漏不掉】。
+       没有图（手打、粘文字、Excel）时 回头核 自己就返回，不花钱也不吵人。 */
+    回头核(null,"",null);
   }
 
   function 收下格子表(J,怎么读的,用量,重来){
@@ -5822,6 +5888,10 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!重来) 话答过=[];
     问要不要加(结构报告&&结构报告.只有话);
     if(!重来) (ST.custOK?$("card-match"):$("auto-cust")).scrollIntoView({behavior:"smooth",block:"center"});
+    /* ★ 2026-08-21：识别完的【总出口】叫一次回头核 —— 跟 收下文字 那头一个道理。
+       认表、明细切段、本子那条路都从这儿出去，挂在这里就一条都漏不掉。
+       账全对得上又没看不清的，回头核 自己会判「不用花这笔钱」。 */
+    回头核(null,"",结构报告);
   }
 
   /* ════════ 图片先过 OCR ★（2026-08-09）════════
@@ -5871,6 +5941,14 @@ window.addEventListener("unhandledrejection",function(ev){
   async function runOcr(){
     var key=getKey();
     var imgs=readyImgs();
+    /* 回头核那一遍要用的【真图】。
+       ⚠ 不能拿发出去的 content 当图：OCR 走通那条路上 content 里全是文字块、
+         一张图都没有，拿它去核等于让 AI 闭着眼睛看图（2026-08-21 踩到）。
+       图片以外的来源（PDF / Excel / 手打文字）没有图可看，这里就是空的，不核。 */
+    var 核对用的图=imgs.map(function(im){
+      return {type:"image",source:{type:"base64",media_type:im.mime,data:im.b64}};
+    });
+    本次核对图=核对用的图;
     if(!imgs.length&&!PDFS.length&&!TXTS.length){ return; }
     if(imgs.length<IMGS.length){ $("ocr-msg").textContent="还有图没读完，等一秒再点"; return; }
     /* 走服务器的时候密钥在服务器上，浏览器这边不需要 —— 只有双击本地文件才要自己配。 */
@@ -6034,6 +6112,8 @@ window.addEventListener("unhandledrejection",function(ev){
 
       var 账=window.GM_PARSE.捞干净了吗(OCR全文);
       if(账.够){
+        /* 捞得全 → 直接进原文框，一个 token 都不花。
+           回头核对不在这儿叫 —— 挂在 收下文字 那个总出口上，路再多也漏不掉。 */
         收下文字(OCR全文,"OCR 认的字，本地断句读的 —— 一个 token 都没花");
         return;
       }
@@ -6207,55 +6287,15 @@ window.addEventListener("unhandledrejection",function(ev){
              · 表上有「总数量/合计/任务数」→ 账已经对过了，再花一遍钱是浪费
              · 微信随手写的、没有任何合计的 → 那道账是空的，只能靠核对，该花
            想强制核的，把上面那个勾打上。 */
-        var 有账=ST.lines.some(function(L){ return L&&L.总数&&L.总数.qty>0; })
-              || !!(结构报告&&结构报告.抬头&&(结构报告.抬头.表上条数||结构报告.抬头.表上数量小计));
-        /* ★ 2026-08-04 老板：「这个功能自动默认添加，而且是只读有问题那一部分，没问题就不用读。」
-           原来是「有校验码就不核」—— 可【有校验码 ≠ 账对得上】。
-           江云 8/4 那张单有「总数量」列、却 13≠14（漏了 A859 南站亚朵那一段 1 斤），
-           正因为这条判成「账已对过」不去核，漏掉的一段就这么过去了。
-           改成：账对不上、或者有段没看清 —— 这两种一律自动回头核，不用人记得勾。
-           账全对得上又没有看不清的，才省这笔钱。 */
-        var 对不上了=!!重点核哪几行();
-        var 有没看清=ST.lines.some(function(L){
-          return (L&&L.segs||[]).some(function(g){ return g&&g.没看清; }); });
-        var 要核=!有账||对不上了||有没看清;
-        if(要核&&这批图.length){
-          核对中=true;
-          $("ocr-msg").innerHTML=底+'<br><span class="muted">'+
-            (对不上了||有没看清
-              ? '账对不上／有看不清的，正在<b>把图放大</b>、回头把那几行重看一遍…（十几秒）'
-              : '正在回头核对数字…（十几秒）')+'</span>';
-          /* ★ 重看这一遍用【放大过的图】——
-             实测江云 8/4 那张：原图 755px 漏了 A859 那一段，放大到 2500px 就读出来了。
-             只在这一步放大（不是每次都放大）：10 家 A/B 实测全放大只帮到 1 家却多花 25%。 */
-          放大图(这批图,function(大图){
-          /* ⛔ 送去核的是【单子上现在这些行】，不是 OCR 转写的原文（老板 8/21 那条命门）：
-             朱鲜生 8-19 那张，转写的原文本身没写错、只是少抄了一整列，
-             拿原文去核，AI 一定答「全对」，这一遍就白跑了。
-             错是在【转写 → 单据行】那一步才发生的，所以要核的是单据行。 */
-          核对一遍(大图,window.GM_STRUCT.摆行给核对(ST.lines),function(果){
-            核对中=false;
-            核对结果=果;
-            var n=果?(果.改.length+果.漏.length+果.多.length):0;
-            $("ocr-msg").innerHTML=底+'<br>'+(!果
-              ? '<span style="color:#E0A33E">⚠ 这一遍没核成（没回话或看不懂）—— 单子没动，自己核一下</span>'
-              : (n?'<span style="color:#E0A33E">⚠ 核对发现 '+n+' 处对不上，看下面那条</span>'
-                  :'<span style="color:#6FBF73">✓ 放大重看过一遍，没发现读错的</span>'));
-            renderMatch();
-          });
-          });
-        } else {
-          核对结果=null;
-          if(有账&&这批图.length)
-            $("ocr-msg").innerHTML=底+
-              '<br><span class="muted">这张单表上带着合计、每一行都对得上，也没有看不清的 —— 不用再花钱回头核。</span>';
-        }
+        回头核(核对用的图,底,结构报告);
       }
     }).catch(function(e){
       $("btn-ocr").disabled=false;
       $("ocr-msg").textContent="识别失败："+e.message+"（网络不通，或者密钥不对）";
     });
   }
+
+
 
   var SAMPLES={
     ya:{find:"雅食乐餐饮",text:
