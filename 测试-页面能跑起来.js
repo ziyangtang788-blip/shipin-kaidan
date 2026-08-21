@@ -996,7 +996,11 @@ async function 跑读法本() {
 
   /* ── 读法摊不出货：另一条以前也是 ReferenceError 的分支 ── */
   win.fetch = () => Promise.resolve({
-    json: () => Promise.resolve({ content: [{ type: "text", text: JSON.stringify({ 用第几张表: 9, 版式: "明细", 商品列: 1 }) }] })
+    /* 怎么让它摊不出货：指一列根本不存在的当商品列。
+       ⚠ 以前这儿写的是「用第几张表: 9」（指一张不存在的表）—— 2026-08-21 老板定了
+         【永远只读第一张】之后，第几张说什么都没用了，这个触发方式就失效了。
+         这一条守的意图从来是「摊不出货要说出来、不许卡住」，跟第几张无关。 */
+    json: () => Promise.resolve({ content: [{ type: "text", text: JSON.stringify({ 用第几张表: 1, 版式: "明细", 表头在第几行: 1, 商品列: 99, 数量列: 98 }) }] })
   });
   EL["btn-ocr"].disabled = true;
   T.认表跑一趟(裕丰份, "假密钥");
