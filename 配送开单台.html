@@ -891,23 +891,23 @@ window.addEventListener("unhandledrejection",function(ev){
 </script>
 
 <script src="数据-价格库.js"></script>
-<script src="对照-预置.js?v=20260821n"></script>
+<script src="对照-预置.js?v=20260821p"></script>
 <script src="数据-常用规格.js"></script>
-<script src="数据-换算.js?v=20260821n"></script>
-<script src="数据-客户量纲.js?v=20260821n"></script>
-<script src="引擎-读文件.js?v=20260821n"></script>
-<script src="数据-商户名.js?v=20260821n"></script>
-<script src="导出-观麦.js?v=20260821n"></script>
-<script src="引擎-解析.js?v=20260821n"></script>
-<script src="引擎-读结构.js?v=20260821n"></script>
-<script src="引擎-认表.js?v=20260821n"></script>
-<script src="新-按内容认单.js?v=20260821n"></script>
-<script src="引擎-抓取.js?v=20260821n"></script>
-<script src="引擎-点位册.js?v=20260821n"></script>
-<script src="引擎-匹配.js?v=20260821n"></script>
-<script src="数据-切法规矩.js?v=20260821n"></script>
-<script src="引擎-断句规矩.js?v=20260821n"></script>
-<script src="引擎-OCR.js?v=20260821n"></script>
+<script src="数据-换算.js?v=20260821p"></script>
+<script src="数据-客户量纲.js?v=20260821p"></script>
+<script src="引擎-读文件.js?v=20260821p"></script>
+<script src="数据-商户名.js?v=20260821p"></script>
+<script src="导出-观麦.js?v=20260821p"></script>
+<script src="引擎-解析.js?v=20260821p"></script>
+<script src="引擎-读结构.js?v=20260821p"></script>
+<script src="引擎-认表.js?v=20260821p"></script>
+<script src="新-按内容认单.js?v=20260821p"></script>
+<script src="引擎-抓取.js?v=20260821p"></script>
+<script src="引擎-点位册.js?v=20260821p"></script>
+<script src="引擎-匹配.js?v=20260821p"></script>
+<script src="数据-切法规矩.js?v=20260821p"></script>
+<script src="引擎-断句规矩.js?v=20260821p"></script>
+<script src="引擎-OCR.js?v=20260821p"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821n";
+  var 版本号 = "v20260821p";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -4012,9 +4012,23 @@ window.addEventListener("unhandledrejection",function(ev){
     var 找 = function(sku){ var k=-1; DATA.items.forEach(function(t,j){ if(t[0]===ci&&t[6]===sku) k=j; }); return k; };
     ST.lines=(o.lines||[]).map(function(r){
       var idx=r.sku?找(r.sku):-1;
+      /* ★★ 2026-08-21 江云：这一行的 how 原来【一律写死成 frozen】，
+         可 sku 找不到时 idx 是 -1、商品是空的。
+         frozen 在系统里算「已经定了、不用再问」，画那一行时就直接去读商品名 ——
+         读到 null 当场炸，整张单打不开，只弹一句
+           「调不出这张单：Cannot read properties of null (reading 'alias')」
+         老板那张单里有几行本来就认不出（腐皮结、小豆腐卜），
+         他没挑商品就点了确定订单，存下来 sku 是空的 —— 再调就崩。
+
+         ★ 找不到商品就当【认不出】：摆出来让人挑，跟识别时认不出的行一个样。
+         ⚠ 别只在画的那头加个判断挡一下 —— how 一路串到存疑拦截、导观麦、rematch，
+           标错了那几处全跟着错。要改就改在源头。
+
+         什么时候会 idx<0：认不出的行、手动加的行（存下来就没 sku）、
+         或者存单之后那个商品被删了／改了编码。 */
       return { text:(r.text||r.name||""), unit:r.unit||"", qty:r.qty,
                segs:[{qty:r.qty,unit:r.unit||"",code:r.code||"",note:r.note||""}],
-               i:idx, how:"frozen", cands:idx>=0?[idx]:[],
+               i:idx, how:idx>=0?"frozen":"none", cands:idx>=0?[idx]:[],
                manual:!!r.manual, 冻:false };
     });
     ST.savedNo=o.order_no||""; ST.no=ST.savedNo||"待出号";

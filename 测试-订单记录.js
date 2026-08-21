@@ -192,6 +192,37 @@ const ORDER = (cid, name, date, amt) => ({
     const back = (await req("GET", "/api/orders/" + g.json.order_no)).json.order;
     ok("手动那一行的 manual 标记留住了", back.lines[1].manual, true);
     ok("手动那一行的 sku 留住了（重开时靠它找回来）", back.lines[1].sku, "B2");
+
+    /* ══════ ★ 调老单：没配上商品的那几行不许把整张单弄崩（2026-08-21 江云）══════
+       老板拖江云那张单，里头有几行本来就「认不出」（腐皮结、小豆腐卜），
+       他没挑商品就点了确定订单 —— 存下来 sku 是空的。
+       再去订单记录里调它，整张单打不开，只弹一句：
+         「调不出这张单：Cannot read properties of null (reading 'alias')」
+
+       根子在 ordReopen：sku 找不到时 i 是 -1，可 how 【一律写死成 frozen】。
+       frozen 在系统里算「已经定了、不用再问」，画那一行时就直接去读 r.it.alias ——
+       可 r.it 是 null（compute 里 i<0 的行 it 就是 null），当场炸，整张单调不出来。
+
+       ★ 规矩：找不到商品的行，就当【认不出】摆出来让人挑，跟识别时认不出的行一个样。
+       ⚠ 这条不能只在页面上防（那是治标）—— 标错 how 会一路串到别处：
+         存疑拦截、导观麦、rematch 全都看 how。 */
+    {
+      const 抠 = (name) => {
+        const i = H.indexOf("function " + name + "(");
+        if (i < 0) throw new Error("页面里找不到 " + name);
+        let d = 0;
+        for (let k = H.indexOf("{", i); k < H.length; k++) {
+          if (H[k] === "{") d++; else if (H[k] === "}") { d--; if (!d) return H.slice(i, k + 1); }
+        }
+      };
+      const 源 = 抠("ordReopen");
+      ok("★ 找不到商品的行不许标 frozen（标了就当它配好了，画的时候读 null 崩）",
+        /how:\s*idx\s*>=\s*0\s*\?\s*"frozen"\s*:\s*"none"/.test(源.replace(/\s+/g, " ")), true);
+      ok("⛔ 不许再无脑写死 how:\"frozen\"", !/how:"frozen"/.test(源), true);
+      /* 存下来没有 sku 的行（认不出、手动加的）→ idx 一定是 -1，必须走「认不出」那条 */
+      ok("★ 没有 sku 的行也照样走「认不出」，不是 frozen",
+        /var idx\s*=\s*r\.sku\s*\?\s*找\(r\.sku\)\s*:\s*-1/.test(源.replace(/\s+/g, " ")), true);
+    }
   } catch (e) {
     fail++; L("  ✗ 后端测试炸了：" + (e && e.message));
   } finally {

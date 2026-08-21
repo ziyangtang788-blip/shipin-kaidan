@@ -378,8 +378,16 @@ ok("填单据原文不报错", !流程出错, 流程出错 && 流程出错.messa
 {
   const src = scripts.join("\n");
   ok("调出来是按存下来的行原样摆回去，不重新解析",
-    /function ordReopen[\s\S]{0,2500}how:"frozen"/.test(src),
+    /function ordReopen[\s\S]{0,3500}how:idx>=0\?"frozen":"none"/.test(src) &&
+    !/function ordReopen[\s\S]{0,3500}parseOrder\(/.test(src),
     "重新 parseOrder 的话，中间改过引擎/学过新词/改过价，老行会悄悄变样");
+  /* ★ 2026-08-21 江云：how 原来一律写死 frozen，可 sku 找不到时商品是空的。
+     frozen 算「已经定了」，画那一行时直接读商品名 → 读到 null 当场炸，
+     整张单打不开（「调不出这张单：Cannot read properties of null (reading 'alias')」）。
+     配不上的行要当【认不出】摆出来让人挑。 */
+  ok("★ 配不上商品的行不许假装配上了（不然调出来整张崩）",
+    !/function ordReopen[\s\S]{0,3500}how:"frozen"/.test(src),
+    "sku 找不到时 i 是 -1、商品是 null，标成 frozen 就会去读 null.alias");
   ok("存的时候把客户原话也记上了（不然还原不出来）",
     /text:\(r\.L\.text\|\|""\)/.test(src));
   ok("重算绕开冻住的行", /if\(L\.manual\|\|L\.pinned\|\|L\.冻\) return;/.test(src));
