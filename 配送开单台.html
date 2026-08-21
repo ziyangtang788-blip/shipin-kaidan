@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821c";
+  var 版本号 = "v20260821d";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5799,16 +5799,19 @@ window.addEventListener("unhandledrejection",function(ev){
       ? '<span style="color:var(--warn)">⚠</span> <b>读出 '+ST.lines.length+' 样货，其中 '+
         '<span style="color:var(--warn)">'+读不懂+' 格没读懂</span></b>'
       : '<span style="color:var(--ok)">✅</span> <b>读出 '+ST.lines.length+' 样货</b>';
-    $("ocr-msg").innerHTML=头+
+    var 底=头+
       (ST.custOK?'':'　<span class="muted">·</span>　<b style="color:var(--acc)">下一步：选客户 ↑</b>')+
       '<div class="muted" style="margin-top:4px;font-size:12.5px">'+esc(怎么读的||"")+'</div>';
+    $("ocr-msg").innerHTML=底;
     走的哪条路="文字";
     /* ★ 2026-08-21：识别完的【总出口】叫一次回头核。
        ⛔ 原来这一步只长在「AI 填格子表」那条路上，OCR 断句这条省钱路读完就走人 ——
           朱鲜生 8-19 那张四行错数，从来没人回去看一眼原图。
        挂在出口上是为了以后【再加一条路也漏不掉】。
-       没有图（手打、粘文字、Excel）时 回头核 自己就返回，不花钱也不吵人。 */
-    回头核(null,"",null);
+       没有图（手打、粘文字、Excel）时 回头核 自己就返回，不花钱也不吵人。
+       ⚠ 底 一定要传：不传的话这一步在屏幕上一个字都没有，
+         出了事分不清是「没跑」还是「跑了没找到」（2026-08-21 就为这个白查一轮）。 */
+    回头核(null,底,null);
   }
 
   function 收下格子表(J,怎么读的,用量,重来){
@@ -5881,7 +5884,8 @@ window.addEventListener("unhandledrejection",function(ev){
        别的（「照记住的读法，没花钱」「选完客户重读了一遍…」）都是他要知道的，留着。 */
     var 补=(怎么读的&&!/照格子表读的/.test(怎么读的))
       ? ('　<span class="muted">· '+esc(怎么读的)+'</span>') : '';
-    $("ocr-msg").innerHTML=头+下一步+补;
+    var 底=头+下一步+补;
+    $("ocr-msg").innerHTML=底;
     /* 明细格里客户留的话 → 问一次要不要加行。★2026-08-18
        重来（选完客户那一趟）不清 话答过 —— 人刚答过的不能再问一遍。
        ⚠ 图片那条路有一模一样的两行，在「识别完成」那个 ocr-msg 下面，改这儿记得看那儿。 */
@@ -5890,8 +5894,9 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!重来) (ST.custOK?$("card-match"):$("auto-cust")).scrollIntoView({behavior:"smooth",block:"center"});
     /* ★ 2026-08-21：识别完的【总出口】叫一次回头核 —— 跟 收下文字 那头一个道理。
        认表、明细切段、本子那条路都从这儿出去，挂在这里就一条都漏不掉。
-       账全对得上又没看不清的，回头核 自己会判「不用花这笔钱」。 */
-    回头核(null,"",结构报告);
+       账全对得上又没看不清的，回头核 自己会判「不用花这笔钱」。
+       ⚠ 底 一定要传，不然这一步在屏幕上不吭声，出事分不清「没跑」还是「跑了没找到」。 */
+    回头核(null,底,结构报告);
   }
 
   /* ════════ 图片先过 OCR ★（2026-08-09）════════
