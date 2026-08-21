@@ -112,6 +112,26 @@ process.stdout.write("• 页面：语法 / id / 有没有再抄一份匹配逻�
   else console.log("通过　" + n + " 段 script、" + used.size + " 个 id");
 }
 
+/* ★ 缓存戳：改了引擎文件却没改它的 ?v=，浏览器就一直用旧的那份。
+   2026-08-21 踩到：引擎-解析.js、引擎-读结构.js 都改了，戳还停在 8/19 ——
+   页面版本号每次都改，顶上显示的是新版本，看着像上线了，
+   可引擎是【单独的文件】，靠自己那个 ?v= 决定要不要重新下载。
+   结果：无痕窗口里是对的、普通窗口里怎么刷都是旧的，白查一轮。
+   规矩：页面版本号 vXXX ↔ 每个 ?v=XXX 必须一致，一个都不许落下。 */
+process.stdout.write("• ★ 缓存戳跟版本号对得上（对不上＝改了没生效）\n    配送开单台.html … ");
+{
+  const h = fs.readFileSync(path.join(__dirname, "配送开单台.html"), "utf8");
+  const 版 = (h.match(/var 版本号\s*=\s*"v?([0-9a-z]+)"/) || [])[1] || "";
+  const 戳们 = [...h.matchAll(/([^"?]+\.js)\?v=([0-9a-z]+)/g)];
+  const 落下 = 戳们.filter(m => m[2] !== 版).map(m => m[1] + " (?v=" + m[2] + ")");
+  if (!版) { bad++; console.log("没过 ❌\n      找不到版本号"); }
+  else if (落下.length) {
+    bad++; console.log("没过 ❌");
+    console.log("      版本号是 " + 版 + "，可这几个文件的戳还是旧的 —— 浏览器会继续用旧那份：");
+    落下.forEach(x => console.log("        " + x));
+  } else console.log("通过　" + 戳们.length + " 个文件都是 " + 版);
+}
+
 /* 上传清单：新加的 js 忘了写进部署脚本，线上就是白屏。
    .bat 本身不写逻辑（cmd 在中文系统上按 GBK 读，中文路径会闪退），只负责调 .ps1。
    ⚠ 2026-08-13：这里原来只查 deploy.ps1，可「2-上传网页.bat」实际调的是 push-all.ps1 ——
