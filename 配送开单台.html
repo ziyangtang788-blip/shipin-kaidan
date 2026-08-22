@@ -891,23 +891,23 @@ window.addEventListener("unhandledrejection",function(ev){
 </script>
 
 <script src="数据-价格库.js"></script>
-<script src="对照-预置.js?v=20260821t"></script>
+<script src="对照-预置.js?v=20260822b"></script>
 <script src="数据-常用规格.js"></script>
-<script src="数据-换算.js?v=20260821t"></script>
-<script src="数据-客户量纲.js?v=20260821t"></script>
-<script src="引擎-读文件.js?v=20260821t"></script>
-<script src="数据-商户名.js?v=20260821t"></script>
-<script src="导出-观麦.js?v=20260821t"></script>
-<script src="引擎-解析.js?v=20260821t"></script>
-<script src="引擎-读结构.js?v=20260821t"></script>
-<script src="引擎-认表.js?v=20260821t"></script>
-<script src="新-按内容认单.js?v=20260821t"></script>
-<script src="引擎-抓取.js?v=20260821t"></script>
-<script src="引擎-点位册.js?v=20260821t"></script>
-<script src="引擎-匹配.js?v=20260821t"></script>
-<script src="数据-切法规矩.js?v=20260821t"></script>
-<script src="引擎-断句规矩.js?v=20260821t"></script>
-<script src="引擎-OCR.js?v=20260821t"></script>
+<script src="数据-换算.js?v=20260822b"></script>
+<script src="数据-客户量纲.js?v=20260822b"></script>
+<script src="引擎-读文件.js?v=20260822b"></script>
+<script src="数据-商户名.js?v=20260822b"></script>
+<script src="导出-观麦.js?v=20260822b"></script>
+<script src="引擎-解析.js?v=20260822b"></script>
+<script src="引擎-读结构.js?v=20260822b"></script>
+<script src="引擎-认表.js?v=20260822b"></script>
+<script src="新-按内容认单.js?v=20260822b"></script>
+<script src="引擎-抓取.js?v=20260822b"></script>
+<script src="引擎-点位册.js?v=20260822b"></script>
+<script src="引擎-匹配.js?v=20260822b"></script>
+<script src="数据-切法规矩.js?v=20260822b"></script>
+<script src="引擎-断句规矩.js?v=20260822b"></script>
+<script src="引擎-OCR.js?v=20260822b"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -920,7 +920,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260821t";
+  var 版本号 = "v20260822b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5713,7 +5713,28 @@ window.addEventListener("unhandledrejection",function(ev){
     try{ 记=查读法本(fp); }catch(e){ 记=null; }
     if(记) try{
       var 合本=照读法摊(份,记.读法);
+      /* ★★ 2026-08-22：套完本子【要过一遍秤】—— 摊出来一行像样的都没有，就是这份读法坏了。
+         老板原话：「AI 的作用在哪里啊？为什么不会去指他、告诉他怎么认吗？为什么没有这一步呢」
+         —— 这一步一直有，只是【被这条近道跳过了】：本子里有读法就直接套，不再问 AI。
+         2026-08-22「工作簿1」：本子里 8/19 记着一份【整个往右错一位】的读法
+           商品列1 ✓　数量列2（那是单位列）✗　单位列3（那是明细列）✗　分布列4（那是订购数列）✗
+         照它摊出来 8 行【全是「读不懂」】，可 行.length=8，旧判据「摊出货了」当场通过，
+         于是接着用 —— 用过 2 次，校验网一条都没喊。
+         按长相存的键（4×§单位,商品名称,明细）还不认客户，所有长这样的表一起中招。
+       ⚠ 判据卡到最死：【一行能读出数量的都没有】才算坏。
+         真表里几行读不懂是常事，那种照旧留着让人处理，不许因为这条就把好读法扔了。
+       ⚠ 扔掉之后不是完事 —— 下面接着走识别那条路，AI 该出场就出场（见 忘掉读法 那行）。 */
+      var 全读不懂=false;
       if(合本&&合本.行.length){
+        全读不懂=(合本.行||[]).every(function(L){
+          var d=L&&L.分布;
+          if(!d||!d.length) return true;                 /* 一段都没有，也不算读出来 */
+          return d.every(function(g){ return g&&(g.读不懂||g.数量==="?"); });
+        });
+        if(全读不懂) $("ocr-msg").textContent=
+          "记着的那份读法摊出来一行都读不懂 —— 多半记错了或者表改版了，重新问一次识别…";
+      }
+      if(合本&&合本.行.length&&!全读不懂){
         记.用过=(记.用过||0)+1; ovSave();
         收尾(合本,null,"照记住的读法，没花钱",function(){
           $("ocr-msg").innerHTML=$("ocr-msg").innerHTML+
@@ -5728,8 +5749,9 @@ window.addEventListener("unhandledrejection",function(ev){
         });
         return;
       }
-      /* 本子上那份摊不出货来了 —— 多半是表改版了。
-         不许硬套（硬套出来的是一张缺货的单，还不吭声），忘掉、重新问识别。 */
+      /* 本子上那份摊不出货来了、或者摊出来一行都读不懂 —— 多半是记错了或者表改版了。
+         不许硬套（硬套出来的是一张缺货的单，还不吭声），忘掉、重新问识别。
+         ★ 忘掉这一下会同步到服务器（ovForget），别台电脑也不会再照那份错的读。 */
       忘掉读法(fp);
     }catch(e){ /* 近道自己坏了：当没有本子，往下走识别那条老路 */ }
 
