@@ -126,12 +126,27 @@ process.stdout.write("• ★ 缓存戳跟版本号对得上（对不上＝改�
   const 版 = (h.match(/var 版本号\s*=\s*"v?([0-9a-z]+)"/) || [])[1] || "";
   const 戳们 = [...h.matchAll(/([^"?]+\.js)\?v=([0-9a-z]+)/g)];
   const 落下 = 戳们.filter(m => m[2] !== 版).map(m => m[1] + " (?v=" + m[2] + ")");
+  /* ★ 2026-08-22：这道闸原来只查【已经带戳的戳对不对】，
+     压根不看【有没有文件根本没戳】—— 没戳的那种更糟：它永远不会更新。
+     踩到的：数据-价格库.js（181 客户 / 5898 条价格）和 数据-常用规格.js 都没戳，
+     哪天重新导了观麦数据、价格变了，别台电脑的浏览器会一直用旧价，而且体检全绿。
+     ⚠ 密钥-本机.js 例外：它故意不上传（上传清单那道闸里也是 不传），
+       别台电脑本来就是 404，加不加戳都一样。 */
+  const 免戳 = ["密钥-本机.js"];
+  const 没戳 = [...h.matchAll(/<script\s+src="([^"?]+\.js)"/g)]
+    .map(m => m[1]).filter(f => 免戳.indexOf(f) < 0);
   if (!版) { bad++; console.log("没过 ❌\n      找不到版本号"); }
-  else if (落下.length) {
+  else if (落下.length || 没戳.length) {
     bad++; console.log("没过 ❌");
-    console.log("      版本号是 " + 版 + "，可这几个文件的戳还是旧的 —— 浏览器会继续用旧那份：");
-    落下.forEach(x => console.log("        " + x));
-  } else console.log("通过　" + 戳们.length + " 个文件都是 " + 版);
+    if (落下.length) {
+      console.log("      版本号是 " + 版 + "，可这几个文件的戳还是旧的 —— 浏览器会继续用旧那份：");
+      落下.forEach(x => console.log("        " + x));
+    }
+    if (没戳.length) {
+      console.log("      这几个文件【根本没有 ?v= 戳】—— 改了也永远推不到别人的浏览器上：");
+      没戳.forEach(x => console.log("        " + x));
+    }
+  } else console.log("通过　" + 戳们.length + " 个文件都是 " + 版 + "，没有漏戳的");
 }
 
 /* 上传清单：新加的 js 忘了写进部署脚本，线上就是白屏。
