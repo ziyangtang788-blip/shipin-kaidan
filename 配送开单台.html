@@ -904,25 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260824d"></script>
-<script src="对照-预置.js?v=20260824d"></script>
-<script src="数据-常用规格.js?v=20260824d"></script>
-<script src="数据-换算.js?v=20260824d"></script>
-<script src="数据-客户量纲.js?v=20260824d"></script>
-<script src="引擎-读文件.js?v=20260824d"></script>
-<script src="数据-商户名.js?v=20260824d"></script>
-<script src="导出-观麦.js?v=20260824d"></script>
-<script src="引擎-解析.js?v=20260824d"></script>
-<script src="引擎-读结构.js?v=20260824d"></script>
-<script src="引擎-认表.js?v=20260824d"></script>
-<script src="新-按内容认单.js?v=20260824d"></script>
-<script src="引擎-抓取.js?v=20260824d"></script>
-<script src="引擎-点位册.js?v=20260824d"></script>
-<script src="引擎-匹配.js?v=20260824d"></script>
-<script src="数据-切法规矩.js?v=20260824d"></script>
-<script src="引擎-断句规矩.js?v=20260824d"></script>
-<script src="引擎-学分法.js?v=20260824d"></script>
-<script src="引擎-OCR.js?v=20260824d"></script>
+<script src="数据-价格库.js?v=20260824e"></script>
+<script src="对照-预置.js?v=20260824e"></script>
+<script src="数据-常用规格.js?v=20260824e"></script>
+<script src="数据-换算.js?v=20260824e"></script>
+<script src="数据-客户量纲.js?v=20260824e"></script>
+<script src="引擎-读文件.js?v=20260824e"></script>
+<script src="数据-商户名.js?v=20260824e"></script>
+<script src="导出-观麦.js?v=20260824e"></script>
+<script src="引擎-解析.js?v=20260824e"></script>
+<script src="引擎-读结构.js?v=20260824e"></script>
+<script src="引擎-认表.js?v=20260824e"></script>
+<script src="新-按内容认单.js?v=20260824e"></script>
+<script src="引擎-抓取.js?v=20260824e"></script>
+<script src="引擎-点位册.js?v=20260824e"></script>
+<script src="引擎-匹配.js?v=20260824e"></script>
+<script src="数据-切法规矩.js?v=20260824e"></script>
+<script src="引擎-断句规矩.js?v=20260824e"></script>
+<script src="引擎-学分法.js?v=20260824e"></script>
+<script src="引擎-OCR.js?v=20260824e"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260824d";
+  var 版本号 = "v20260824e";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1308,7 +1308,19 @@ window.addEventListener("unhandledrejection",function(ev){
     var price=parseFloat(String(o.price).replace(/[^\d.]/g,""));
     if(!prod||!(price>=0)) return null;
     OV.padd[cid]=OV.padd[cid]||[];
-    var sku="X"+cid+"-"+Date.now()+"-"+Math.floor(Math.random()*1000);
+    /* ★ 2026-08-24：人填了观麦的商品ID 就用真的，没填才自己编一个（老板：「新加产品要有编号」）。
+       编号是观麦发的，我们编不出来 —— 自编的那串导过去观麦只会报「商品不存在」。
+       ⚠ 只认【看着像观麦码】的：字母开头 + 一串数字（D3196709 / C123456）。
+         人随手打两个字不算，免得拿一个假码去撞，那比不填还糟。
+       ⚠ 这家已经有这个码了就不新建了 —— 那说明货本来就在库里，重复建会出两条一样的。 */
+    var 填的=String(o.sku||"").trim().toUpperCase();
+    var sku="";
+    if(/^[A-Z]{1,2}[0-9]{5,12}$/.test(填的)){
+      var ci0=custIndexById(cid), b0=(ci0>=0&&IDX.byCust[ci0])||null;
+      if(b0&&b0.sku&&b0.sku[填的]!==undefined) return 填的;   /* 库里已经有，直接用它 */
+      sku=填的;
+    }
+    if(!sku) sku="X"+cid+"-"+Date.now()+"-"+Math.floor(Math.random()*1000);
     OV.padd[cid].push({prod:prod,alias:alias,unit:unit,
                        price:Math.round(price*100)/100,spec:spec,sku:sku});
     logChange(cid,prod,"新增品类","—",alias+" / "+unit+" / "+n2(price));
@@ -2521,6 +2533,14 @@ window.addEventListener("unhandledrejection",function(ev){
              '<input class="np-unit" placeholder="单位" value="'+esc(lu||"斤")+'" style="max-width:70px">'+
              '<input class="np-spec" placeholder="规格（可空）" style="max-width:120px">'+
              '<input class="np-price" placeholder="单价" style="max-width:80px">'+
+             /* ★ 2026-08-24 老板：「新加产品没有编号也导入不进去，新加产品要有编号。」
+                编号是观麦发的，我们编不出来 —— 只能让人把它填进来。
+                填了：导观麦时按码取货，一次就进；
+                不填：导出时那一列留空，观麦退回去按商品名配，多点一下也能进。
+                （原来是把我们自编的假码填过去，观麦直接报「商品不存在」，整单卡死。） */
+             '<input class="np-sku" placeholder="观麦商品ID（可空）" style="max-width:150px"'+
+             ' title="观麦里这个货的商品ID，D 开头那串。填了导观麦一次就进；'+
+             '不填也能导，观麦会按商品名去配，可能要多点一下">'+
              '<button class="btn sm np-ok">加进库并选中</button>'+
              '<button class="btn ghost sm np-no">取消</button>'+
              '<div class="muted np-msg"></div>'+
@@ -2708,7 +2728,9 @@ window.addEventListener("unhandledrejection",function(ev){
         var sku=addProduct(cid,{prod:name,alias:name,
                                 unit:box.querySelector(".np-unit").value,
                                 spec:box.querySelector(".np-spec").value,
-                                price:price});
+                                price:price,
+                                /* 人填的观麦商品ID —— 填了就拿它当这个品的码 */
+                                sku:(box.querySelector(".np-sku")||{}).value});
         if(!sku){ msg.textContent="没加成，检查商品名和单价"; return; }
         /* 加完顺手把「下单表这个词 → 这个新品」也记住，下次不用再问 */
         learnPair(ST.ci,box.getAttribute("data-text"),sku,box.getAttribute("data-unit")||"");
