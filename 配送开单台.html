@@ -2234,7 +2234,16 @@ window.addEventListener("unhandledrejection",function(ev){
           /* ⚠ 「客户自己把总数填错」这层意思一个字都不许删（测试-页面能跑起来.js 钉着这条）：
              不写的话人会以为表上那个总数一定对，反过来去改各段 —— 那就是拿总数凑数字了。 */
           ' title="我核过了：后面那几段是对的，就按各段发（多半是客户自己把总数填错了）。'+
-          '一个数字都不改，只是不再提醒，并且留一笔痕在订单记录里">✓ 核过了，按各段发</button>';
+          '一个数字都不改，只是不再提醒，并且留一笔痕在订单记录里">✓ 核过了，按各段发</button>'+
+          /* ★★ 2026-08-24：学过的切法排到通用前面之后，唯一的风险就是【当初教错了】——
+               教错一次，这家以后天天错。老板：「唯一就是教错了，这样得有个重新教的案件。」
+             ⚠ 出口就放在这儿，不放别处：教错了唯一的症状就是【账对不上】，
+               放在别的地方人想不起来去点。
+             ⚠ 只在这家真教过东西的时候才露 —— 没教过的表摆这个按钮是白占地方。 */
+          ((window.GM_CUT_RULES||[]).some(function(x){ return String(x.客户||"")===String(custId(ST.ci)||""); })
+            ? (' <button class="btn ghost sm reteach"'+
+               ' title="这家的切法是当初教错了？扔掉重教一遍 —— 扔完这张单会重新读，'+
+               '读不出来会再问你一次">↺ 切法教错了，重教</button>') : '');
       }).join('')+
       '<br><span class="muted">以各段为准，不拿总数去凑。补齐了这条自己会消。</span></div>';
 
@@ -2324,6 +2333,34 @@ window.addEventListener("unhandledrejection",function(ev){
         判过的.push({行:名,按:b.getAttribute("data-h"),表上:b.getAttribute("data-t"),
                      人:(OV.who||"")||"未署名",时:new Date().toISOString().slice(0,16).replace("T"," ")});
         ST.dirty=true; renderMatch();
+      });
+    });
+    /* ★「↺ 切法教错了，重教」（2026-08-24）
+       学过的切法排到通用前面之后，教错一次这家就天天错 —— 这是那条路唯一的风险出口。
+       点了做三件事：把这家教过的切法【全扔掉】（本机 + 服务器都扔）、重新摊一遍、
+       读不出来就照旧走第 3 步再问一次。
+       ⚠ 扔的是【这家的】，别家一条不碰。
+       ⚠ 一定要连服务器上那份一起扔（ovSave+ovPush），不然别台电脑还照着错的读。 */
+    Array.prototype.forEach.call($("match-alerts").querySelectorAll("button.reteach"),function(b){
+      b.addEventListener("click",function(){
+        var 谁=String(custId(ST.ci)||"");
+        if(!谁) return;
+        var 剩=function(a){ return (a||[]).filter(function(x){ return String(x.客户||"")!==谁; }); };
+        var 扔了=(window.GM_CUT_RULES||[]).length-剩(window.GM_CUT_RULES).length;
+        window.GM_CUT_RULES=剩(window.GM_CUT_RULES);
+        OV.切法=剩(OV.切法);
+        ovSave(); ovPush();
+        /* 重新摊：读法本身没变，变的是切法规矩本，照旧那份读法再摊一次就行。
+           ⚠ 不能走 客户定了重读() —— 它开头有一道「第一遍就全读懂了就不折腾」的闸，
+             而人正是因为【读懂了但读错了】才点的这个按钮，会被那道闸挡回去。
+           ⚠ 扔完【一定要再问一次】：人点这个就是要重教。不管还剩几处读不懂都问。 */
+        if(!ST.重摊){ ST.dirty=true; renderMatch(); return; }
+        var 合=照读法摊(ST.重摊.份, ST.重摊.读法);
+        if(!合||!合.行.length){ ST.dirty=true; renderMatch(); return; }
+        var 剩=数读不懂(合);
+        收下格子表(合, "扔掉了这家教过的 "+扔了+" 条切法，重读了一遍"+
+                      (剩?("　—— 还剩 "+剩+" 处读不懂"):""), null, true);
+        学一次分法(合, function(成){ if(成===true) 重摊一遍("重新教好了"); });
       });
     });
     /* 「表上改成 ___」：人订正一个被我们读错的总数。
