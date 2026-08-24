@@ -476,6 +476,20 @@
         </div>
       </div>
 
+      <!-- ══════ 第 3 步：这张表怎么读 ★（2026-08-24）══════
+           老板 8/23-24：读得懂就直接出单一句不问；读不准就【一次只问一件】，
+           两个按钮；答完记住，下次这家发同样的表一句不问。
+           ⚠ 为什么单独占一块地：原来这类问题全挤在 ocr-msg 那一片，
+             「回头核」十几秒后回来就把窗盖掉了，人根本没机会答（交接 8/22 §4.2）。
+           ⚠ 平时是收着的 —— 只有真读不准才露面。 -->
+      <div class="stp" id="stp-learn" hidden>
+        <div class="stp-n">3</div>
+        <div class="stp-b">
+          <div class="stp-t" id="learn-title">这张表怎么读？</div>
+          <div id="learn-body"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -890,24 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260822e"></script>
-<script src="对照-预置.js?v=20260822e"></script>
-<script src="数据-常用规格.js?v=20260822e"></script>
-<script src="数据-换算.js?v=20260822e"></script>
-<script src="数据-客户量纲.js?v=20260822e"></script>
-<script src="引擎-读文件.js?v=20260822e"></script>
-<script src="数据-商户名.js?v=20260822e"></script>
-<script src="导出-观麦.js?v=20260822e"></script>
-<script src="引擎-解析.js?v=20260822e"></script>
-<script src="引擎-读结构.js?v=20260822e"></script>
-<script src="引擎-认表.js?v=20260822e"></script>
-<script src="新-按内容认单.js?v=20260822e"></script>
-<script src="引擎-抓取.js?v=20260822e"></script>
-<script src="引擎-点位册.js?v=20260822e"></script>
-<script src="引擎-匹配.js?v=20260822e"></script>
-<script src="数据-切法规矩.js?v=20260822e"></script>
-<script src="引擎-断句规矩.js?v=20260822e"></script>
-<script src="引擎-OCR.js?v=20260822e"></script>
+<script src="数据-价格库.js?v=20260824a"></script>
+<script src="对照-预置.js?v=20260824a"></script>
+<script src="数据-常用规格.js?v=20260824a"></script>
+<script src="数据-换算.js?v=20260824a"></script>
+<script src="数据-客户量纲.js?v=20260824a"></script>
+<script src="引擎-读文件.js?v=20260824a"></script>
+<script src="数据-商户名.js?v=20260824a"></script>
+<script src="导出-观麦.js?v=20260824a"></script>
+<script src="引擎-解析.js?v=20260824a"></script>
+<script src="引擎-读结构.js?v=20260824a"></script>
+<script src="引擎-认表.js?v=20260824a"></script>
+<script src="新-按内容认单.js?v=20260824a"></script>
+<script src="引擎-抓取.js?v=20260824a"></script>
+<script src="引擎-点位册.js?v=20260824a"></script>
+<script src="引擎-匹配.js?v=20260824a"></script>
+<script src="数据-切法规矩.js?v=20260824a"></script>
+<script src="引擎-断句规矩.js?v=20260824a"></script>
+<script src="引擎-学分法.js?v=20260824a"></script>
+<script src="引擎-OCR.js?v=20260824a"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -920,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260822e";
+  var 版本号 = "v20260824a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5466,6 +5481,7 @@ window.addEventListener("unhandledrejection",function(ev){
   }
   function 客户定了重读(){
     if(!ST.重摊||ST.ci<0) return;
+    关第三步();                                /* 上一单的问题不许留在屏上 */
     if(!(ST.重摊.读不懂数>0)) return;          /* 第一遍就全读懂了，不折腾 */
     var 原=ST.重摊.读不懂数;
     var 合=照读法摊(ST.重摊.份, ST.重摊.读法);  /* 这一趟客户号有了，学过的规矩才轮得上 */
@@ -5475,18 +5491,124 @@ window.addEventListener("unhandledrejection",function(ev){
       补上>0 ? ("选完客户重读了一遍 —— 原来读不懂的 "+原+" 处，补上了 "+补上+" 处")
              : ("选完客户重读了一遍 —— 这家的写法还没教过，"+剩+" 处还读不懂"),
       null, true);
-    /* 补完还剩的，这时候才轮到「帮我认一下」*/
-    if(剩>0) 问怎么切(读不懂条们(合), function(新们){
-      if(!新们.length) return;
-      存切法规矩(新们);
-      var 合2=照读法摊(ST.重摊.份, ST.重摊.读法);
-      if(!合2||!合2.行.length) return;
-      var 剩2=数读不懂(合2);
-      收下格子表(合2,
-        剩2 ? ("学会了，又读了一遍 —— 还剩 "+剩2+" 处要你手填")
-            : "学会了，又读了一遍 —— 这张单全读通了，以后这家自动切",
-        null, true);
+    /* 补完还剩的，这时候才轮到问人 —— 走第 3 步那块地（2026-08-24 换的入口）。
+       ⚠ 老弹窗 问怎么切() 留着没删：它是【退路】——
+         新的那条但凡自己出毛病，照旧回到老弹窗，绝不让人卡在没得问的地方。 */
+    if(剩>0) 学一次分法(合, function(成){
+      if(成===true){ 重摊一遍("学会了，又读了一遍"); return; }
+      /* ★「分不开，我自己填」是人明说的 —— 绝不许接着再弹一个老窗问同一件事。
+         那正是老板 8/23 说的「不是什么东西都是要问的」。 */
+      if(成==="算了") return;
+      问怎么切(读不懂条们(合), function(新们){
+        if(!新们.length) return;
+        存切法规矩(新们);
+        重摊一遍("学会了，又读了一遍");
+      });
     });
+  }
+  function 重摊一遍(话){
+    var 合2=照读法摊(ST.重摊.份, ST.重摊.读法);
+    if(!合2||!合2.行.length) return;
+    var 剩2=数读不懂(合2);
+    收下格子表(合2,
+      剩2 ? (话+" —— 还剩 "+剩2+" 处要你手填")
+          : (话+" —— 这张单全读通了，以后这家自动切"),
+      null, true);
+  }
+
+  /* ══════════════ 第 3 步：这一格该分成几份 ★（2026-08-24）══════════════
+     老板 8/23-24 原话：
+       「不要给我看符号，给我看分完长什么样。」
+       「这种都没有问的必要，肯定是分成 9 份的。」
+       「问哪些要问，你得衡量清楚，不是什么东西都是要问的。」
+
+     跟老弹窗（问怎么切）的区别，一句话：
+       老的问【机制】—— 把一格切成好几块，每块一个下拉框，选「点位/接上/数量/不要」。
+                        人看不出该选什么，一次最多问三种，还挤在会被盖掉的那一片。
+       新的问【事实】—— 摆出「分成 9 份，这一列 12 行加起来都跟表上对得上」，
+                        你只答「对」还是「换一种」。
+
+     ⚠ 判据只有账：这一列每一行各段加起来 == 表上写的总数。
+       账能证明的一句不问（见 引擎-学分法.js 不用问吗），这是老板点名要的。
+     ⚠ 分不出来不硬拼：留白让人填，绝不许把总数硬安在一个点位上。 */
+  function 学一次分法(合,回调){
+    var 学=window.GM_学分法, 读=ST.重摊&&ST.重摊.读法;
+    if(!学||!读||读.分布列==null){ 回调(false); return; }
+    /* 这一列每一格 + 它那一行表上写的总数 */
+    var 料=[];
+    (ST.重摊.份||[]).forEach(function(z){
+      ((z&&z.grid)||[]).forEach(function(sh){
+        var rows=(sh&&sh.rows)||[];
+        var 起=(读.表头在第几行==null?1:(+读.表头在第几行||0));
+        for(var i=起;i<rows.length;i++){
+          var r=rows[i]||[];
+          var 文=String(r[读.分布列-1]==null?"":r[读.分布列-1]).trim();
+          if(!文) continue;
+          var 校=null;
+          var c校=(读.合计列!=null?读.合计列:读.数量列);
+          if(c校){ var m=/^([0-9]+(?:\.[0-9]+)?)/.exec(String(r[c校-1]==null?"":r[c校-1]).trim());
+                   if(m) 校=parseFloat(m[1]); }
+          料.push({原文:文, 表上总数:校, 商品:String(r[(读.商品列||1)-1]||"")});
+        }
+      });
+    });
+    if(!料.length){ 回调(false); return; }
+    var 法们=[]; try{ 法们=学.几种分法(料); }catch(e){ 回调(false); return; }
+    if(!法们.length){ 回调(false); return; }          /* 一种都切不出来 → 退回老弹窗 */
+    var 定=学.不用问吗(法们);
+    /* 账已经证明了、而且用的就是通用那套 → 现状已经是它，什么都不用做 */
+    if(定&&定.分隔==="通用"){ 回调(false); return; }
+    if(定){                                            /* 账证明了某一条学过的规矩更对 → 直接立，不问 */
+      存切法规矩([学.立成规矩(custId(ST.ci)||"", 定, 学.挑例子(料)&&学.挑例子(料).原文)].filter(Boolean));
+      回调(true); return;
+    }
+    摆第三步(料,法们,回调);
+  }
+
+  var 第三步挑第几=0;
+  function 关第三步(){ var e=$("stp-learn"); if(e){ e.hidden=true; $("learn-body").innerHTML=""; } }
+  function 摆第三步(料,法们,回调){
+    第三步挑第几=0;
+    画第三步(料,法们,回调);
+  }
+  function 画第三步(料,法们,回调){
+    var 例=window.GM_学分法.挑例子(料)||{原文:""};
+    if(第三步挑第几>=法们.length) 第三步挑第几=0;
+    var f=法们[第三步挑第几];
+    var 全对=(f.量过&&f.对===f.量过);
+    var h='<div class="muted" style="margin-bottom:8px">这一格里挤着好几个送货点，分不开我不会自己拼一个。</div>'+
+      '<div style="font-family:Consolas,monospace;font-size:13.5px;background:var(--field);'+
+      'border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:12px;'+
+      'word-break:break-all;line-height:1.85">'+esc(String(例.原文).slice(0,300))+'</div>'+
+      '<div style="border:1px solid var(--line2);background:var(--panel);border-radius:10px;'+
+      'padding:12px 14px;max-width:520px;margin-bottom:12px">'+
+      '<div style="font-size:15px;font-weight:700;margin-bottom:6px">分成 '+f.份.length+' 份</div>';
+    f.份.slice(0,5).forEach(function(g){
+      h+='<div style="font-family:Consolas,monospace;font-size:12.5px;color:var(--ink2);'+
+         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
+         esc(String(g.code||"？").slice(0,30))+'　<b style="color:var(--acc);font-weight:400">'+
+         (g.qty==null?"没有数量":(g.qty+(g.unit||"")))+'</b></div>';
+    });
+    if(f.份.length>5) h+='<div class="muted" style="font-size:12.5px">…还有 '+(f.份.length-5)+' 份</div>';
+    if(f.量过) h+='<div style="margin-top:8px;font-size:12.5px;color:'+(全对?"var(--ok)":"var(--sale)")+'">'+
+      (全对?("✓ 这一列 "+f.量过+" 行加起来都跟表上对得上")
+           :("△ 这一列 "+f.量过+" 行里只有 "+f.对+" 行对得上"))+'</div>';
+    h+='</div><div class="btn-row">'+
+       '<button class="btn" id="lrn-ok">对，就这么分</button>'+
+       (法们.length>1?'<button class="btn ghost" id="lrn-next">换一种看看</button>':'')+
+       '<button class="btn ghost" id="lrn-no">分不开，我自己填</button></div>';
+    $("learn-title").textContent="这一格该分成几份？";
+    $("learn-body").innerHTML=h;
+    $("stp-learn").hidden=false;
+    $("lrn-ok").onclick=function(){
+      var 条=window.GM_学分法.立成规矩(custId(ST.ci)||"", f, 例.原文);
+      关第三步();
+      if(条){ 存切法规矩([条]); 回调(true); } else 回调(false);
+    };
+    if($("lrn-next")) $("lrn-next").onclick=function(){
+      第三步挑第几=(第三步挑第几+1)%法们.length; 画第三步(料,法们,回调);
+    };
+    $("lrn-no").onclick=function(){ 关第三步(); 回调("算了"); };
   }
 
   /* ════════ 识别这一步炸了，必须【说出来】★（2026-08-11）════════

@@ -1,111 +1,522 @@
 <!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>学这张表怎么读</title><style>
-:root{
-  --bg:#15181D; --panel:#1D2127; --panel2:#22262D;
-  --ink:#E4E7EB; --ink2:#98A0AA; --ink3:#6C747E;
-  --line:#2B3037; --line2:#3A4048; --field:#171B20;
-  --acc:#E8A33D; --acc-d:#F0B45C; --acc-soft:rgba(232,163,61,.13); --acc-line:rgba(232,163,61,.38);
-  --ok:#4FA37B; --ok-soft:rgba(79,163,123,.13);
-  --bad:#D9705E; --bad-soft:rgba(217,112,94,.13);
-  --r:12px; --r-s:8px;
-  --ui:"Microsoft YaHei","微软雅黑",-apple-system,"PingFang SC","Segoe UI",sans-serif;
-  --figs:Consolas,ui-monospace,"Microsoft YaHei",monospace;
-  color-scheme:dark;
-}
-*{box-sizing:border-box}
-html{background:var(--bg)}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.65}
-.topbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:0 22px;min-height:50px;
-  border-bottom:1px solid var(--line);background:var(--panel)}
-.topbar .who{font-size:15px;font-weight:700}
-.topbar .step{font-size:13px;color:var(--acc);font-family:var(--figs)}
-.picker{margin-left:auto;display:flex;gap:3px;flex-wrap:wrap}
-.picker button{font:inherit;font-size:13px;cursor:pointer;background:none;color:var(--ink3);
-  border:1px solid transparent;border-radius:6px;padding:4px 11px}
-.picker button:hover{color:var(--ink)}
-.picker button[aria-selected="true"]{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-line)}
+<title>整体样子 · 学表格坐在哪儿</title>
+<style>
+  :root{
+    --bg:#15181D; --panel:#1D2127; --panel2:#22262D;
+    --ink:#E4E7EB; --ink2:#98A0AA; --ink3:#6C747E;
+    --line:#2B3037; --line2:#3A4048; --field:#171B20;
+    --acc:#E8A33D; --acc-d:#F0B45C; --acc-soft:rgba(232,163,61,.13); --acc-line:rgba(232,163,61,.38);
+    --ok:#4FA37B; --ok-soft:rgba(79,163,123,.13);
+    --sale:#E88B6A; --sale-soft:rgba(232,139,106,.12);
+    --warn:#E0BA5E; --warn-soft:rgba(224,186,94,.12);
+    --info:#7FB0DE; --info-soft:rgba(127,176,222,.12);
+    --r:10px; --r-s:7px;
+    --ui:"Microsoft YaHei","微软雅黑",-apple-system,"PingFang SC","Segoe UI",sans-serif;
+    --figs:Consolas,ui-monospace,"Microsoft YaHei",monospace;
+    --doc:"FangSong","仿宋","FangSong_GB2312","SimSun",serif;
+    /* 让滚动条、日期选择器、下拉菜单跟着变深色，不然会闪出一块白 */
+    color-scheme:dark;
+  }
 
-.stage{max-width:760px;margin:0 auto;padding:46px 22px 40px}
+  *{box-sizing:border-box}
+  html{background:var(--bg)}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--ui);font-size:15px;
+    line-height:1.65;-webkit-font-smoothing:antialiased;position:relative;min-height:100vh}
+  /* 台灯光晕 —— 整页只有这一处装饰 */
+  body::before{content:"";position:absolute;inset:0 0 auto;height:260px;pointer-events:none;z-index:0;
+    background:radial-gradient(120% 100% at 50% -30%,rgba(232,163,61,.15),transparent 62%)}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+  [hidden]{display:none !important}
 
-/* 上一步答完的回话 —— 整个流程就靠这一行 */
-.echo{border-radius:var(--r-s);padding:10px 15px;font-size:14.5px;margin-bottom:26px;
-  border:1px solid var(--line2);background:var(--panel)}
-.echo.good{border-color:rgba(79,163,123,.45);background:var(--ok-soft);color:var(--ok)}
-.echo.warn{border-color:rgba(217,112,94,.45);background:var(--bad-soft);color:var(--bad)}
-.echo b{font-weight:700}
-.echo .undo{margin-left:10px;font:inherit;font-size:13px;cursor:pointer;background:none;
-  border:1px solid currentColor;border-radius:6px;padding:2px 10px;color:inherit;opacity:.85}
+  /* ---------- 顶栏 ---------- */
+  .topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+    padding:0 24px;min-height:52px;background:rgba(21,24,29,.92);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
+  .topbar .name{font-size:16px;font-weight:700;letter-spacing:.06em}
+  .pill{font-size:12.5px;color:var(--ink3);font-family:var(--figs)}
+  .pill b{color:var(--ok);font-weight:400}
+  .nav{display:flex;gap:4px;margin-left:auto;flex-wrap:wrap}
+  .nav button{font:inherit;font-size:13.5px;cursor:pointer;background:none;color:var(--ink2);
+    border:none;border-radius:var(--r-s);padding:6px 14px}
+  .nav button:hover{color:var(--ink);background:var(--panel2)}
+  .nav button[aria-selected="true"]{background:var(--acc-soft);color:var(--acc);font-weight:700}
 
-h1{font-size:25px;line-height:1.45;margin:0 0 8px;font-weight:700}
-.sub{color:var(--ink2);font-size:14.5px;margin-bottom:20px}
+  .wrap{position:relative;z-index:1;max-width:1280px;margin:0 auto;padding:20px 24px 56px}
 
-.chips{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 24px}
-.chips span{font-family:var(--figs);font-size:14px;background:var(--field);border:1px solid var(--line);
-  border-radius:7px;padding:5px 13px}
-.one{font-family:var(--figs);font-size:14.5px;background:var(--field);border:1px solid var(--line);
-  border-radius:var(--r-s);padding:13px 15px;margin:0 0 24px;word-break:break-all;line-height:1.9}
+  /* ---------- 卡片 ---------- */
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r)}
+  .card+.card{margin-top:16px}
+  .card-hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 18px;
+    border-bottom:1px solid var(--line)}
+  .card-hd h2{margin:0;font-size:14.5px;font-weight:700}
+  .card-hd .n{font-family:var(--figs);font-size:12px;color:var(--acc);
+    border:1px solid var(--acc-line);border-radius:4px;padding:1px 6px;line-height:1.5}
+  .card-hd .sub,.card-hd .right{font-size:12.5px;color:var(--ink3)}
+  .card-hd .right{margin-left:auto}
+  .card-bd{padding:16px 18px}
 
-.btns{display:flex;gap:9px;flex-wrap:wrap}
-.btn{font:inherit;font-size:15.5px;cursor:pointer;border-radius:var(--r-s);border:1px solid var(--line2);
-  background:var(--panel2);color:var(--ink);padding:11px 20px}
-.btn:hover{border-color:var(--acc);color:var(--acc)}
-.btn.on{border-color:var(--acc);background:var(--acc-soft);color:var(--acc)}
-.btn.on .g{font-size:11.5px;opacity:.8;font-weight:400}
-.btn.pri{background:var(--acc);border-color:var(--acc);color:#1A1207;font-weight:700}
-.btn.pri:hover{background:var(--acc-d);color:#1A1207}
-.btn.sm{font-size:13.5px;padding:6px 14px}
-.btn.ghost{background:none;border-color:var(--line)}
-/* 分法：不给他看符号，给他看分完长什么样 */
-.cards{display:flex;gap:12px;flex-wrap:wrap}
-.card{flex:1 1 250px;min-width:250px;border:1px solid var(--line2);background:var(--panel);
-  border-radius:var(--r);padding:13px 15px;cursor:pointer}
-.card:hover{border-color:var(--acc)}
-.card .cn{font-size:16px;font-weight:700;margin-bottom:7px}
-.card .cl{font-family:var(--figs);font-size:13px;color:var(--ink2);white-space:nowrap;
+  /* ---------- 表单 ---------- */
+  /* ★ 2026-08-04 老板：「这个界面……现在太大了，能简化的简化」，选了「标签挪到左边」。
+     原来标签在输入框【上面】，每个字段占两行；窗口一窄整块就变成 5 个整行，高得吓人。
+     改成标签在【左边】一列 —— 字段一个不少，高度直接省一半。
+     宽度够就自动排成两列三列，窄了自己掉成一列。 */
+  .fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:8px 18px;align-items:center}
+  .field{display:grid;grid-template-columns:4.6em minmax(0,1fr);align-items:center;gap:9px;min-width:0}
+  .field>span{font-size:12.5px;color:var(--ink2);margin-bottom:0;text-align:right;white-space:nowrap}
+  /* 用 :not(file) 而不是列举 type —— 表格里的数量框没写 type，
+     写成 input[type="text"] 会漏掉它，那一格就会白得刺眼 */
+  select,textarea,input:not([type="file"]){
+    width:100%;font:inherit;font-size:14.5px;color:var(--ink);background:var(--field);
+    border:1px solid var(--line2);border-radius:var(--r-s);padding:8px 11px}
+  select{cursor:pointer;height:38px}
+
+  /* ===== 可搜索的商品选择框 =====
+     原来是个 <select>：一个客户几十上百条价格，滚着挑又慢又容易点到隔壁那条。
+     现在「认错必须为 0」之后要点选的行明显变多，这一步成了主要操作量，
+     所以换成「打字就筛」的输入框 + 列表。 */
+  .cb{position:relative;display:block;margin-top:4px;max-width:340px}
+  .cb-in{width:100%;height:34px;box-sizing:border-box;
+    background:var(--field);color:var(--ink);border:1px solid var(--line2);
+    border-radius:var(--r-s);padding:6px 10px;font-family:var(--ui);font-size:14px}
+  .cb-in:focus{outline:none;border-color:var(--acc-line);background:#12161A}
+  .cb-in::placeholder{color:var(--ink3)}
+  .cb.on .cb-in{border-color:var(--acc-line)}
+  /* 用 position:fixed 而不是 absolute：表格外面那层是 .tablewrap{overflow-x:auto}，
+     一旦设了 overflow，纵向也会跟着裁 —— 靠下面几行的下拉会被切掉一半。
+     贴着屏幕定位就绕开了所有裁剪，位置由 JS 按输入框的实际坐标算。 */
+  .cb-list{display:none;position:fixed;z-index:200;
+    max-height:290px;overflow-y:auto;background:var(--panel2);
+    border:1px solid var(--line2);border-radius:var(--r-s);
+    box-shadow:0 10px 26px rgba(0,0,0,.55)}
+  .cb.on .cb-list{display:block}
+  .cb-op{padding:7px 10px;cursor:pointer;font-size:13.5px;line-height:1.35;
+    border-bottom:1px solid var(--line)}
+  .cb-op:last-child{border-bottom:none}
+  .cb-op .p{color:var(--acc-d);font-family:var(--figs)}
+  .cb-op .u{color:var(--ink3)}
+  .cb-op .s{color:var(--ink3);font-size:12px;display:block}
+  .cb-op.hot,.cb-op:hover{background:var(--acc-soft)}
+  .cb-op.pick{color:var(--acc-d)}
+  .cb-none{padding:9px 10px;color:var(--ink3);font-size:13px}
+  option{background:var(--panel);color:var(--ink)}
+  textarea{min-height:170px;resize:vertical;line-height:1.9;font-size:13.5px;font-family:var(--figs)}
+  ::placeholder{color:var(--ink3)}
+
+  .btn{font:inherit;font-size:14px;font-weight:700;cursor:pointer;background:var(--acc);color:#15181D;
+    border:1px solid var(--acc);border-radius:var(--r-s);padding:9px 20px}
+  .btn:hover{background:var(--acc-d);border-color:var(--acc-d)}
+  .btn.ghost{background:none;color:var(--ink2);border-color:var(--line2);font-weight:400}
+  .btn.ghost:hover{background:var(--panel2);color:var(--ink)}
+  .btn.sm{font-size:12.5px;padding:5px 12px;font-weight:400}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .chip{font:inherit;font-size:12px;cursor:pointer;color:var(--ink2);background:none;
+    border:1px solid var(--line2);border-radius:999px;padding:3px 11px}
+  .chip:hover{border-color:var(--acc);color:var(--acc)}
+  .chip.hot{background:var(--acc);color:#15181D;border-color:var(--acc);font-weight:700}
+  .needcust{opacity:.4;pointer-events:none}
+
+  /* 客户信息条 */
+  /* ══ 搜索式下拉（2026-08-09 · 版本 A）══
+     为什么要它：177 家客户里光「中南NN档」就 12 家，差一个数字价目表完全不同。
+     浏览器自带的下拉只能用眼睛扫，扫错一行 = 整单价格全错。
+     ⛔ 原来的 <select> 一个都没删，藏在后面照旧存值 ——
+       JS 那 35 处读写一个字都不用改，也就不会出现「页面死了体检却全绿」。 */
+  .pk{position:relative}
+  .pk-btn{width:100%;background:var(--field);border:1px solid var(--line2);border-radius:var(--r-s);
+          padding:10px 13px;color:var(--ink);font:15px var(--ui);text-align:left;cursor:pointer;
+          display:flex;align-items:center;gap:8px;min-height:41px}
+  .pk-btn:hover{border-color:var(--line2)}
+  .pk-btn.on{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+  .pk-btn .pk-t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pk-btn .pk-t.dim{color:var(--ink3)}
+  .pk-btn .pk-c{margin-left:auto;color:var(--ink3);font-size:12px;flex-shrink:0}
+  /* fixed 而不是 absolute：外面那层常有 overflow 裁剪，absolute 会被切掉半截 */
+  .pk-pop{position:fixed;z-index:300;background:var(--panel2);border:1px solid var(--line2);
+          border-radius:var(--r-s);box-shadow:0 14px 34px rgba(0,0,0,.55);
+          display:none;overflow:hidden;max-height:min(60vh,420px);flex-direction:column}
+  .pk-pop.on{display:flex}
+  .pk-sr{padding:9px 10px;border-bottom:1px solid var(--line);flex-shrink:0}
+  .pk-sr input{width:100%;background:var(--field);border:1px solid var(--line2);
+               border-radius:var(--r-s);padding:9px 12px;color:var(--ink);font:15px var(--ui)}
+  .pk-sr input:focus{outline:0;border-color:var(--acc)}
+  .pk-list{overflow-y:auto;flex:1}
+  .pk-it{padding:9px 13px;display:flex;align-items:center;gap:9px;font-size:14.5px;cursor:pointer;
+         border-bottom:1px solid rgba(255,255,255,.03)}
+  .pk-it:last-child{border-bottom:0}
+  .pk-it:hover,.pk-it.cur{background:var(--acc-soft);box-shadow:inset 3px 0 0 var(--acc)}
+  .pk-it em{font-style:normal;color:var(--acc);font-weight:700}
+  .pk-it .pk-n{margin-left:auto;color:var(--ink3);font-size:12px;flex-shrink:0}
+  .pk-sep{height:1px;background:var(--line2);margin:4px 0}
+  .pk-non{padding:14px;color:var(--ink3);font-size:13.5px;text-align:center}
+  .pk-tip{padding:7px 13px;color:var(--ink3);font-size:12px;border-top:1px solid var(--line);flex-shrink:0}
+
+  /* ══ 第 1 步那个投放框（2026-08-09）══
+     贴进来的图要落在【框里面】，不能掉到框外面 —— 老板 2026-08-09 指出来的。
+     做法：边框画在外层 #imgdrop 上，里面的输入框自己不再画边框，
+     于是「打的字 + 贴的图 + 识别进度」看着就是同一个盒子。 */
+  #imgdrop{background:var(--field);border:1px solid var(--line2);border-radius:var(--r-s);
+           padding:11px 13px}
+  #imgdrop:focus-within{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+  #imgdrop #raw{background:transparent;border:0;padding:0;width:100%;min-height:150px}
+  #imgdrop #raw:focus{outline:0;box-shadow:none}
+  #imgdrop .thumbs{margin-top:10px}
+  #imgdrop .thumbs:not(:empty)+.s,#imgdrop .s:not(:empty){margin-top:8px}
+  /* ★ 识别按钮只此一个：底下那个「识别这一份 →」永久藏起来。
+     它的 hidden 属性被十几处 JS 来回改（有图就取消隐藏），
+     光在 HTML 上写 hidden 挡不住 —— 得用样式压死。
+     ⛔ 元素不许删：JS 还要用它改文字、控制禁用。 */
+  #btn-ocr{display:none !important}
+  /* 「清空图片」也压掉：每张缩略图右上角本来就有 ✕ 能单独删，
+     跟旁边的「清空」并排摆着只是让人多认一个按钮。元素同样不删。 */
+  #btn-imgclear{display:none !important}
+
+  /* ══ 三步条（2026-08-09 UI 改版 · 版本 F）══
+     顺序是真的顺序：单子先进 → 认客户 → 出单。号码不是装饰。
+     只用页面本来就有的变量，不引新颜色（夜台只此一套）。 */
+  .stp{display:flex;gap:13px;align-items:flex-start;padding:15px 0;border-bottom:1px solid var(--line)}
+  .stp:last-child{border-bottom:0;padding-bottom:2px}
+  .stp-n{width:25px;height:25px;border-radius:50%;background:var(--acc);color:var(--bg);
+         font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;
+         flex-shrink:0;margin-top:1px}
+  .stp-n.off{background:var(--line2);color:var(--ink3)}
+  .stp-b{flex:1;min-width:0}
+  .stp-t{font-weight:700;font-size:15px;margin-bottom:9px}
+  .stp-t .sub{font-weight:400;font-size:12.5px;color:var(--ink3);margin-left:6px}
+  .stp .searchbar{margin-bottom:8px}
+  .stp textarea{width:100%}
+  .hint{color:var(--ink3);font-size:12px}
+  .kv{margin-top:12px;padding:9px 13px;background:var(--field);border-radius:var(--r-s);
+    font-size:12.5px;color:var(--ink2);line-height:1.9}
+  .kv b{color:var(--ink);font-weight:600}
+  .banner{border-radius:var(--r-s);padding:8px 13px;font-size:13.5px;margin-bottom:12px;line-height:1.7}
+  .banner.ok{background:var(--ok-soft);color:var(--ink2)}
+  .banner.ask{background:var(--warn-soft);color:var(--ink2)}
+  .banner b{color:var(--ink)}
+
+  /* ---------- 图片区（收成一条） ---------- */
+  .drop{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:9px 13px;
+    border:1px dashed var(--line2);border-radius:var(--r-s);background:var(--field);
+    font-size:13px;color:var(--ink2)}
+  .drop.hot{border-color:var(--acc);border-style:solid;background:var(--acc-soft);color:var(--ink)}
+  .drop .d-ic{font-size:16px;line-height:1}
+  .drop .d-t{flex:1;min-width:200px}
+  .thumbs{display:flex;flex-wrap:wrap;gap:8px;width:100%}
+  .thumbs:empty{display:none}
+  .thumb-item{position:relative;width:124px}
+  .thumb-item img{width:100%;height:88px;object-fit:cover;border-radius:6px;
+    border:1px solid var(--line2);display:block;cursor:zoom-in}
+  .thumb-item.big{width:100%}
+  .thumb-item.big img{height:auto;max-height:420px;object-fit:contain;cursor:zoom-out}
+  .thumb-item.loading{height:88px;border:1px dashed var(--line2);border-radius:6px;
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--ink3)}
+  .thumb-n{position:absolute;left:5px;top:5px;background:rgba(0,0,0,.66);color:#fff;
+    font-size:11px;line-height:1;padding:3px 7px;border-radius:999px;pointer-events:none}
+  .thumb-x{position:absolute;right:5px;top:5px;width:21px;height:21px;border:none;border-radius:50%;
+    background:rgba(0,0,0,.66);color:#fff;font-size:14px;line-height:21px;padding:0;cursor:pointer}
+  .thumb-x:hover{background:#C4633E}
+  .s{font-size:12.5px;color:var(--ink3);width:100%}
+  .s:empty{display:none}
+
+  /* ---------- 表格 ---------- */
+  .tablewrap{overflow-x:auto}
+  /* 就地新建品的小表单：认不出的行点「＋ 库里没有，新建」展开 */
+  .npbox{margin-top:8px;padding:10px;border:1px solid var(--acc-line);border-radius:var(--r-s);
+         background:var(--field);display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .npbox input{height:30px;box-sizing:border-box;padding:0 8px;border-radius:6px;
+               border:1px solid var(--line2);background:#12161A;color:var(--ink);font:inherit;max-width:160px}
+  .npbox .muted{flex-basis:100%}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--ink3);text-align:left;
+    padding:0 8px 8px;border-bottom:1px solid var(--line2);white-space:nowrap}
+  td{padding:7px 8px;border-top:1px solid var(--line);vertical-align:middle}
+  tbody tr:hover{background:var(--panel2)}
+  .num{text-align:right;font-family:var(--figs);font-variant-numeric:tabular-nums;white-space:nowrap}
+  th.num{text-align:right}
+  .muted{color:var(--ink3);font-size:12.5px}
+  .arrow{color:var(--ink3);margin-right:4px}
+  td input.qty{width:70px;padding:3px 7px;text-align:right;font-family:var(--figs)}
+  /* 单位框：2026-08-17 老板「单位这里不要搞这么大」。
+     它一直没有自己的样式，套的是通用 input 的 width:100%、padding:8px 11px ——
+     一个「板」字撑成半屏，比旁边 70px 的数量框还宽好几倍。
+     跟数量框对齐：一样的高矮、一样的内边距，宽度够放「公斤」两个字就行。 */
+  td input.unit-in{width:56px;padding:3px 7px;text-align:center}
+  /* 无价的行就地填价：橙边提示「这里等着你填」 */
+  td input.fixp{width:74px;padding:3px 7px;text-align:right;font-family:var(--figs);
+    border:1px solid var(--acc-line);background:#12161A;color:var(--ink);border-radius:6px}
+  td input.fixp::placeholder{color:var(--acc)}
+
+  .tag{display:inline-block;font-size:11px;border-radius:4px;padding:1px 6px;margin-left:5px;
+    white-space:nowrap;vertical-align:1px}
+  .tag.sale{color:var(--sale);background:var(--sale-soft)}
+  .tag.warn{color:var(--warn);background:var(--warn-soft)}
+  .tag.info{color:var(--info);background:var(--info-soft)}
+  .tag.ok{color:var(--ok);background:var(--ok-soft)}
+
+  .alerts{display:grid;gap:8px;margin-bottom:14px}
+  .alerts:empty{display:none}
+  .alert{font-size:13.5px;line-height:1.75;border-radius:var(--r-s);padding:8px 12px}
+  .alert.warn{background:var(--warn-soft)} .alert.sale{background:var(--sale-soft)}
+  .alert.info{background:var(--info-soft)}
+  .alert b{font-weight:700}
+  .alert.warn b{color:var(--warn)} .alert.sale b{color:var(--sale)} .alert.info b{color:var(--info)}
+
+  .empty{color:var(--ink3);text-align:center;padding:34px 10px;font-size:13.5px}
+
+  /* ---------- 客户卡片 / 资料编辑 ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(228px,1fr));gap:12px}
+  .ccard{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;
+    background:var(--field);border:1px solid var(--line);border-radius:var(--r-s);padding:12px 14px}
+  .ccard:hover{border-color:var(--acc-line);background:var(--panel2)}
+  .ccard .cn{font-size:14px;font-weight:700;line-height:1.45;margin-bottom:5px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .ccard .cm{font-size:12px;color:var(--ink3);font-family:var(--figs)}
+  .ccard .cb{margin-top:9px;display:flex;gap:5px;flex-wrap:wrap}
+  .seg{display:flex;border:1px solid var(--line2);border-radius:var(--r-s);overflow:hidden}
+  .seg button{font:inherit;font-size:13px;cursor:pointer;background:none;color:var(--ink2);
+    border:none;padding:7px 14px;border-right:1px solid var(--line2)}
+  .seg button:last-child{border-right:none}
+  .seg button[aria-pressed="true"]{background:var(--acc-soft);color:var(--acc);font-weight:700}
+  .back{font:inherit;font-size:13px;cursor:pointer;background:none;color:var(--ink2);
+    border:1px solid var(--line2);border-radius:var(--r-s);padding:4px 12px}
+  .back:hover{color:var(--acc);border-color:var(--acc-line)}
+  td input.ed{width:78px;padding:3px 7px;text-align:right;font-family:var(--figs)}
+  td input.ea{width:100%;min-width:110px;padding:3px 7px;font-size:12.5px}
+  tr.edited{box-shadow:inset 2px 0 0 var(--acc)}
+  tr.off td{opacity:.5}
+  /* ===== 有问题的行整行变色 =====
+     老板 2026-08-03：「有问题的那几行变个色，我好一下找到，改好之后变回原来色」。
+       q-blur 识别没看清（写了 ?）—— 琥珀色，数量框空着等填
+       q-diff 各段之和跟表上总数量对不上 —— 红色，回去核那几段
+     两个都是「渲染时按当前状态算」，填好了 class 就不加了，颜色自动回去。 */
+  tr.q-blur td{background:rgba(232,163,61,.10)}
+  tr.q-blur{box-shadow:inset 3px 0 0 var(--acc)}
+  tr.q-diff td{background:rgba(224,92,92,.10)}
+  tr.q-diff{box-shadow:inset 3px 0 0 #E05C5C}
+  /* ===== 你亲手动过的行 =====
+     老板 2026-08-20：「有问题的行做个特别的标注，就是我手动改的那些，但是不要标红」，
+     样式他选的是「左边一道竖条」。
+     ⚠ 这是【留痕】不是【待办】：处理完了也不消失，好让你交单前扫一眼
+       「今天这张单我动过哪几行」。上面那两个是待办，填好了自己就没了 —— 两回事。
+     ⚠ 颜色特意避开琥珀和红：那两个是「要你处理」，这条是「已经处理过」。
+       用青（--info），跟「已学会」的绿也分得开。
+     ⚠ 用 inset 6px 而不是 3px：一行可能【既动过、又还对不上总数】，
+       两道条并排显示（3px 红 + 6px 青），不会互相盖掉。 */
+  tr.q-hand{box-shadow:inset 6px 0 0 var(--info)}
+  tr.q-hand.q-blur{box-shadow:inset 3px 0 0 var(--acc), inset 6px 0 0 var(--info)}
+  tr.q-hand.q-diff{box-shadow:inset 3px 0 0 #E05C5C, inset 6px 0 0 var(--info)}
+  td input.qty.blur{border-color:var(--acc);background:rgba(232,163,61,.10)}
+  td input.qty.blur::placeholder{color:var(--acc);opacity:.8}
+  .who{font:inherit;font-size:12.5px;cursor:pointer;background:none;color:var(--ink3);
+    border:1px solid var(--line2);border-radius:var(--r-s);padding:3px 10px;white-space:nowrap}
+  .who:hover{color:var(--acc);border-color:var(--acc-line)}
+  .who b{color:var(--ink);font-weight:600}
+  .logline{font-size:12.5px;color:var(--ink2);padding:5px 0;border-top:1px solid var(--line);
+    display:flex;gap:10px;flex-wrap:wrap}
+  .logline .t{color:var(--ink3);font-family:var(--figs);white-space:nowrap}
+  .logline b{color:var(--ink)}
+
+  /* 合计条 —— 金额是整页唯一的高光 */
+  .stats{display:flex;align-items:flex-end;gap:26px;flex-wrap:wrap;
+    margin-top:16px;padding-top:14px;border-top:1px solid var(--line)}
+  .stat .k{font-size:11.5px;letter-spacing:.1em;color:var(--ink3)}
+  /* 数量合计放大 —— 老板 2026-08-04：「没有总数量的就不用管他，我们自己核算总数，
+     把总数放大一点。」很多单子客户压根不写合计，那这个自己算出来的数就是唯一的账。 */
+  .stat .v{font-size:27px;font-weight:700;font-family:var(--figs);line-height:1.2}
+  .stat.big{margin-left:auto;text-align:right}
+  .stat.big .v{font-size:36px;color:var(--acc);text-shadow:0 0 26px rgba(232,163,61,.4);
+    letter-spacing:.01em}
+  .stats .btn{margin-bottom:2px}
+
+  /* ---------- 销售单（纸白，屏幕上就是打出来的样子） ---------- */
+  .sheet{background:#F7F5EF;color:#1E2126;border-radius:var(--r);padding:26px 30px 22px;
+    font-family:var(--doc)}
+  .sheet .co{font-size:16px;text-align:center;letter-spacing:.1em}
+  .sheet .doct{font-size:25px;font-weight:700;letter-spacing:.5em;text-indent:.5em;
+    text-align:center;margin:2px 0 6px}
+  .sheet-meta{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+    font-size:13px;color:#5A6068;border-bottom:1.5px solid #1E2126;padding-bottom:8px;
+    margin-bottom:2px;line-height:1.85}
+  .sheet table{font-family:var(--ui);font-size:12.5px}
+  .sheet th{color:#5A6068;border-bottom:1px solid #9AA0A8;padding:0 6px 6px}
+  .sheet td{padding:5px 6px;border-top:1px solid #DDD9CE;color:#1E2126}
+  .sheet tbody tr:hover{background:#EFECE3}
+  .sheet .muted{color:#7A8088}
+  .sheet .tag{border:1px solid #C9C4B6;color:#5A6068;background:none}
+  .sheet tfoot td{border-top:1.5px solid #1E2126;font-weight:700}
+  .sheet-cap{margin-top:9px;font-size:14px;letter-spacing:.04em}
+  .sheet-cap b{font-size:16px}
+  .sheet-ft{display:flex;justify-content:space-between;gap:24px;flex-wrap:wrap;
+    margin-top:18px;font-size:13px;color:#5A6068;line-height:2}
+
+  /* ---------- 其它页 ---------- */
+  .searchbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .searchbar input{flex:1;min-width:170px}
+  .doc h3{font-size:14px;margin:20px 0 6px} .doc h3:first-child{margin-top:0}
+  .doc p,.doc li{font-size:13.5px;color:var(--ink2);line-height:1.9}
+  .doc ul{padding-left:20px;margin:5px 0} .doc b{color:var(--ink)}
+  .doc code{background:var(--field);border:1px solid var(--line);border-radius:4px;padding:1px 6px;
+    font-family:var(--figs);font-size:12.5px;color:var(--ink2)}
+  .foot{max-width:1280px;margin:0 auto;padding:0 24px 36px;font-size:12.5px;color:var(--ink3);
+    line-height:1.9;position:relative;z-index:1}
+
+  /* 拖图满屏提示 */
+  #dropveil{position:fixed;inset:0;z-index:9999;pointer-events:none;
+    background:rgba(21,24,29,.88);backdrop-filter:blur(3px);
+    display:flex;align-items:center;justify-content:center}
+  #dropveil .in{color:var(--acc);text-align:center;font-size:28px;font-weight:700;line-height:1.7;
+    border:3px dashed var(--acc-line);border-radius:18px;padding:40px 66px}
+  #dropveil .sm2{font-size:14px;font-weight:400;color:var(--ink2)}
+
+  @media print{
+    @page{margin:12mm}
+    html,body{background:#fff;color:#000}
+    body::before{display:none}
+    .topbar,#card-input,#card-match,.tools,.foot,#view-lib,#view-spot,#view-doc{display:none !important}
+    .wrap{padding:0;max-width:none}
+    .card{border:none;background:none}
+    .card-hd{display:none}
+    .card-bd{padding:0}
+    .sheet{background:#fff;color:#000;border-radius:0;padding:0}
+    .sheet th,.sheet td{border-color:#bbb !important;color:#000}
+    .sheet-meta,.sheet-ft{color:#333}
+    .sheet-meta{border-bottom-color:#000 !important}
+    .sheet tfoot td{border-top-color:#000 !important}
+    .tag{border:1px solid #000;color:#000;background:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+
+.ask{border:1px solid var(--acc-line);border-radius:var(--r);padding:16px 18px;
+  background:linear-gradient(180deg,var(--acc-soft),transparent 62%),var(--panel)}
+.ask h3{margin:0 0 6px;font-size:19px;font-weight:700;line-height:1.4}
+.ask .why{color:var(--ink2);font-size:13.5px;margin-bottom:12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.chips span{font-family:var(--figs);font-size:13px;background:var(--field);
+  border:1px solid var(--line);border-radius:6px;padding:3px 10px}
+.one{font-family:var(--figs);font-size:13.5px;background:var(--field);border:1px solid var(--line);
+  border-radius:var(--r-s);padding:11px 13px;margin:0 0 14px;word-break:break-all;line-height:1.85}
+.pick{border:1px solid var(--line2);background:var(--panel);border-radius:var(--r);
+  padding:12px 14px;max-width:480px;margin-bottom:14px}
+.pick .pn{font-size:15px;font-weight:700;margin-bottom:6px}
+.pick .pl{font-family:var(--figs);font-size:12.5px;color:var(--ink2);white-space:nowrap;
   overflow:hidden;text-overflow:ellipsis}
-.card .cl b{color:var(--acc);font-weight:400}
-.card .cs{margin-top:9px;font-size:13px;color:var(--ink3)}
-.card.hit{border-color:rgba(79,163,123,.55);background:linear-gradient(180deg,var(--ok-soft),transparent 70%),var(--panel)}
-.card.hit .cn{color:var(--ok)}
-.card.hit .cs{color:var(--ok)}
-.card.miss .cs,.card .cs.bad{color:var(--bad)}
-.more{margin-top:22px}
-.more>summary{cursor:pointer;color:var(--ink3);font-size:13.5px;list-style:none}
-.more>summary::-webkit-details-marker{display:none}
-.more>summary:hover{color:var(--ink2)}
-/* ⚠ 原表格子【不许截断】（老板 8/23：「明细要齐全，不能只写一行，后面都看不见」）。
-   截断的那一截正好是最要紧的送货点，看不见就没法判断对不对。宁可行高一点。 */
-.rawbox{margin-top:12px;overflow:auto;max-height:420px;border:1px solid var(--line);border-radius:var(--r-s)}
-table.raw{border-collapse:collapse;font-family:var(--figs);font-size:12px;min-width:100%}
-table.raw td,table.raw th{border:1px solid var(--line);padding:4px 8px;text-align:left;
-  white-space:pre-wrap;word-break:break-all;vertical-align:top;max-width:620px}
-table.raw th{background:var(--panel2);color:var(--ink3);font-weight:400;position:sticky;top:0}
+.pick .pl b{color:var(--acc);font-weight:400}
+.pick .ps{margin-top:8px;font-size:12.5px}
+.echo{border-radius:var(--r-s);padding:8px 13px;font-size:13.5px;margin-bottom:14px;
+  border:1px solid var(--line2);background:var(--panel2);color:var(--ink2)}
+.echo.good{border-color:rgba(79,163,123,.45);background:var(--ok-soft);color:var(--ok)}
+.rawbox{margin-top:10px;overflow:auto;max-height:300px;border:1px solid var(--line);border-radius:var(--r-s)}
+table.raw{border-collapse:collapse;font-family:var(--figs);font-size:11.5px;min-width:100%}
+table.raw td,table.raw th{border:1px solid var(--line);padding:3px 7px;text-align:left;
+  white-space:pre-wrap;word-break:break-all;vertical-align:top;max-width:520px}
+table.raw th{background:var(--panel2);color:var(--ink3);font-weight:400}
 table.raw td.hot{background:var(--acc-soft);color:var(--acc-d)}
 table.raw td.no{color:var(--ink3)}
-
-table.res{width:100%;border-collapse:collapse;font-size:14.5px;margin-top:6px}
-table.res th{text-align:left;font-weight:400;font-size:12.5px;color:var(--ink3);padding:6px 8px;
-  border-bottom:1px solid var(--line)}
-table.res td{padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
-table.res td.num{font-family:var(--figs);text-align:right;white-space:nowrap}
-table.res tr.bad td{background:var(--bad-soft)}
 .pt{display:inline-block;background:var(--panel2);border:1px solid var(--line);border-radius:5px;
-  padding:1px 8px;margin:1px 3px 1px 0;font-size:13px;font-family:var(--figs)}
+  padding:1px 7px;margin:1px 3px 1px 0;font-size:12.5px;font-family:var(--figs)}
 .pt b{color:var(--acc);font-weight:400}
-.pt.q{color:var(--bad);border-color:rgba(217,112,94,.4)}
-.why{color:var(--bad);font-size:13px;margin-top:3px}
-.big{font-size:19px;font-weight:700;margin:14px 0 4px}
-.big.ok{color:var(--ok)}
+.pt.q{color:var(--sale);border-color:rgba(232,139,106,.4)}
+/* ★ 上面还没答完，底下「核对」一律压住（老板 8/24 选的）。
+   不压的话人会直接往下看那张半成品的货，忽略上面还有问题 —— 他自己定过「问完才出单」。 */
+.压住{position:relative}
+.压住 > .card-bd{opacity:.28;filter:grayscale(1);pointer-events:none}
+.压住 .盖{position:absolute;left:0;right:0;top:52px;display:flex;justify-content:center;
+  padding:26px 18px;font-size:14.5px;color:var(--ink2);z-index:2}
+.压住 .盖 b{color:var(--warn)}
+.demo{position:fixed;right:14px;bottom:14px;z-index:60;background:var(--panel);
+  border:1px solid var(--acc-line);border-radius:var(--r);padding:9px 12px;max-width:330px}
+.demo .t{font-size:11.5px;color:var(--acc);letter-spacing:.06em;margin-bottom:6px}
+.demo button{font:inherit;font-size:12px;cursor:pointer;background:none;color:var(--ink3);
+  border:1px solid var(--line2);border-radius:6px;padding:3px 9px;margin:0 3px 3px 0}
+.demo button:hover{color:var(--ink)}
+.demo button[aria-selected="true"]{background:var(--acc-soft);color:var(--acc);border-color:var(--acc-line)}
 </style></head><body>
 
-<div class="topbar">
-  <div class="who" id="who"></div>
-  <div class="step" id="stepno"></div>
-  <button class="btn sm ghost" id="seen" onclick="看教过的()"></button>
-  <div class="picker" id="pick"></div>
+<header class="topbar">
+  <div class="name">尝元 开单台</div>
+  <span class="pill">181 客户 · 5898 条价格</span>
+  <button class="who">操作人：<b>尝元</b></button>
+  <nav class="nav" role="tablist">
+    <button role="tab" aria-selected="true">开单</button>
+    <button role="tab" aria-selected="false">客户 · 改价</button>
+    <button role="tab" aria-selected="false">点位对照</button>
+    <button role="tab" aria-selected="false">订单记录</button>
+    <button role="tab" aria-selected="false">设置</button>
+  </nav>
+</header>
+
+<div class="wrap">
+<section>
+  <div class="card">
+    <div class="card-hd"><span class="n">1</span><h2>开单</h2></div>
+    <div class="card-bd">
+
+      <div class="stp">
+        <div class="stp-n">1</div>
+        <div class="stp-b">
+          <div class="stp-t">单子放进来</div>
+          <div class="banner ok" id="拖进来"></div>
+          <div class="btn-row" style="margin-top:10px">
+            <button class="btn">识别</button>
+            <button class="btn ghost sm">选文件</button>
+            <button class="btn ghost sm">清空</button>
+            <span class="hint" style="margin-left:auto">图片 / Excel / Word / PDF 拖到页面任意位置都行</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stp">
+        <div class="stp-n">2</div>
+        <div class="stp-b">
+          <div class="stp-t">这是哪家？</div>
+          <div class="banner ok" id="猜客户"></div>
+          <div class="searchbar">
+            <input type="text" placeholder="打字找客户…" style="max-width:170px">
+            <select id="客户下拉" style="max-width:300px"></select>
+            <select style="max-width:150px"><option>（不分店）</option></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════ 新的第 3 步：这张表怎么读 ══════
+           只有读不准的时候才出现；教过的表、或者一读就懂的表，这一步根本不露面。 -->
+      <div class="stp" id="步3" hidden>
+        <div class="stp-n">3</div>
+        <div class="stp-b">
+          <div class="stp-t" id="步3题">这张表怎么读？</div>
+          <div id="学"></div>
+          <details class="more" style="margin-top:12px">
+            <summary class="hint" style="cursor:pointer">看看原表</summary>
+            <div class="rawbox" id="原表"></div>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="card" id="卡核对">
+    <div class="card-hd"><span class="n" id="核号">3</span><h2>核对</h2></div>
+    <div class="盖" id="盖" hidden></div>
+    <div class="card-bd">
+      <div id="核对话"></div>
+      <div id="核对表"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-hd"><span class="n" id="单号">4</span><h2>销售单</h2></div>
+    <div class="card-bd"><div class="muted" id="销售单话">上面核对完就出单。</div></div>
+  </div>
+</section>
 </div>
-<div class="stage" id="stage"></div>
+
+<div class="demo">
+  <div class="t">样子演示 · 换一张单看看</div>
+  <div id="选表"></div>
+</div>
+
 <script>
 
 "use strict";
@@ -155,17 +566,13 @@ function 量列(rows,起,c){
      这种绝不许当没用的悄悄扔掉，那就是江云整列点位丢掉的翻版。
      所以：格子里只要有「几斤几板」或者有点位号的样子，一律要问。 */
 var 没用词=/^(序号|编号|商品编码|货号|条码|单价|采购价|供应商报价|金额|总金额|金额（元）|实采\(基本单位\)|实际采购数|操作|状态|一级分类|二级分类|分类名称|参考线路)$/;
-function 值得问(s,w,r,有行){
+function 值得问(s,w,r){
   if(s.有===0) return false;                       /* 空列 */
   if(没用词.test(w)) return false;                  /* 序号、单价、金额、实采… */
   /* ⚠ 「整列一个样」不等于没用 —— 得看那一个样是什么。
      　「0」「元」「斤」这种确实没用；可【一整列都是同一家店名】的多得很
-     　（惠隆 3 行都送同一个客户、轩宝就一行货），那是「送去哪里」，扔了就是丢点位。
-     ⛔⛔ 而且这条【只在表上有三行以上货的时候】才敢用（2026-08-24 拿 34 张卷子量出来的）：
-        天晟那张单只有一行货 ——「订购数量:1」「下单单位:板」当然「整列一个样」，
-        照这条一扔，数量和单位两列一起没了，而且【一句都不问】。
-        一两行的表，一行就是全部，扔不得。 */
-  if(s.异<=1&&有行>=3){
+     　（惠隆 3 行都送同一个客户、轩宝就一行货），那是「送去哪里」，扔了就是丢点位。 */
+  if(s.异<=1){
     var v=s.样[0]||"";
     if(/^[0-9.]+$/.test(v)||单位词.test(v)||v.length<=2) return false;
   }
@@ -219,9 +626,6 @@ function 猜读法(rows){
   for(var c9=0;c9<宽;c9++) 量.push(量列(rows,起,c9));
   /* 先扫一眼：这张表有没有一列是明细（每个点几斤都写在一格里）。
      有的话，旁边那列「几斤几板」就是【总数】不是数量（望家欢「预定数量（汇总）」）。 */
-  /* 这张表上有几行是有内容的 —— 值得问() 要拿它判断敢不敢扔列 */
-  var 有行=0;
-  for(var r9=起;r9<rows.length;r9++){ if((rows[r9]||[]).some(function(v){return 字(v);})) 有行++; }
   var 有明细=量.some(function(s){
     return s.有&&(s.长串>=Math.max(2,s.有*0.5)||(s.有号>=s.有*0.6&&s.有量>=s.有*0.6));
   })||/^(明细|订货明细|订菜明细|订菜分布清单|分布|下单明细)$/.test(
@@ -288,7 +692,7 @@ function 猜读法(rows){
   var 扔=[];
   for(var c4=0;c4<角色.length;c4++){
     var w4=头<0?"":字(头词[c4]);
-    if(把握[c4]!=="稳"&&!值得问(量[c4],w4,角色[c4],有行)){ 角色[c4]="不用"; 把握[c4]="稳"; 扔.push(c4); }
+    if(把握[c4]!=="稳"&&!值得问(量[c4],w4,角色[c4])){ 角色[c4]="不用"; 把握[c4]="稳"; 扔.push(c4); }
   }
   var 名列=-1;
   for(var c3=0;c3<角色.length;c3++)
@@ -298,7 +702,7 @@ function 猜读法(rows){
     if(角色[c2]==="品名"&&c2!==名列){
       角色[c2]="点位名"; 把握[c2]="猜"; 因[c2]="重名";
       var w2=头<0?"":字(头词[c2]);
-      if(!值得问(量[c2],w2,"点位名",有行)){ 角色[c2]="不用"; 把握[c2]="稳"; }
+      if(!值得问(量[c2],w2,"点位名")){ 角色[c2]="不用"; 把握[c2]="稳"; }
     }
   /* 整列纯数字：这张表要是已经有明细列（送去哪里在那儿写着），那这一列多半是【多少】，
      不是点位号 —— 聚农的「待采购量」3、10、1 就是这么被猜成点位号的。 */
@@ -651,250 +1055,213 @@ function 画原表(rows,读法,热){
   return h+"</tbody></table>";
 }
 
-/* ⚠ 问题清单是【每次重新数一遍还剩几处】，不是排好队按序号往下走。
-   答过的那一处自己就从清单里消失了 —— 要是再拿「第几个」去索引，
-   答完第一句清单就短了一截，剩下的全被跳过去（8/23 当场撞到：江云答完只剩 0 样也照样收工）。
-   所以永远问【剩下的头一个】，答过几句单独记账。 */
-var 料={"裕丰":{"客户":"广东裕丰膳食管理服务有限公司","rows":[["商品名称","规格","单位","数量","单位编号","备注","备注2"],["大豆泡","","斤","8.5","112","",""],["水豆腐","5斤/板","板","2","218","",""],["豆腐片","","斤","2","110","大片",""],["优质豆腐","","斤","38","178","",""],["优质豆腐","","斤","235","178","",""],["水豆腐","","斤","8","207","",""],["千张","","斤","7","223","",""],["水豆腐","6斤/板","板","3","213","",""],["水豆腐","6斤/板","板","4","112","",""],["小豆泡","","斤","5","207","",""],["攸县香干","","斤","10","104","",""],["老豆腐","","斤","5","164","",""],["豆腐串","50串/包","包","1","163","",""],["水豆腐","6斤/板","板","1","166","",""],["水豆腐","6斤/板","板","1","161","",""],["香干","","斤","8","161","",""],["猪红","","斤","1","163","",""],["猪红","","斤","6","261","",""],["日本豆腐","40条/件","件","1","261","",""]]},"江云":{"客户":"江云兄弟","rows":[["菜名","总数量","采购数量","单价","金额","订菜总数","订菜分布清单"],["炸腐竹","3.5斤","","","","(B163 南方明珠#火锅)0.5斤____+(B135 多宝#员工)3斤____",""],["嫩豆腐","20.5斤","","","","(A006 爱儿坊#教师餐)2斤____+(B158 茂福#幼儿)9斤____+(B157 广美)2斤____+(B182 维比奇#幼儿-6块)0斤____+(B153 东方阳光#教师)0.5斤____+(B153 东方阳光#学生)1斤____+(BB120 华美达#员工餐)6斤____+(A867 明昇#月子-4块)0斤____",""],["靓腋板豆腐7斤","19板","","","","(A804 石江#幼儿)1板____+(B169 环城)1板____+(A042 益蝶)7板____+(A 860戴斯温德姆#点心)1板____+(AA023 生命加#员工)4板____+(B130 科乐多)1板____+(B170 中安)4板____",""],["老豆腐/斤","6斤","","","","(A849 增城店#月子)6斤____",""],["炸豆腐","26斤","","","","(B157 广美)9斤____+(A017 总部#员工)12斤____+(A811 新华店#月子)5斤____",""],["大豆腐卜","3斤","","","","(B111 风怡湾#学生)1.5斤____+(A815 海北)1.5斤____",""],["小豆腐卜","14.5斤","","","","(B128 阅景#幼儿-20个)0斤____+(A018 德艺#教师)1斤____+(A805 镇南#教师)1.5斤____+(A034 新星)1斤____+(B181 文星)3.5斤____+(A022 宜致(天字)#早餐)1.5斤____+(A046 吉鼎亚采#伙伴餐)2斤____+(A816 中队)3斤____+(A823 里水维也纳#自助)1斤____",""],["面筋","12斤","","","","(A012 美百年)12斤____",""],["豆腐皮/千张","4.5斤","","","","(A028 君豪#早餐)0.5斤____+(A 860戴斯温德姆#员工)1斤____+(A859南站亚采)1斤____+(BB120 华美达#客餐)1斤____+(B141 城际#客餐)1斤____",""],["豆腐干","3斤","","","","(A 861峰际)3斤____",""],["豆腐串","4串","","","","(B128 阅景#幼儿)4串____",""],["香干","42斤","","","","(A842 粤侨)5斤____+(A014 东富#客餐)3斤____+(A865宝德#客餐)4斤____+(A055 软芯#中餐)14斤____+(B 195 万博亚采#员工)3斤____+(B149 星亚 #早餐)3斤____+(AA023 生命加#月子)0.5斤____+(AA064 福越希维#员工)3斤____+(B141 城际#客餐)5斤____+(A058 水晶#员工)1.5斤____",""],["凉皮","1斤","","","","(A 044 金沙洲全季#客餐)1斤____",""],["炸支竹","0.3斤","","","","(A814 广场店#月子)0.3斤____",""],["白色香干","1斤","","","","(B131 圣明希)1斤____",""],["靓客家豆腐5斤装","9板","","","","(A820 沙涌#幼儿)8板____+(B149 星亚 #员工)1板____",""],["腐皮结","0斤","","","","(A012 美百年-1件)0斤____",""],["腋板豆腐4.5斤/板","6板","","","","(A817 本部)6板____",""],["花泉山水豆腐400g","18盒","","","","(B163 南方明珠#试吃)1盒____+(B163 南方明珠#月子)1盒____+(B145御星)4盒____+(B181 文星)3盒____+(AA023 生命加#月子)1盒____+(A017 总部#月子)4盒____+(A813 天河店#月子)2盒____+(A020 真爱#月子)2盒____",""],["鲜腐竹500g","8盒","","","","(B189 丽枫(金沙)#早餐)1盒____+(A028 君豪#员工)3盒____+(A849 增城店#月子)3盒____+(A811 新华店#月子)1盒____",""],["白豆干","0.5斤","","","","(A837 秦2#客餐)0.5斤____",""]]},"朱鲜生":{"客户":"广东朱鲜生餐饮有限公司","rows":[["序号","商品名","总数","明细"],["1","中板豆腐 (7斤/板)","20板","佛山市南海区昆仑实业有限公司33-1 广州市老人院上水院区 (老人碎菜) 5-9 广州市老人院 (上水院区) (老人糊餐) 5-5 广州市老人院 (上水院区) (老人糖餐) 5-4 广州市老人院 (上水院区) (老人菜泥) 5-6 广州市老人院 (上水院区) (老人餐) 5-3"],["2","白豆干","110斤","广州市老人院 (上水院区) (老人餐) 5-3"],["3","牛皮干","1斤","佛山支队执勤二中队11-8"],["4","百页","2斤","佛山支队机动中队11-9"],["5","攸县香干","3斤","广州医科大学附属第一医院 (海印院区) 30-2"],["6","中板豆腐","3板","佛山市南海区财政局 (午餐) 26-2"],["7","炸豆干","8斤","瀚蓝环境股份有限公司 (午餐) 31-2"],["8","九龙炸豆腐","10斤","瀚蓝环境股份有限公司 (午餐) 31-2"]]},"祺之盛":{"客户":"佛山市祺之盛农业发展有限公司","rows":[["序号","商品名","规格","计划采购","实采(基本单位)"],["1","炸圆面筋","1斤/斤","1斤(1斤)","0"],["1斤**E004","","","",""],["2","豆腐串","1串/串","70串(70串)","0"],["35串**E018-01+25串**E002-01+10串**E020","","","",""],["3","水豆腐 (5斤)","1板/板","17板(17板)","0"],["2板**E028+3板**D008+1板**E003+1板**E008+3板**E032+2板**B002+1板**E019+2板**E033+2板**E012","","","",""],["4","韧豆腐 (6.5-7斤)","1板/板","7板(7板)","0"],["3板**D005+2板**C008-01+2板**E005","","","",""],["5","白豆干","1斤/斤","9斤(9斤)","0"],["1斤**D008+8斤**E010","","","",""],["6","老豆腐1*10","1斤/斤","12斤(12斤)","0"],["4斤**E004+8斤**E033","","","",""],["7","大豆腐卜","1斤/斤","10斤(10斤)","0"],["5斤**E018+1斤**E020+4斤**E010","","","",""],["8","小豆腐卜","1斤/斤","7斤(7斤)","0"],["6斤**E015+1斤**E002-01","","","",""],["9","千张","1斤/斤","25斤(25斤)","0"],["5斤**E018+3斤**E028+5斤**C008-01+12斤**E005","","","",""],["10","薄香干","1斤/斤","14斤(14斤)","0"],["10斤**E018+4斤**E032","","","",""],["11","攸县香干","1斤/斤","16.5斤(16.5斤)","0"],["2.5斤**E002-01+6斤*厚的品质*E009+8斤**E005","","","",""],["12","炸面筋","1斤/斤","1斤(1斤)","0"],["1斤**E002-01","","","",""]]},"惠隆":{"客户":"广东惠隆供应链有限公司","rows":[["序号","客户","物料名称","规格","单位","数量","单价","备注"],["1","A55","内脂豆腐","400g/盒","盒","3","",""],["2","A55","鸭血","300g*20盒/件","盒","5","",""],["3","A55","炸面筋","","斤","2.00","","扁.油面筋"]]},"蔬源":{"客户":"广东蔬源农产品有限公司","rows":[["商品名称","商品规格","客户简称","单据类型","预定数","单位","备注"],["华晨豆腐","7斤/板","广三高速(松岗站)","","1","板",""],["华晨豆腐","15斤/板","桃盛饮食（中厨、设施）","（中厨 蔬菜类）","1","板",""],["华晨豆腐","15斤/板","桃盛饮食（员工饭堂）","（员工饭堂 蔬菜类）","15","板",""],["豆腐","5.5-6斤/板","广三高速(狮岭站)","","2","斤","白豆腐"],["豆腐","5.5-6斤/板","广三高速(狮中站)","（蔬菜）","2","板","要薄的嫩豆腐"],["豆腐卜","","丹灶燃气","","0.5","斤","中只"],["千张皮","","佛山妇幼","（新城院区一楼）","3","斤",""],["香干","","大沥燃气","","4","斤","五香干"],["攸县香干","","一方和顺厂","（和顺厂）","15","斤",""],["炸腐竹","","善耆养老院","（长者）","1","斤",""]]},"碧源":{"客户":"佛山碧源餐饮管理服务有限公司","rows":[["商品编码","菜名","总数量","订货明细","备注","实际采购数","采购价","总金额"],["a00795","水豆腐（5斤装）","14板","(105) 2板____+(217#01) 5板 _ _ _ _ + ( 6 9 ) 1 板 _ _ _ _ + ( 7 4 # 0 1 ) 3 板 ____+(82) 3板____","","","",""],["a00805","攸县香干","5斤","(274) 5斤____","","","",""],["a00807","大豆泡","2.5斤","(229) 2.5斤____","","","",""],["a00808","小豆泡","4斤","(75) 4斤____","","","",""],["a00809","炸面筋","1斤","(231) 1斤____","","","",""],["a00811","千张","12斤","( 2 1 7 # 0 1 ) 1 0 斤 ____+(242) 2斤____","","","",""],["a00814","猪红","46斤","( 2 1 7 # 0 1 ) 2 1 斤 _ _ _ _ + ( 2 3 1 ) 3 斤 _ _ _ _ + ( 2 4 2 ) 7 斤 _ _ _ _ + ( 2 4 5 # 2 ) 2 斤 ____+(72) 13斤____","","","",""],["a00968","日本豆腐","2箱","(77) 2箱____","","","",""]]},"御口福":{"客户":"广东御口福经贸发展有限公司","rows":[["序号","商品名","规格","采购总数","明细",""],["1","水豆腐切块(斤)","1斤/斤","1斤/斤","2斤(2斤)","2斤*嘉禾云门PODO(厨房)月付【543-】"]]},"品昌":{"客户":"广东品昌餐饮管理有限公司","rows":[["序号","商品名","计划采购","实采(基本单位)","明细",""],["1","豆腐 (小)","1板(1板)","","1板*PC050",""],["2","豆腐串","1串/串","120串(120串)","","120串*PC050"]]},"广晟":{"客户":"广东省广晟饮食服务有限公司","rows":[["序号","商品名","计划采购","单价","(实收:√,差异填实收)下单数量—客户—商品要求",""],["1","蚊县香干","15斤","3.80元/斤","( ) 15斤〈176A〉",""],["2","花泉山水豆腐（内蔬豆腐）400g/盒","6盒","3.50元/盒","( ) 6盒〈178A〉",""],["3","炸豆干","0.01斤","6.50元/斤","( ) 0.01斤〈128F〉3板",""],["4","干水熟猪血","20斤","2.50元/斤","( ) 20斤〈176A〉",""],["5","小豆卜/小豆泡（裁）","1斤","6.50元/斤","( ) 1斤〈178D〉",""],["6","鲜豆腐皮","3斤","4.50元/斤","( ) 3斤〈178D〉",""],["7","千张","67斤","4.50元/斤","( ) 25斤〈128A〉 ( ) 30斤〈128F〉 ( ) 12斤〈136〉",""],["8","敌盒水豆腐（小板）2.6kg","5板","6.00元/板","( ) 4板〈123A（农林院区）〉中厨 ( ) 1板〈178D〉2kg以上",""],["9","敌盒水豆腐（中板）3.5kg","4板","8.00元/板","( ) 4板〈K006〉白色框的6斤的那种",""],["10","初心豆腐（馍醋专用）","1板","9.50元/板","( ) 1板〈178C2〉必须是初心豆腐，压紧实老豆腐！不紧就退货！",""],["11","豆腐串（串）","1串/串","30串","0.60元/串","( ) 30串〈176F〉"]]},"三棵菜":{"客户":"三棵菜三水仓","rows":[["一级分类","二级分类","产品名称","单位","数量","企业简称","企业编号"],["豆蕉品类","豆制品","白豆干","斤","25","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","白豆干","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","白豆干","斤","7","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","老豆腐","斤","1","食乡园餐饮","1-18"],["豆蕉品类","豆制品","老豆腐","斤","3","希音（二楼麻辣烫）","18-10"],["豆蕉品类","豆制品","老豆腐","斤","5","和正锦龙工地","20-16"],["豆蕉品类","豆制品","老豆腐","斤","10","石博士新材料","2-2"],["豆蕉品类","豆制品","老豆腐","斤","30","德技优品","2-4"],["豆蕉品类","豆制品","老豆腐","斤","40","宝正盛","4-8"],["豆蕉品类","豆制品","老豆腐","斤","1","汇江赛福饭堂","5-9"],["豆蕉品类","豆制品","老豆腐","斤","4","文科绿色","6-2"],["豆蕉品类","豆制品","凉粉","斤","2","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","干张","斤","2","乐源烧腊","1-1"],["豆蕉品类","豆制品","干张","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","干张","斤","2","现炒快餐","6-4"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","和盛隆","10-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","5","食乡园餐饮","1-18"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","3","风华高科101食堂","13-3"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","7","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","6","正创食堂","2-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","5","明巨氧化","3-18"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","10","名上餐饮","3-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","奥迪威","4-2"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","优鲜品","4-3"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","8","从众","4-5"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","宝正盛","4-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","正圆（面馆）","8-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","复雅食品机械","8-10"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","绿品通风设备","8-11"],["豆蕉品类","豆制品","素鸡","斤","6","鹏程易胜机械","3-22"],["豆蕉品类","豆制品","烟香干","斤","3","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","攸县香干","斤","5","风华高科101食堂","13-3"],["豆蕉品类","豆制品","攸县香干","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","攸县香干","斤","5","和正锦龙工地","20-16"],["豆蕉品类","豆制品","攸县香干","斤","10","正创食堂","2-1"],["豆蕉品类","豆制品","攸县香干","斤","8","全中创科技","3-14"],["豆蕉品类","豆制品","油豆腐","斤","3","风华高科101食堂","13-3"],["豆蕉品类","豆制品","油豆腐","斤","2","希音（二楼麻辣烫）","18-10"],["豆蕉品类","豆制品","油豆腐","斤","20","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","油豆腐","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","油豆腐","斤","5","顺安新材料","3-6"],["豆蕉品类","豆制品","油豆腐","斤","3","优鲜品","4-26"],["豆蕉品类","豆制品","油豆腐","斤","5","优鲜品","4-3"],["豆蕉品类","豆制品","油豆腐","斤","1","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","油豆腐","斤","1","自选快餐","6-3"],["豆蕉品类","豆制品","油豆腐","斤","3","现炒快餐","6-4"],["豆蕉品类","豆制品","油豆腐块","斤","8","益丰塑业食堂","1-8"],["豆蕉品类","豆制品","油豆腐块","斤","2","希音（二楼麻辣烫）","18-10"]]},"望家欢":{"客户":"佛山望家欢农产品有限公司","rows":[["订货单位：佛山望家欢农产品有限公司","","","","供应商：V025736 广东崇元绿色食品有限公司","","",""],["电话：","","","","电话：联系人：","","",""],["分类名称","商品名称","规格","订货明细","预定数量（汇总）","收货数量","供应商报价","金额（元）"],["面点豆制品","卤白干（卤香干）","","3斤【34】","3斤","斤","元","元"],["","客家豆腐","1","1板【58】","1板","板","元","元"],["","小板豆腐","3KG","4板【34】","4板","板","元","元"],["","攸县豆干","","10斤【12】+10斤【34】+2斤【34】+5斤【63（补单）】","27斤","斤","元","元"],["","水豆腐块","","4斤【9】","4斤","斤","元","元"],["","油炸豆腐块","","1斤【73】","1斤","斤","元","元"],["","老豆腐","","11斤【8】+2斤【12】+5斤【34】","18斤","斤","元","元"],["","豆腐皮","","2.5斤【12】","2.5斤","斤","元","元"],["肉类","鲜猪血","","4斤【9】+10斤【62】","14斤","斤","元","元"],["副食调料","乡巴佬鸡蛋干","150G","7包【12】","7包","包","元","元"]]},"轩宝":{"客户":"佛山南海轩宝餐饮管理有限公司狮山分公司","rows":[["供应商：广东鉴元绿色食品有限公司","","","","","","到货时间：2026年8月1日",""],["联系人：","","手机：13534310064","","","","收货方：生鲜仓",""],["品名","规格","单位","汇总合计","客户","数量","备注","参考线路"],["老豆腐","","斤","3","167大众千喜鹤（面条）","3","","6"],["合计","","","","","3.00","",""]]},"万速鲜":{"客户":"佛山市万速鲜供应链管理有限公司","rows":[["兴业食品","",""],["打印时间: 2026-08-01 02:05:10","",""],["商品名","计划采购",""],["大油豆腐","4斤",""],["老豆腐","7块",""],["日本豆腐","3箱",""],["烧烤香干","0.5斤",""],["烟香干","5斤",""],["小油豆腐","12斤",""],["猪血","2桶",""],["豆腐皮","20斤",""],["米豆腐","3斤",""],["水豆腐【中板】","8板",""],["五香香干","1斤",""],["攸县香干(5斤/包)","1包",""],["干水豆腐","1板/板","1板"]]},"聚农":{"客户":"佛山市聚农商贸有限公司","rows":[["崇元豆腐(12345678)-2026-08-01&2026-08-01 三水仓仓库","","",""],["商品名称","待采购量","单位","明细"],["大油豆腐","3","斤","773:2斤+1218:1斤"],["干水豆腐","10","板","1064:1板+1074:1板+528:1板+1168:1板+1331:1板+1392:1板+832:1板+332:1板+972:1板+1218:1板"],["厚细干","1","斤","216:1斤"],["米豆腐(散装)","10","斤","1003:10斤"],["干叶豆腐","2","包","1264:1包+652:1包"],["干张","37","斤","1074:1斤+1125:1斤+1309:1斤+1264:1斤+1333:1斤+1082:1斤+1338:3斤+1310:3斤+1398:1斤+1392:6斤+1453:1斤+1521:1斤+862:3斤+870:2斤+845:3斤+1003:1斤+832:2斤+773:1斤+1252:1斤+1129:1斤+924:1斤+1036:1斤"],["日本豆腐","9","件","1147:1件+581:1件+1309:1件+1134:1件+970:1件+1082:1件+1310:1件+1453:1件+1129:1件"],["(散装) 牧县善干","31","斤","1125:2斤+657:2斤+1134:1斤+1333:2斤+1310:9斤+1398:3斤+1391:2斤+496:2斤+924:2斤+708:6斤"],["五香善干","1","斤","479:1斤"],["攸县善干(5斤/包)","36","包","1150:1包+1064:2包+1147:1包+1084:1包+1074:2包+581:1包+1127:2包+1230:1包+1315:1包+1309:1包+1264:1包+963:2包+970:1包+1007:2包+1077:1包+1168:1包+1365:1包+1262:1包+1521:1包+1357:1包+862:1包+647:1包+773:1包+1281:1包+122:1包+413:1包+1218:1包+794:1包+1113:1包+1036:1包+916:1包"],["小油豆腐","76.5","斤","1064:3斤+1147:1斤+1190:1斤+1074:2斤+1122:1斤+528:1斤+1286:2斤+1127:2斤+1315:1斤+1309:1斤+1264:2斤+963:1斤+1134:1斤+1271:2斤+706:3斤+598:1斤+1168:1斤+988:2斤+1331:2斤+1310:2斤+1010:2斤+1398:2斤+1416:1斤+1336:1斤+1453:2斤+1521:1斤+1357:1斤+678:1斤+652:1斤+781:1斤+862:3斤+328:2斤+725:1.50斤+845:3斤+647:1斤+668:1斤;(搞一斤半,两斤有点多了)+603:1斤+297:3斤+496:1斤+413:2斤+1252:2斤+841:1斤+241:1斤+924:1斤+708:3斤+794:4斤+1036:1斤"],["烟善干","27","斤","1312:1斤+956:2斤+528:2斤+988:3斤+106:10斤+652:3斤+297:3斤+496:1斤+841:2斤"],["老豆腐(散称)","7","斤","137:7斤;(不要酸的。)"],["水豆腐(小板)","5","板","1230:1板+773:1板+413:1板+319:1板+794:1板"],["水豆腐(中板)","15","板","1147:1板+1190:1板+1325:1板+1264:1板+1082:1板+1310:1板+1336:1板+1521:1板+1385:1板+845:1板+647:1板+1252:1板+241:1板+200:1板+1015:1板"]]}}, 名=Object.keys(料)[0], rows, 读法, 答过, 回话, 存档, 挑第几=0, 摊开=false, 学过={};
 
-/* ★ 教过的存下来 —— 关了页面也还在。
-   老板 8/23：「你去看一下我点的有哪些不对的」—— 原来什么都不存，点完就没了，没法查。 */
-var 柜="学表格·教过的";
-try{ 学过=JSON.parse(localStorage.getItem(柜)||"{}")||{}; }catch(e){ 学过={}; }
-function 存起来(){ try{ localStorage.setItem(柜,JSON.stringify(学过)); }catch(e){} 画教过几张(); }
-function 画教过几张(){
-  var n=Object.keys(学过).length;
-  document.getElementById('seen').textContent=n?("我教过的 "+n+" 张"):"";
-  document.getElementById('seen').style.display=n?"":"none";
-}
+var 料={"裕丰":{"客户":"广东裕丰膳食管理服务有限公司","rows":[["商品名称","规格","单位","数量","单位编号","备注","备注2"],["大豆泡","","斤","8.5","112","",""],["水豆腐","5斤/板","板","2","218","",""],["豆腐片","","斤","2","110","大片",""],["优质豆腐","","斤","38","178","",""],["优质豆腐","","斤","235","178","",""],["水豆腐","","斤","8","207","",""],["千张","","斤","7","223","",""],["水豆腐","6斤/板","板","3","213","",""],["水豆腐","6斤/板","板","4","112","",""],["小豆泡","","斤","5","207","",""],["攸县香干","","斤","10","104","",""],["老豆腐","","斤","5","164","",""],["豆腐串","50串/包","包","1","163","",""],["水豆腐","6斤/板","板","1","166","",""],["水豆腐","6斤/板","板","1","161","",""],["香干","","斤","8","161","",""],["猪红","","斤","1","163","",""],["猪红","","斤","6","261","",""],["日本豆腐","40条/件","件","1","261","",""]]},"江云":{"客户":"江云兄弟","rows":[["菜名","总数量","采购数量","单价","金额","订菜总数","订菜分布清单"],["炸腐竹","3.5斤","","","","(B163 南方明珠#火锅)0.5斤____+(B135 多宝#员工)3斤____",""],["嫩豆腐","20.5斤","","","","(A006 爱儿坊#教师餐)2斤____+(B158 茂福#幼儿)9斤____+(B157 广美)2斤____+(B182 维比奇#幼儿-6块)0斤____+(B153 东方阳光#教师)0.5斤____+(B153 东方阳光#学生)1斤____+(BB120 华美达#员工餐)6斤____+(A867 明昇#月子-4块)0斤____",""],["靓腋板豆腐7斤","19板","","","","(A804 石江#幼儿)1板____+(B169 环城)1板____+(A042 益蝶)7板____+(A 860戴斯温德姆#点心)1板____+(AA023 生命加#员工)4板____+(B130 科乐多)1板____+(B170 中安)4板____",""],["老豆腐/斤","6斤","","","","(A849 增城店#月子)6斤____",""],["炸豆腐","26斤","","","","(B157 广美)9斤____+(A017 总部#员工)12斤____+(A811 新华店#月子)5斤____",""],["大豆腐卜","3斤","","","","(B111 风怡湾#学生)1.5斤____+(A815 海北)1.5斤____",""],["小豆腐卜","14.5斤","","","","(B128 阅景#幼儿-20个)0斤____+(A018 德艺#教师)1斤____+(A805 镇南#教师)1.5斤____+(A034 新星)1斤____+(B181 文星)3.5斤____+(A022 宜致(天字)#早餐)1.5斤____+(A046 吉鼎亚采#伙伴餐)2斤____+(A816 中队)3斤____+(A823 里水维也纳#自助)1斤____",""],["面筋","12斤","","","","(A012 美百年)12斤____",""],["豆腐皮/千张","4.5斤","","","","(A028 君豪#早餐)0.5斤____+(A 860戴斯温德姆#员工)1斤____+(A859南站亚采)1斤____+(BB120 华美达#客餐)1斤____+(B141 城际#客餐)1斤____",""],["豆腐干","3斤","","","","(A 861峰际)3斤____",""],["豆腐串","4串","","","","(B128 阅景#幼儿)4串____",""],["香干","42斤","","","","(A842 粤侨)5斤____+(A014 东富#客餐)3斤____+(A865宝德#客餐)4斤____+(A055 软芯#中餐)14斤____+(B 195 万博亚采#员工)3斤____+(B149 星亚 #早餐)3斤____+(AA023 生命加#月子)0.5斤____+(AA064 福越希维#员工)3斤____+(B141 城际#客餐)5斤____+(A058 水晶#员工)1.5斤____",""],["凉皮","1斤","","","","(A 044 金沙洲全季#客餐)1斤____",""],["炸支竹","0.3斤","","","","(A814 广场店#月子)0.3斤____",""],["白色香干","1斤","","","","(B131 圣明希)1斤____",""],["靓客家豆腐5斤装","9板","","","","(A820 沙涌#幼儿)8板____+(B149 星亚 #员工)1板____",""],["腐皮结","0斤","","","","(A012 美百年-1件)0斤____",""],["腋板豆腐4.5斤/板","6板","","","","(A817 本部)6板____",""],["花泉山水豆腐400g","18盒","","","","(B163 南方明珠#试吃)1盒____+(B163 南方明珠#月子)1盒____+(B145御星)4盒____+(B181 文星)3盒____+(AA023 生命加#月子)1盒____+(A017 总部#月子)4盒____+(A813 天河店#月子)2盒____+(A020 真爱#月子)2盒____",""],["鲜腐竹500g","8盒","","","","(B189 丽枫(金沙)#早餐)1盒____+(A028 君豪#员工)3盒____+(A849 增城店#月子)3盒____+(A811 新华店#月子)1盒____",""],["白豆干","0.5斤","","","","(A837 秦2#客餐)0.5斤____",""]]},"朱鲜生":{"客户":"广东朱鲜生餐饮有限公司","rows":[["序号","商品名","总数","明细"],["1","中板豆腐 (7斤/板)","20板","佛山市南海区昆仑实业有限公司33-1 广州市老人院上水院区 (老人碎菜) 5-9 广州市老人院 (上水院区) (老人糊餐) 5-5 广州市老人院 (上水院区) (老人糖餐) 5-4 广州市老人院 (上水院区) (老人菜泥) 5-6 广州市老人院 (上水院区) (老人餐) 5-3"],["2","白豆干","110斤","广州市老人院 (上水院区) (老人餐) 5-3"],["3","牛皮干","1斤","佛山支队执勤二中队11-8"],["4","百页","2斤","佛山支队机动中队11-9"],["5","攸县香干","3斤","广州医科大学附属第一医院 (海印院区) 30-2"],["6","中板豆腐","3板","佛山市南海区财政局 (午餐) 26-2"],["7","炸豆干","8斤","瀚蓝环境股份有限公司 (午餐) 31-2"],["8","九龙炸豆腐","10斤","瀚蓝环境股份有限公司 (午餐) 31-2"]]},"祺之盛":{"客户":"佛山市祺之盛农业发展有限公司","rows":[["序号","商品名","规格","计划采购","实采(基本单位)"],["1","炸圆面筋","1斤/斤","1斤(1斤)","0"],["1斤**E004","","","",""],["2","豆腐串","1串/串","70串(70串)","0"],["35串**E018-01+25串**E002-01+10串**E020","","","",""],["3","水豆腐 (5斤)","1板/板","17板(17板)","0"],["2板**E028+3板**D008+1板**E003+1板**E008+3板**E032+2板**B002+1板**E019+2板**E033+2板**E012","","","",""],["4","韧豆腐 (6.5-7斤)","1板/板","7板(7板)","0"],["3板**D005+2板**C008-01+2板**E005","","","",""],["5","白豆干","1斤/斤","9斤(9斤)","0"],["1斤**D008+8斤**E010","","","",""],["6","老豆腐1*10","1斤/斤","12斤(12斤)","0"],["4斤**E004+8斤**E033","","","",""],["7","大豆腐卜","1斤/斤","10斤(10斤)","0"],["5斤**E018+1斤**E020+4斤**E010","","","",""],["8","小豆腐卜","1斤/斤","7斤(7斤)","0"],["6斤**E015+1斤**E002-01","","","",""],["9","千张","1斤/斤","25斤(25斤)","0"],["5斤**E018+3斤**E028+5斤**C008-01+12斤**E005","","","",""],["10","薄香干","1斤/斤","14斤(14斤)","0"],["10斤**E018+4斤**E032","","","",""],["11","攸县香干","1斤/斤","16.5斤(16.5斤)","0"],["2.5斤**E002-01+6斤*厚的品质*E009+8斤**E005","","","",""],["12","炸面筋","1斤/斤","1斤(1斤)","0"],["1斤**E002-01","","","",""]]},"惠隆":{"客户":"广东惠隆供应链有限公司","rows":[["序号","客户","物料名称","规格","单位","数量","单价","备注"],["1","A55","内脂豆腐","400g/盒","盒","3","",""],["2","A55","鸭血","300g*20盒/件","盒","5","",""],["3","A55","炸面筋","","斤","2.00","","扁.油面筋"]]},"蔬源":{"客户":"广东蔬源农产品有限公司","rows":[["商品名称","商品规格","客户简称","单据类型","预定数","单位","备注"],["华晨豆腐","7斤/板","广三高速(松岗站)","","1","板",""],["华晨豆腐","15斤/板","桃盛饮食（中厨、设施）","（中厨 蔬菜类）","1","板",""],["华晨豆腐","15斤/板","桃盛饮食（员工饭堂）","（员工饭堂 蔬菜类）","15","板",""],["豆腐","5.5-6斤/板","广三高速(狮岭站)","","2","斤","白豆腐"],["豆腐","5.5-6斤/板","广三高速(狮中站)","（蔬菜）","2","板","要薄的嫩豆腐"],["豆腐卜","","丹灶燃气","","0.5","斤","中只"],["千张皮","","佛山妇幼","（新城院区一楼）","3","斤",""],["香干","","大沥燃气","","4","斤","五香干"],["攸县香干","","一方和顺厂","（和顺厂）","15","斤",""],["炸腐竹","","善耆养老院","（长者）","1","斤",""]]},"碧源":{"客户":"佛山碧源餐饮管理服务有限公司","rows":[["商品编码","菜名","总数量","订货明细","备注","实际采购数","采购价","总金额"],["a00795","水豆腐（5斤装）","14板","(105) 2板____+(217#01) 5板 _ _ _ _ + ( 6 9 ) 1 板 _ _ _ _ + ( 7 4 # 0 1 ) 3 板 ____+(82) 3板____","","","",""],["a00805","攸县香干","5斤","(274) 5斤____","","","",""],["a00807","大豆泡","2.5斤","(229) 2.5斤____","","","",""],["a00808","小豆泡","4斤","(75) 4斤____","","","",""],["a00809","炸面筋","1斤","(231) 1斤____","","","",""],["a00811","千张","12斤","( 2 1 7 # 0 1 ) 1 0 斤 ____+(242) 2斤____","","","",""],["a00814","猪红","46斤","( 2 1 7 # 0 1 ) 2 1 斤 _ _ _ _ + ( 2 3 1 ) 3 斤 _ _ _ _ + ( 2 4 2 ) 7 斤 _ _ _ _ + ( 2 4 5 # 2 ) 2 斤 ____+(72) 13斤____","","","",""],["a00968","日本豆腐","2箱","(77) 2箱____","","","",""]]},"御口福":{"客户":"广东御口福经贸发展有限公司","rows":[["序号","商品名","规格","采购总数","明细",""],["1","水豆腐切块(斤)","1斤/斤","1斤/斤","2斤(2斤)","2斤*嘉禾云门PODO(厨房)月付【543-】"]]},"品昌":{"客户":"广东品昌餐饮管理有限公司","rows":[["序号","商品名","计划采购","实采(基本单位)","明细",""],["1","豆腐 (小)","1板(1板)","","1板*PC050",""],["2","豆腐串","1串/串","120串(120串)","","120串*PC050"]]},"广晟":{"客户":"广东省广晟饮食服务有限公司","rows":[["序号","商品名","计划采购","单价","(实收:√,差异填实收)下单数量—客户—商品要求",""],["1","蚊县香干","15斤","3.80元/斤","( ) 15斤〈176A〉",""],["2","花泉山水豆腐（内蔬豆腐）400g/盒","6盒","3.50元/盒","( ) 6盒〈178A〉",""],["3","炸豆干","0.01斤","6.50元/斤","( ) 0.01斤〈128F〉3板",""],["4","干水熟猪血","20斤","2.50元/斤","( ) 20斤〈176A〉",""],["5","小豆卜/小豆泡（裁）","1斤","6.50元/斤","( ) 1斤〈178D〉",""],["6","鲜豆腐皮","3斤","4.50元/斤","( ) 3斤〈178D〉",""],["7","千张","67斤","4.50元/斤","( ) 25斤〈128A〉 ( ) 30斤〈128F〉 ( ) 12斤〈136〉",""],["8","敌盒水豆腐（小板）2.6kg","5板","6.00元/板","( ) 4板〈123A（农林院区）〉中厨 ( ) 1板〈178D〉2kg以上",""],["9","敌盒水豆腐（中板）3.5kg","4板","8.00元/板","( ) 4板〈K006〉白色框的6斤的那种",""],["10","初心豆腐（馍醋专用）","1板","9.50元/板","( ) 1板〈178C2〉必须是初心豆腐，压紧实老豆腐！不紧就退货！",""],["11","豆腐串（串）","1串/串","30串","0.60元/串","( ) 30串〈176F〉"]]},"三棵菜":{"客户":"三棵菜三水仓","rows":[["一级分类","二级分类","产品名称","单位","数量","企业简称","企业编号"],["豆蕉品类","豆制品","白豆干","斤","25","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","白豆干","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","白豆干","斤","7","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","老豆腐","斤","1","食乡园餐饮","1-18"],["豆蕉品类","豆制品","老豆腐","斤","3","希音（二楼麻辣烫）","18-10"],["豆蕉品类","豆制品","老豆腐","斤","5","和正锦龙工地","20-16"],["豆蕉品类","豆制品","老豆腐","斤","10","石博士新材料","2-2"],["豆蕉品类","豆制品","老豆腐","斤","30","德技优品","2-4"],["豆蕉品类","豆制品","老豆腐","斤","40","宝正盛","4-8"],["豆蕉品类","豆制品","老豆腐","斤","1","汇江赛福饭堂","5-9"],["豆蕉品类","豆制品","老豆腐","斤","4","文科绿色","6-2"],["豆蕉品类","豆制品","凉粉","斤","2","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","干张","斤","2","乐源烧腊","1-1"],["豆蕉品类","豆制品","干张","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","干张","斤","2","现炒快餐","6-4"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","和盛隆","10-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","5","食乡园餐饮","1-18"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","3","风华高科101食堂","13-3"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","7","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","6","正创食堂","2-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","5","明巨氧化","3-18"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","10","名上餐饮","3-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","奥迪威","4-2"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","优鲜品","4-3"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","8","从众","4-5"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","宝正盛","4-8"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","1","正圆（面馆）","8-1"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","4","复雅食品机械","8-10"],["豆蕉品类","豆制品","水豆腐/板","中板/约5斤","2","绿品通风设备","8-11"],["豆蕉品类","豆制品","素鸡","斤","6","鹏程易胜机械","3-22"],["豆蕉品类","豆制品","烟香干","斤","3","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","攸县香干","斤","5","风华高科101食堂","13-3"],["豆蕉品类","豆制品","攸县香干","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","攸县香干","斤","5","和正锦龙工地","20-16"],["豆蕉品类","豆制品","攸县香干","斤","10","正创食堂","2-1"],["豆蕉品类","豆制品","攸县香干","斤","8","全中创科技","3-14"],["豆蕉品类","豆制品","油豆腐","斤","3","风华高科101食堂","13-3"],["豆蕉品类","豆制品","油豆腐","斤","2","希音（二楼麻辣烫）","18-10"],["豆蕉品类","豆制品","油豆腐","斤","20","希音（一楼称重窗口）","18-11"],["豆蕉品类","豆制品","油豆腐","斤","5","希音（二楼江西小炒）","18-8"],["豆蕉品类","豆制品","油豆腐","斤","5","顺安新材料","3-6"],["豆蕉品类","豆制品","油豆腐","斤","3","优鲜品","4-26"],["豆蕉品类","豆制品","油豆腐","斤","5","优鲜品","4-3"],["豆蕉品类","豆制品","油豆腐","斤","1","宏富康饮食服务","4-4"],["豆蕉品类","豆制品","油豆腐","斤","1","自选快餐","6-3"],["豆蕉品类","豆制品","油豆腐","斤","3","现炒快餐","6-4"],["豆蕉品类","豆制品","油豆腐块","斤","8","益丰塑业食堂","1-8"],["豆蕉品类","豆制品","油豆腐块","斤","2","希音（二楼麻辣烫）","18-10"]]},"望家欢":{"客户":"佛山望家欢农产品有限公司","rows":[["订货单位：佛山望家欢农产品有限公司","","","","供应商：V025736 广东崇元绿色食品有限公司","","",""],["电话：","","","","电话：联系人：","","",""],["分类名称","商品名称","规格","订货明细","预定数量（汇总）","收货数量","供应商报价","金额（元）"],["面点豆制品","卤白干（卤香干）","","3斤【34】","3斤","斤","元","元"],["","客家豆腐","1","1板【58】","1板","板","元","元"],["","小板豆腐","3KG","4板【34】","4板","板","元","元"],["","攸县豆干","","10斤【12】+10斤【34】+2斤【34】+5斤【63（补单）】","27斤","斤","元","元"],["","水豆腐块","","4斤【9】","4斤","斤","元","元"],["","油炸豆腐块","","1斤【73】","1斤","斤","元","元"],["","老豆腐","","11斤【8】+2斤【12】+5斤【34】","18斤","斤","元","元"],["","豆腐皮","","2.5斤【12】","2.5斤","斤","元","元"],["肉类","鲜猪血","","4斤【9】+10斤【62】","14斤","斤","元","元"],["副食调料","乡巴佬鸡蛋干","150G","7包【12】","7包","包","元","元"]]},"轩宝":{"客户":"佛山南海轩宝餐饮管理有限公司狮山分公司","rows":[["供应商：广东鉴元绿色食品有限公司","","","","","","到货时间：2026年8月1日",""],["联系人：","","手机：13534310064","","","","收货方：生鲜仓",""],["品名","规格","单位","汇总合计","客户","数量","备注","参考线路"],["老豆腐","","斤","3","167大众千喜鹤（面条）","3","","6"],["合计","","","","","3.00","",""]]},"万速鲜":{"客户":"佛山市万速鲜供应链管理有限公司","rows":[["兴业食品","",""],["打印时间: 2026-08-01 02:05:10","",""],["商品名","计划采购",""],["大油豆腐","4斤",""],["老豆腐","7块",""],["日本豆腐","3箱",""],["烧烤香干","0.5斤",""],["烟香干","5斤",""],["小油豆腐","12斤",""],["猪血","2桶",""],["豆腐皮","20斤",""],["米豆腐","3斤",""],["水豆腐【中板】","8板",""],["五香香干","1斤",""],["攸县香干(5斤/包)","1包",""],["干水豆腐","1板/板","1板"]]},"聚农":{"客户":"佛山市聚农商贸有限公司","rows":[["崇元豆腐(12345678)-2026-08-01&2026-08-01 三水仓仓库","","",""],["商品名称","待采购量","单位","明细"],["大油豆腐","3","斤","773:2斤+1218:1斤"],["干水豆腐","10","板","1064:1板+1074:1板+528:1板+1168:1板+1331:1板+1392:1板+832:1板+332:1板+972:1板+1218:1板"],["厚细干","1","斤","216:1斤"],["米豆腐(散装)","10","斤","1003:10斤"],["干叶豆腐","2","包","1264:1包+652:1包"],["干张","37","斤","1074:1斤+1125:1斤+1309:1斤+1264:1斤+1333:1斤+1082:1斤+1338:3斤+1310:3斤+1398:1斤+1392:6斤+1453:1斤+1521:1斤+862:3斤+870:2斤+845:3斤+1003:1斤+832:2斤+773:1斤+1252:1斤+1129:1斤+924:1斤+1036:1斤"],["日本豆腐","9","件","1147:1件+581:1件+1309:1件+1134:1件+970:1件+1082:1件+1310:1件+1453:1件+1129:1件"],["(散装) 牧县善干","31","斤","1125:2斤+657:2斤+1134:1斤+1333:2斤+1310:9斤+1398:3斤+1391:2斤+496:2斤+924:2斤+708:6斤"],["五香善干","1","斤","479:1斤"],["攸县善干(5斤/包)","36","包","1150:1包+1064:2包+1147:1包+1084:1包+1074:2包+581:1包+1127:2包+1230:1包+1315:1包+1309:1包+1264:1包+963:2包+970:1包+1007:2包+1077:1包+1168:1包+1365:1包+1262:1包+1521:1包+1357:1包+862:1包+647:1包+773:1包+1281:1包+122:1包+413:1包+1218:1包+794:1包+1113:1包+1036:1包+916:1包"],["小油豆腐","76.5","斤","1064:3斤+1147:1斤+1190:1斤+1074:2斤+1122:1斤+528:1斤+1286:2斤+1127:2斤+1315:1斤+1309:1斤+1264:2斤+963:1斤+1134:1斤+1271:2斤+706:3斤+598:1斤+1168:1斤+988:2斤+1331:2斤+1310:2斤+1010:2斤+1398:2斤+1416:1斤+1336:1斤+1453:2斤+1521:1斤+1357:1斤+678:1斤+652:1斤+781:1斤+862:3斤+328:2斤+725:1.50斤+845:3斤+647:1斤+668:1斤;(搞一斤半,两斤有点多了)+603:1斤+297:3斤+496:1斤+413:2斤+1252:2斤+841:1斤+241:1斤+924:1斤+708:3斤+794:4斤+1036:1斤"],["烟善干","27","斤","1312:1斤+956:2斤+528:2斤+988:3斤+106:10斤+652:3斤+297:3斤+496:1斤+841:2斤"],["老豆腐(散称)","7","斤","137:7斤;(不要酸的。)"],["水豆腐(小板)","5","板","1230:1板+773:1板+413:1板+319:1板+794:1板"],["水豆腐(中板)","15","板","1147:1板+1190:1板+1325:1板+1264:1板+1082:1板+1310:1板+1336:1板+1521:1板+1385:1板+845:1板+647:1板+1252:1板+241:1板+200:1板+1015:1板"]]}}, 名=Object.keys(料)[0], rows, 读法, 答过, 回话, 存档, 挑第几=0, 摊开=false, 学过={};
+try{ 学过=JSON.parse(localStorage.getItem("整体样子·教过的")||"{}")||{}; }catch(e){ 学过={}; }
+function 存起来(){ try{ localStorage.setItem("整体样子·教过的",JSON.stringify(学过)); }catch(e){} }
+
+function $(id){ return document.getElementById(id); }
 
 function 换(n){
   名=n; rows=料[n].rows;
-  document.getElementById('who').textContent=料[n].客户;
-  document.querySelectorAll('#pick button').forEach(function(b){
-    b.setAttribute('aria-selected',b.dataset.n===n?"true":"false"); });
+  $("拖进来").innerHTML="已放进来：<b>"+esc(名)+".xlsx</b>　"+rows.length+" 行 × "+
+    (rows[0]||[]).length+" 列";
+  $("猜客户").innerHTML="认出来是 <b>"+esc(料[n].客户)+"</b> —— 不对就在下面自己选";
+  $("客户下拉").innerHTML="<option>"+esc(料[n].客户)+"</option>";
+  document.querySelectorAll("#选表 button").forEach(function(b){
+    b.setAttribute("aria-selected", b.dataset.n===n?"true":"false"); });
   开头();
 }
 
-/* ① 表进来，我先自己读一遍 */
 function 开头(){
   读法=学过[名]?JSON.parse(JSON.stringify(学过[名])):猜读法(rows);
   答过=0; 回话=null; 挑第几=0; 摊开=false;
   自动分法(rows,读法);
-  /* 不相干的东西：当场报错，一句都不问 */
   var 不像=像不像订单(rows,读法);
-  if(不像){ 画(报错(不像)); return; }
-  var 剩=排问题(读法), 结果=读(rows,读法), 坏=坏几样(结果);
-  /* ⛔ 原来这儿先摆一屏「有 N 处不懂 [开始]」—— 那一屏什么也没干，就是让人多按一下。
-     顶上本来就写着「第 1 问 共 N 问」。拖进来直接问第一句（老板 8/23）。 */
-  if(剩.length){ 下一问(); return; }
-  画(不问了(结果,坏,!!学过[名]));
-}
-function 报错(话){
-  return "<div class='echo warn'>读不了这个文件</div>"+
-    "<h1>"+esc(话)+"</h1>"+
-    "<div class='sub'>换一份发过来，或者截图重发。我不会拿它硬凑一张单。</div>";
-}
-function 不问了(结果,坏,老相识){
-  var h="<div class='echo "+(坏?"":"good")+"'>"+
-    (老相识?"这张表教过了 —— <b>一句都没问</b>":"这张表我全看懂了 —— <b>不用问你</b>")+"</div>";
-  h+="<h1>读懂了，"+好几样(结果)+" 样</h1>";
-  h+="<div class='sub'>"+(坏?("有 <b style='color:var(--bad)'>"+坏+"</b> 样表上本来就没写清楚，那几行留着你手工填，其余照常出单。")
-                            :"每一样加起来都跟表上写的总数对得上。")+"</div>";
-  return h+画结果(结果)+
-    "<div class='btns' style='margin-top:22px'><button class='btn pri' onclick='开头()'>出单</button></div>";
-}
-function 要问几句(几){
-  return "<h1>这张表我读了一遍，有 "+几+" 处不懂</h1>"+
-    "<div class='sub'>答完这张表就学会了，以后他再发同样的表，一句都不问。</div>"+
-    "<div class='btns'><button class='btn pri' onclick='下一问()'>开始</button></div>";
+  if(不像){ 收起步3(); 摆核对(null,不像); return; }
+  下一问();
 }
 
-/* ② 一次只问一件事 */
+/* 收起来的时候把里头的问句清掉 —— 留着的话，下一张表进来那一瞬还是上一张的问题 */
+function 收起步3(){ $("步3").hidden=true; $("学").innerHTML=""; $("核号").textContent="3"; $("单号").textContent="4"; 压(0); }
+function 摊开步3(){ $("步3").hidden=false; $("核号").textContent="4"; $("单号").textContent="5"; }
+/* 上面还有没答完的，就把「核对」压住 —— 货是有了，但不许人先去看那张半成品 */
+function 压(剩){
+  var 卡=$("卡核对");
+  if(剩){ 卡.className="card 压住"; $("盖").hidden=false;
+    $("盖").innerHTML="上面还有 <b>"+剩+"</b> 处没答完 —— 答完这些才出货"; }
+  else { 卡.className="card"; $("盖").hidden=true; }
+}
+
 function 下一问(){
-  自动分法(rows,读法);          /* 每答一句都重算一遍 —— 列定下来之后可能就不用问怎么分了 */
+  自动分法(rows,读法);
   var 剩=排问题(读法);
   if(!剩.length){ 完了(); return; }
-  var q=剩[0];                       /* 永远问剩下的头一个 */
-  画((回话?画回话():"")+问(q), q.型==="列"?q.列:-1);
+  摊开步3();
+  var q=剩[0];
+  $("步3题").textContent="这张表怎么读？　（第 "+(答过+1)+" 问 · 共 "+(答过+剩.length)+" 问）";
+  $("学").innerHTML=(回话?画回话():"")+问(q);
+  $("原表").innerHTML=画原表(rows,读法,q.型==="列"?q.列:-1);
+  摆核对(读(rows,读法),"");
+  压(剩.length);            /* 没答完 → 核对压住 */
 }
 function 这一问(){ return 排问题(读法)[0]; }
+
 function 问(q){
   if(q.型==="列"){
     var c=q.列, s=读法.量[c], w=读法.表头行>=0?字(rows[读法.表头行][c]):"";
     var 猜=读法.角色[c];
-    var 由=(读法.因||[])[c]||"生词";
-    /* ★ 说真话：为什么问这一列。理由说错，人就没法判断，只能瞎点（老板 8/23）。 */
-    /* ⛔ 只留「重名」这一句 —— 它能拦住人再答一遍品名。
-       别的三句（没表头 / 这个词我没见过 / 表头对不上）删了（老板 8/23）：
-       问题里已经写着「是【明细】吗」，底下就摆着那一列的内容，人一眼就能判断，
-       那几句一个字都不添，只是占地方。 */
+    var 由=(读法.因||[])[c]||"";
     var 话=(由==="重名")?("货名那一列已经是第 "+((读法.名列||0)+1)+" 列了。"):"";
-    /* ★ 老板 8/23：「把你猜的列进去就可以了，他点不是的时候才会有其他的选项」——
-       先问是不是，点「不是」才摊开那一排。十一个按钮一齐摆出来，人是不看的。 */
-    var h;
+    var h="<div class='ask'>";
     if(!摊开){
-      h="<h1>第 "+(c+1)+" 列是【"+猜+"】吗？</h1>";
-      h+="<div class='sub'>"+话+"</div>";
-      h+="<div class='chips'>"+s.样.map(function(v){return "<span>"+esc(v.slice(0,34))+"</span>";}).join("")+"</div>";
-      h+="<div class='btns'><button class='btn on' onclick=\"答列('"+猜+"')\">对</button>"+
-         "<button class='btn' onclick='摊开别的()'>不是，是别的</button></div>";
-      return h;
+      h+="<h3>第 "+(c+1)+" 列是【"+猜+"】吗？</h3>";
+      if(话) h+="<div class='why'>"+话+"</div>";
+      h+="<div class='chips'>"+s.样.map(function(v){return "<span>"+esc(v.slice(0,30))+"</span>";}).join("")+"</div>";
+      h+="<div class='btn-row'><button class='btn' onclick=\"答列('"+猜+"')\">对</button>"+
+         "<button class='btn ghost' onclick='摊开别的()'>不是，是别的</button></div>";
+      return h+"</div>";
     }
-    h="<h1>那第 "+(c+1)+" 列是什么？</h1>";
-    h+="<div class='sub'>"+话+"</div>";
-    h+="<div class='chips'>"+s.样.map(function(v){return "<span>"+esc(v.slice(0,34))+"</span>";}).join("")+"</div>";
-    h+="<div class='btns'>";
-    角色们.forEach(function(r){
-      if(r===猜) return;                       /* 刚说了不是它 */
-      h+="<button class='btn' onclick=\"答列('"+r+"')\">"+r+"</button>"; });
-    return h+"</div>";
+    h+="<h3>那第 "+(c+1)+" 列是什么？</h3>";
+    h+="<div class='chips'>"+s.样.map(function(v){return "<span>"+esc(v.slice(0,30))+"</span>";}).join("")+"</div>";
+    h+="<div class='btn-row'>";
+    角色们.forEach(function(r){ if(r===猜) return;
+      h+="<button class='btn ghost sm' onclick=\"答列('"+r+"')\">"+r+"</button>"; });
+    return h+"</div></div>";
   }
   if(q.型==="续行"){
     var i=读法.续行[0];
-    return "<h1>有 "+读法.续行.length+" 行只有一格有字，是上一行的明细吗？</h1>"+
-      "<div class='sub'>比方第 "+(i+1)+" 行写的是：</div>"+
+    return "<div class='ask'><h3>有 "+读法.续行.length+" 行只有一格有字，是上一行的明细吗？</h3>"+
       "<div class='one'>"+esc(字(rows[i][是续行(rows[i])]))+"</div>"+
-      "<div class='btns'><button class='btn on' onclick='答续行(1)'>是，接在上一行 <span class=\"g\">我猜的</span></button>"+
-      "<button class='btn' onclick='答续行(0)'>不是，这几行不要</button></div>";
+      "<div class='btn-row'><button class='btn' onclick='答续行(1)'>是，接在上一行</button>"+
+      "<button class='btn ghost' onclick='答续行(0)'>不是，这几行不要</button></div></div>";
   }
-  /* ★ 老板 8/23：四张卡里三张长得一模一样，看不出差别 ——「其他选项是什么意思？有没有存在的必要？」
-     改成跟别的问题一样的是非题：只摆【最好的那一种】，不对再换下一种。 */
   var 例=明细例(rows,读法), 法们=几种分法(rows,读法);
   if(挑第几>=法们.length) 挑第几=0;
   var f=法们[挑第几];
-  var h="<h1>这一格这么分，对吗？</h1>";
-  h+="<div class='sub'>分不开我不会自己拼一个。</div>";
-  h+="<div class='one'>"+esc(例.文)+"</div>";
-  if(!f) return h+"<div class='btns'><button class='btn on' onclick='答分法(-1)'>分不开，我自己填</button></div>";
+  var h2="<div class='ask'><h3>这一格这么分，对吗？</h3>";
+  h2+="<div class='one'>"+esc(例.文)+"</div>";
+  if(!f) return h2+"<div class='btn-row'><button class='btn' onclick='答分法(-1)'>分不开，我自己填</button></div></div>";
   var 全对=(f.量过&&f.对===f.量过);
-  h+="<div class='card' style='cursor:default;max-width:520px'>";
-  h+="<div class='cn'>分成 "+f.份.length+" 份"+(f.整格?"（整格算一个点位）":"")+"</div>";
+  h2+="<div class='pick'><div class='pn'>分成 "+f.份.length+" 份"+(f.整格?"（整格算一个点位）":"")+"</div>";
   f.份.slice(0,5).forEach(function(g){
-    h+="<div class='cl'>"+esc((g.点位||"？").slice(0,30))+
-       "　<b>"+(g.数量==null?"没有数量":(g.数量+(g.单位||"")))+"</b></div>"; });
-  if(f.份.length>5) h+="<div class='cl' style='color:var(--ink3)'>…还有 "+(f.份.length-5)+" 份</div>";
-  if(f.量过)
-    h+="<div class='cs' style='color:"+(全对?"var(--ok)":(f.对?"var(--ink2)":"var(--bad)"))+"'>"+
-       (全对?("✓ 这一列 "+f.量过+" 行加起来都跟表上对得上")
-            :(f.对?("△ 这一列 "+f.量过+" 行里只有 "+f.对+" 行对得上")
-                  :("✗ 这一列 "+f.量过+" 行一行都对不上")))+"</div>";
-  h+="</div>";
-  h+="<div class='btns' style='margin-top:18px'>"+
-     "<button class='btn"+(全对?" on":"")+"' onclick=\"答分法("+挑第几+")\">对，就这么分</button>"+
-     (法们.length>1?"<button class='btn' onclick='换一种()'>换一种看看</button>":"")+
-     "<button class='btn' onclick='答分法(-1)'>分不开，我自己填</button></div>";
-  return h;
+    h2+="<div class='pl'>"+esc((g.点位||"？").slice(0,28))+"　<b>"+
+        (g.数量==null?"没有数量":(g.数量+(g.单位||"")))+"</b></div>"; });
+  if(f.份.length>5) h2+="<div class='pl' style='color:var(--ink3)'>…还有 "+(f.份.length-5)+" 份</div>";
+  if(f.量过) h2+="<div class='ps' style='color:"+(全对?"var(--ok)":"var(--sale)")+"'>"+
+    (全对?("✓ 这一列 "+f.量过+" 行加起来都跟表上对得上")
+         :("△ 这一列 "+f.量过+" 行里只有 "+f.对+" 行对得上"))+"</div>";
+  h2+="</div><div class='btn-row'><button class='btn' onclick=\"答分法("+挑第几+")\">对，就这么分</button>"+
+      (法们.length>1?"<button class='btn ghost' onclick='换一种()'>换一种看看</button>":"")+
+      "<button class='btn ghost' onclick='答分法(-1)'>分不开，我自己填</button></div>";
+  return h2+"</div>";
 }
 
-/* ③ 你答一件，我马上重读，报一句 */
-function 记账(){ var r=读(rows,读法); 存档={好:好几样(r),坏:坏几样(r),读法:JSON.parse(JSON.stringify(读法))}; }
-/* ★★ 问完了才比多了少了（老板 8/23 指着那条红杠问「什么意思？」）
-   祺之盛那条是【假警报】：他答对了「那几行接在上一行」，系统跟着改口
-   ——「计划采购」不是数量、是总数，真数量在明细里 —— 而明细还没问怎么分，
-   所以中间那一步暂时读不出数，屏幕上就写「少了 12 样」。答完下一句就全回来了。
-   问题没问完的时候那个数字根本不算数，报出来只会吓人。 */
+function 记账(){ var r=读(rows,读法); 存档={好:好几样(r),读法:JSON.parse(JSON.stringify(读法))}; }
 function 报(说){
   var r=读(rows,读法), 剩=排问题(读法).length;
-  回话={说:说, 好:好几样(r), 坏:坏几样(r), 剩:剩, 差:剩?null:(好几样(r)-存档.好), 退:存档.读法};
+  回话={说:说, 好:好几样(r), 坏:坏几样(r), 剩:剩, 差:剩?null:(好几样(r)-存档.好)};
   答过++; 下一问();
 }
 function 画回话(){
   var v=回话;
   if(v.剩) return "<div class='echo'>"+esc(v.说)+"　→　还剩 "+v.剩+" 处要问</div>";
-  var 糟=v.差<0;
-  var 变=v.差>0?("多了 "+v.差+" 样"):(糟?("<b>少了 "+(-v.差)+" 样</b>"):"样数没变");
-  return "<div class='echo "+(糟?"warn":(v.坏?"":"good"))+"'>"+esc(v.说)+"　→　"+变+
-    "，现在 "+v.好+" 样读得通"+(v.坏?("，还有 "+v.坏+" 样对不上"):"，账全对")+
-    (糟?" <button class='undo' onclick='退回去()'>退回去</button>":"")+"</div>";
+  return "<div class='echo good'>"+esc(v.说)+"　→　现在 "+v.好+" 样读得通</div>";
 }
-function 退回去(){ 读法=回话.退; 回话=null; 答过=Math.max(0,答过-1); 下一问(); }
-
 function 摊开别的(){ 摊开=true; 下一问(); }
 function 答列(r){ 记账(); var c=这一问().列; 摊开=false;
   读法.角色[c]=r; 读法.把握[c]="稳"; 报("第 "+(c+1)+" 列定成「"+r+"」"); }
-function 答续行(v){ 记账(); 读法.续行是明细=!!v;
-  报(v?"那几行接到上一行去":"那几行不要"); }
+function 答续行(v){ 记账(); 读法.续行是明细=!!v; 报(v?"那几行接到上一行去":"那几行不要"); }
 function 换一种(){ 挑第几=(挑第几+1)%Math.max(1,几种分法(rows,读法).length); 下一问(); }
 function 答分法(i){ 记账();
   if(i<0){ 读法.分法={用什么:"\u0000"}; 报("这一格分不开，留着人工填"); return; }
   var f=几种分法(rows,读法)[i];
   if(!f){ 读法.分法={用什么:"\u0000"}; 报("这一格分不开，留着人工填"); return; }
-  读法.分法={用什么:f.用什么,顺序:f.顺序};
-  报("这一格分成 "+f.份.length+" 份"); }
+  读法.分法={用什么:f.用什么,顺序:f.顺序}; 报("这一格分成 "+f.份.length+" 份"); }
 
-/* ④ 没得问了 → 看一眼 → 记住 */
+/* 问完了：第 3 步换成一行「记住吗」，货摆到底下的「核对」里去 */
 function 完了(){
-  var 结果=读(rows,读法), 坏=坏几样(结果);
-  var h=(回话?画回话():"");
-  h+="<h1>问完了 —— 读出 "+好几样(结果)+" 样</h1>";
-  h+="<div class='sub'>"+(坏?("还有 <b style='color:var(--bad)'>"+坏+"</b> 样对不上，那几行留着你手工填，其余照常出单。")
-                              :"每一样加起来都跟表上写的总数对得上。")+"</div>";
-  h+=画结果(结果);
-  h+="<div class='btns' style='margin-top:22px'><button class='btn pri' onclick='记住()'>对，记住</button>"+
-     "<button class='btn ghost' onclick='开头()'>重来一遍</button></div>";
-  画(h);
+  var 结果=读(rows,读法);
+  if(学过[名]){ 收起步3(); 摆核对(结果,"","这张表教过了 —— 一句都没问"); return; }
+  /* ★ 一句都没问就读通了 —— 第 3 步根本不该露面（老板：读得懂就直接出单）。
+     顺手把这份读法记下来，下次照样不问。 */
+  if(答过===0){
+    学过[名]=JSON.parse(JSON.stringify(读法)); 存起来();
+    收起步3(); 摆核对(结果,"","这张表我全看懂了 —— 一句都没问"); return;
+  }
+  摊开步3();
+  $("步3题").textContent="这张表怎么读？";
+  $("学").innerHTML=(回话?画回话():"")+
+    "<div class='ask'><h3>问完了 —— 读出 "+好几样(结果)+" 样</h3>"+
+    "<div class='why'>下面「核对」里就是读出来的货，对一眼。</div>"+
+    "<div class='btn-row'><button class='btn' onclick='记住()'>对，记住这张表怎么读</button>"+
+    "<button class='btn ghost' onclick='重来()'>重来一遍</button></div></div>";
+  $("原表").innerHTML=画原表(rows,读法,-1);
+  摆核对(结果,"");
+  压(0);                    /* 问完了 → 松开，货可以看了 */
 }
-/* ── 我教过的：一屏看完，哪张教错了一眼看得出 ── */
-function 看教过的(){
-  var ks=Object.keys(学过);
-  if(!ks.length){ 画("<h1>还没教过</h1>"); return; }
-  var h="<h1>我教过的 "+ks.length+" 张</h1><div class='sub'>哪一行看着不对，点「重教」。</div>";
-  ks.forEach(function(k){
-    var 法=学过[k], 老rows=(料[k]||{}).rows||[];
-    var 结=[]; try{ 结=读(老rows,法); }catch(e){}
-    var 好=好几样(结), 坏=坏几样(结);
-    h+="<div class='card' style='cursor:default;margin-bottom:12px'>";
-    h+="<div class='cn'>"+esc((料[k]||{}).客户||k)+
-       " <span style='font-size:13px;font-weight:400;color:"+(坏?"var(--bad)":"var(--ok)")+"'>"+
-       "读出 "+好+" 样"+(坏?("，"+坏+" 样对不上"):"，账全对")+"</span></div>";
-    法.角色.forEach(function(r,c){
-      if(r==="不用") return;
-      var w=法.表头行>=0?字((老rows[法.表头行]||[])[c]):"";
-      h+="<div class='cl'>"+r+"　＝　第 "+(c+1)+" 列"+(w?("（"+esc(w)+"）"):"")+"</div>";
-    });
-    if(法.续行是明细===true) h+="<div class='cl'>只有一格有字的那几行　＝　接在上一行</div>";
-    if(法.分法) h+="<div class='cl'>明细那一格　＝　"+
-      (法.分法.用什么==="\u0000"?"分不开，人工填":(法.分法.用什么==="\u0001"?"整格算一个点位":"分开"))+"</div>";
-    h+="<div style='margin-top:10px'><button class='btn sm' onclick=\"重教('"+k+"')\">重教这张</button></div>";
-    h+="</div>";
-  });
-  document.getElementById('stage').innerHTML=h;
-  document.getElementById('stepno').textContent="";
-  window.scrollTo({top:0});
-}
-function 重教(k){ delete 学过[k]; 存起来(); 换(k); }
-
 function 记住(){
   学过[名]=JSON.parse(JSON.stringify(读法)); 存起来();
-  画("<div class='echo good'>记住了</div>"+
-    "<div class='big ok'>「"+esc(料[名].客户)+"」这种表，以后自己读</div>"+
-    "<div class='sub'>记住的是<b>哪一列是什么、这一格怎么分</b> —— 不是第几列。"+
-    "他改天多加一列、少一列，照样认得。</div>"+
-    "<div class='btns' style='margin-top:20px'><button class='btn pri' onclick='开头()'>下次他再发同样的表 →</button></div>");
+  收起步3(); 摆核对(读(rows,读法),"","记住了 —— 「"+料[名].客户+"」以后发同样的表，一句都不问");
+}
+function 重来(){ delete 学过[名]; 存起来(); 换(名); }
+
+/* ── 底下那张「核对」卡：读出来的货摆这儿，跟现在的开单台一个位置 ── */
+function 摆核对(结果,报错话,好话){
+  if(报错话){
+    $("核对话").innerHTML="<div class='alert warn'><b>读不了这个文件</b><div style='margin-top:4px'>"+
+      esc(报错话)+"　—— 换一份发过来，我不会拿它硬凑一张单。</div></div>";
+    $("核对表").innerHTML=""; $("销售单话").textContent="上面读不出来，出不了单。";
+    return;
+  }
+  var 坏=坏几样(结果);
+  $("核对话").innerHTML=(好话?("<div class='banner ok'>"+esc(好话)+"</div>"):"")+
+    (坏?("<div class='alert warn' style='margin-top:8px'><b>"+坏+" 样要你看一眼</b>"+
+         "<div style='margin-top:3px'>数量空着的自己填，填完才让出单。</div></div>"):"");
+  $("核对表").innerHTML=画结果(结果);
+  $("销售单话").textContent=坏?("还有 "+坏+" 样没定下来，出不了单。"):
+    ("共 "+好几样(结果)+" 样，可以出单。");
 }
 
-/* ★ 每一屏都留一条回头路（老板 8/23：「没有重新来、重新教这个选项啊」）。
-   教过的表一进来就直接出单，原来只有一个「出单」按钮，想改都改不了。 */
-function 回头路(){
-  return "<div style='margin-top:26px;padding-top:14px;border-top:1px solid var(--line)'>"+
-    "<button class='btn sm ghost' onclick=\"重教('"+名+"')\">重新教一遍</button>"+
-    (Object.keys(学过).length?" <button class='btn sm ghost' onclick='看教过的()'>我教过的</button>":"")+
-    "</div>";
+/* 画结果／画原表 用开单台的表格样子 */
+function 画结果(结果){
+  if(!结果.length) return "<div class='muted'>还读不出东西来。</div>";
+  var h="<table style='width:100%;border-collapse:collapse;font-size:14px'>"+
+    "<thead><tr><th style='text-align:left;font-weight:400;font-size:12px;color:var(--ink3);padding:5px 8px;border-bottom:1px solid var(--line)'>货名</th>"+
+    "<th style='text-align:right;font-weight:400;font-size:12px;color:var(--ink3);padding:5px 8px;border-bottom:1px solid var(--line)'>多少</th>"+
+    "<th style='text-align:left;font-weight:400;font-size:12px;color:var(--ink3);padding:5px 8px;border-bottom:1px solid var(--line)'>送到哪</th></tr></thead><tbody>";
+  结果.forEach(function(L){
+    var 坏=L.问&&L.问.length;
+    h+="<tr"+(坏?" style='background:var(--warn-soft)'":"")+">"+
+       "<td style='padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top'>"+esc(L.品名||"（这一行没有货名）")+"</td>";
+    var 量=(L.合计!=null?L.合计:(L.数量!=null?L.数量:null));
+    h+="<td style='padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;font-family:var(--figs);white-space:nowrap;vertical-align:top'>"+
+       (量==null?"<span style='color:var(--sale)'>空</span>":量+(L.单位||""))+"</td>";
+    h+="<td style='padding:5px 8px;border-bottom:1px solid var(--line);vertical-align:top'>";
+    if(L.点位.length) L.点位.forEach(function(g){
+      h+="<span class='pt"+(g.数量==null?" q":"")+"'>"+esc(g.点位||"？")+
+         (g.数量!=null?" <b>"+g.数量+(g.单位||"")+"</b>":" <b>?</b>")+"</span>"; });
+    else h+="<span class='muted'>—</span>";
+    if(坏) h+="<div style='color:var(--sale);font-size:12.5px;margin-top:2px'>⚠ "+esc(L.问.join("；"))+"</div>";
+    h+="</td></tr>";
+  });
+  return h+"</tbody></table>";
 }
-function 原表折叠(热){
-  return "<details class='more'><summary>看看原表</summary>"+
-    "<div class='rawbox'>"+画原表(rows,读法,热)+"</div></details>";
+function 画原表(rows,读法,热){
+  var h="<table class='raw'><thead><tr><th>行</th>";
+  for(var c=0;c<读法.宽;c++) h+="<th>第"+(c+1)+"列</th>";
+  h+="</tr></thead><tbody>";
+  rows.forEach(function(r,i){
+    h+="<tr><td style='color:var(--ink3)'>"+(i+1)+"</td>";
+    for(var c=0;c<读法.宽;c++)
+      h+="<td class='"+(c===热?"hot":(读法.角色[c]==="不用"?"no":""))+"'>"+esc(字(r[c]))+"</td>";
+    h+="</tr>";
+  });
+  return h+"</tbody></table>";
 }
-function 画(h,热){
-  document.getElementById('stage').innerHTML=h+原表折叠(热==null?-1:热)+回头路();
-  var 剩=排问题(读法).length;
-  document.getElementById('stepno').textContent=剩?("第 "+(答过+1)+" 问　共 "+(答过+剩)+" 问"):"";
-  window.scrollTo({top:0});
-}
-document.getElementById('pick').innerHTML=Object.keys(料).map(function(k){
+
+$("选表").innerHTML=Object.keys(料).map(function(k){
   return "<button data-n='"+k+"' onclick=\"换('"+k+"')\">"+k+"</button>"; }).join("");
-画教过几张();
 换(名);
 </script>
 </body></html>
