@@ -183,7 +183,7 @@ function findOrder(no) {
    「来新表得先调 AI 识别正确之后交给人去判断，好了之后给他一个专注的表。」
    ⚠ 合并这儿【必须列出来】：这个 out 是白名单，漏掉一个字段，
      换台电脑一同步就被整份抹掉，人还以为是自己没教过。 */
-const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, px: {}, padd: {}, plog: [] };
+const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, 列读法: {}, px: {}, padd: {}, plog: [] };
 
 function loadOverlay() {
   const o = readJSON(OVERLAY_FILE, null);
@@ -207,6 +207,10 @@ function mergeOverlay(base, incoming) {
     排名单: Object.assign({}, base.排名单, incoming.排名单 || {}),
     /* 读法本：一张表样一条，后确认的盖前面的（表改版了就该听新的那份）。 */
     读法本: Object.assign({}, base.读法本, incoming.读法本 || {}),
+    /* 列读法 = 「这家这张表，哪一列是什么」（2026-08-24 老板：一整列不许不问就扔掉）。
+       跟读法本一个待遇：一张表样一条，后确认的盖前面的。
+       ⚠ 漏在这张名单外面 = 页面推上来整份被丢掉，教了等于没教（8/18 padd 那个洞）。 */
+    列读法: Object.assign({}, base.列读法, incoming.列读法 || {}),
     /* ★ 2026-08-18：px / padd / plog 原来【不在这张名单里】，
        页面推上来整份被丢掉 —— 老板 8/18 撞了一天的那个洞。
 

@@ -904,25 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260824g"></script>
-<script src="对照-预置.js?v=20260824g"></script>
-<script src="数据-常用规格.js?v=20260824g"></script>
-<script src="数据-换算.js?v=20260824g"></script>
-<script src="数据-客户量纲.js?v=20260824g"></script>
-<script src="引擎-读文件.js?v=20260824g"></script>
-<script src="数据-商户名.js?v=20260824g"></script>
-<script src="导出-观麦.js?v=20260824g"></script>
-<script src="引擎-解析.js?v=20260824g"></script>
-<script src="引擎-读结构.js?v=20260824g"></script>
-<script src="引擎-认表.js?v=20260824g"></script>
-<script src="新-按内容认单.js?v=20260824g"></script>
-<script src="引擎-抓取.js?v=20260824g"></script>
-<script src="引擎-点位册.js?v=20260824g"></script>
-<script src="引擎-匹配.js?v=20260824g"></script>
-<script src="数据-切法规矩.js?v=20260824g"></script>
-<script src="引擎-断句规矩.js?v=20260824g"></script>
-<script src="引擎-学分法.js?v=20260824g"></script>
-<script src="引擎-OCR.js?v=20260824g"></script>
+<script src="数据-价格库.js?v=20260824h"></script>
+<script src="对照-预置.js?v=20260824h"></script>
+<script src="数据-常用规格.js?v=20260824h"></script>
+<script src="数据-换算.js?v=20260824h"></script>
+<script src="数据-客户量纲.js?v=20260824h"></script>
+<script src="引擎-读文件.js?v=20260824h"></script>
+<script src="数据-商户名.js?v=20260824h"></script>
+<script src="导出-观麦.js?v=20260824h"></script>
+<script src="引擎-解析.js?v=20260824h"></script>
+<script src="引擎-读结构.js?v=20260824h"></script>
+<script src="引擎-认表.js?v=20260824h"></script>
+<script src="新-按内容认单.js?v=20260824h"></script>
+<script src="引擎-抓取.js?v=20260824h"></script>
+<script src="引擎-点位册.js?v=20260824h"></script>
+<script src="引擎-匹配.js?v=20260824h"></script>
+<script src="数据-切法规矩.js?v=20260824h"></script>
+<script src="引擎-断句规矩.js?v=20260824h"></script>
+<script src="引擎-学分法.js?v=20260824h"></script>
+<script src="引擎-OCR.js?v=20260824h"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260824g";
+  var 版本号 = "v20260824h";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1054,6 +1054,11 @@ window.addEventListener("unhandledrejection",function(ev){
        ⚠ 跟「记住的客户表样」(OV.mem) 不是一回事：那本记的是【这是哪家、这家怎么叫货】，
          这本记的是【这张表怎么读】。以前只有前者，所以每传一次表都要重问识别一遍。 */
     if(!OV.读法本)OV.读法本={};
+    /* 列读法：这家这张表【哪一列是什么】（2026-08-24 老板：一整列不许不问就扔掉）。
+       键 = 客户号 + 这张表长什么样；值 = 人一列一列点出来的答案。
+       ⚠ 跟读法本不是一回事：读法本记的是 AI 答的整份读法（表头在第几行、哪列是什么），
+         这本只记【人亲手点过的那几列】，专治「一整列被悄悄扔掉」。 */
+    if(!OV.列读法)OV.列读法={};
     /* 「帮我认一下」学到的断句规矩。跟预置那份（数据-切法规矩.js）合起来用 ——
        预置那份是代码里带的，这份是人后来教的，两边都要认，不然教一次只顶一次。 */
     if(!OV.切法)OV.切法=[];
@@ -1216,6 +1221,13 @@ window.addEventListener("unhandledrejection",function(ev){
       var a=OV.读法本[fp], b=d.读法本[fp];
       if(!a){ OV.读法本[fp]=b; 变++; return; }
       if((b&&b.确认于||"")>(a.确认于||"")){ OV.读法本[fp]=b; 变++; }
+    });
+    /* 列读法：跟读法本一个待遇 —— 本机没有的收下，两边都有就听【确认时间晚】的那份 */
+    if(!OV.列读法) OV.列读法={};
+    Object.keys(d.列读法||{}).forEach(function(k){
+      var a2=OV.列读法[k], b2=d.列读法[k];
+      if(!a2){ OV.列读法[k]=b2; 变++; return; }
+      if((b2&&b2.确认于||"")>(a2.确认于||"")){ OV.列读法[k]=b2; 变++; }
     });
     return 变;
   }
@@ -5624,6 +5636,70 @@ window.addEventListener("unhandledrejection",function(ev){
     摆第三步(料,法们,回调);
   }
 
+  /* ══════════════ 第 3 步（另一半）：这一列是什么 ★（2026-08-24）══════════════
+     老板原话：「一整列，你凭什么不问就扔掉。」「你应该把这一整节提出来问。」
+
+     那张「客户编码」表撞出来的：数量、单位、品名全读对，可第 2 列没人管 ——
+     既不用、也不问，12 行货全没有送货点，单子照样出。跟江云那次一个形状。
+     根子不在某个词，在【先假定没用、只有拿不准才问】这个顺序反了。
+
+     ⚠ 只问【没见过的表】：答完按「客户 + 这张表长什么样」记住，
+       同一家再发同样的表，一句不问（老板 8/24 亲口确认的目的）。
+     ⚠ 只问、不猜：人点了才算数。猜点位跟猜品名是同一个病。
+     ⚠ 记的键带上客户 —— 光靠表的长相会串到别家头上（8/22 栽过一次）。 */
+  function 表长相(rows,起){
+    var 宽=0; (rows||[]).forEach(function(r){ if(r&&r.length>宽) 宽=r.length; });
+    var 词=[];
+    var h=(rows||[])[Math.max(0,(起|0)-1)]||[];
+    for(var c=0;c<宽&&c<20;c++){ var v=String(h[c]==null?"":h[c]).trim(); if(v) 词.push(v.slice(0,8)); }
+    return 宽+"×"+词.sort().join(",").slice(0,120);
+  }
+  function 列读法键(份,起){
+    var 头=(份&&份[0]&&份[0].grid&&份[0].grid[0]&&份[0].grid[0].rows)||[];
+    return (custId(ST.ci)||"")+"|"+表长相(头,起||1);
+  }
+  function 查列读法(键){ return (OV.列读法||{})[键]||null; }
+  function 存列读法(键,读){
+    if(!键||!读) return;
+    if(!OV.列读法) OV.列读法={};
+    OV.列读法[键]={ 读:读, 客户:(ST.ci>=0?DATA.custs[ST.ci][1]:""),
+                    确认于:new Date().toISOString().slice(0,16).replace("T"," ") };
+    ovTouch("列读法",键); ovSave(); ovPush();
+  }
+
+  /* 一列一列问「这是什么」。问完把答案交回去，由调用方重抓一遍。 */
+  var 列角色们=["点位","品名","数量","单位","规格","分布","备注","不用"];
+  function 问这几列(待们,回调){
+    var 第=0, 答={};
+    function 下一列(){
+      if(第>=待们.length){ 关第三步(); 回调(答); return; }
+      var q=待们[第];
+      var 猜=q.猜||"点位";
+      var h='<div class="muted" style="margin-bottom:8px">这一列我拿不准是什么 —— 你点一下，'+
+            '以后这家发同样的表就不问了。</div>'+
+            '<div style="margin-bottom:12px">'+
+            (q.表头?('表头写着「<b>'+esc(q.表头)+'</b>」，'):'这一列没有表头，')+
+            '里面装的是这些：</div>'+
+            '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+
+            (q.样本||[]).slice(0,6).map(function(v){
+              return '<span style="font-family:Consolas,monospace;font-size:13px;background:var(--field);'+
+                     'border:1px solid var(--line);border-radius:6px;padding:3px 10px">'+
+                     esc(String(v).slice(0,30))+'</span>'; }).join('')+
+            '</div><div class="btn-row" id="lc-btns">'+
+            '<button class="btn" data-r="'+esc(猜)+'">'+esc(猜)+'</button>';
+      列角色们.forEach(function(r){ if(r!==猜)
+        h+='<button class="btn ghost sm" data-r="'+r+'">'+r+'</button>'; });
+      h+='</div>';
+      $("learn-title").textContent="第 "+q.列+" 列是什么？　（第 "+(第+1)+" 问 · 共 "+待们.length+" 问）";
+      $("learn-body").innerHTML=h;
+      $("stp-learn").hidden=false;
+      Array.prototype.forEach.call($("lc-btns").querySelectorAll("button"),function(b){
+        b.onclick=function(){ 答[String(q.列)]=b.getAttribute("data-r"); 第++; 下一列(); };
+      });
+    }
+    下一列();
+  }
+
   var 第三步挑第几=0;
   function 关第三步(){ var e=$("stp-learn"); if(e){ e.hidden=true; $("learn-body").innerHTML=""; } }
   function 摆第三步(料,法们,回调){
@@ -5767,7 +5843,7 @@ window.addEventListener("unhandledrejection",function(ev){
   function 抓取试一把(份,选项){
     var G=window.GM_抓取;
     if(!G||!G.抓) return null;
-    var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 硬伤=[];
+    var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 待问列={}, 硬伤=[];
     (份||[]).forEach(function(z){
       ((z&&z.grid)||[]).forEach(function(sh){
         var rows=(sh&&sh.rows)||[];
@@ -5777,6 +5853,12 @@ window.addEventListener("unhandledrejection",function(ev){
         if(!r||!(r.行||[]).length) return;
         出货的表.push(1);
         全行=全行.concat(r.行);
+        /* ★ 已经派上用场的列不许再问 —— 它们只是【某几格】读不干净，
+           那是格子的事，不是「这一列是什么」的事。问了就是骚扰。 */
+        var 用上了={};
+        Object.keys(r.挑的列||{}).forEach(function(k){
+          var m=/第(\d+)列/.exec(String(r.挑的列[k]||"")); if(m) 用上了[+m[1]]=1;
+        });
         (r.没抓到的||[]).forEach(function(q){
           if(!q) return;
           /* 引擎说「这一整列没归宿、像是送货点位」—— 收集整列的原文，
@@ -5788,6 +5870,20 @@ window.addEventListener("unhandledrejection",function(ev){
               if(v&&样.indexOf(v)<0) 样.push(v);
             }
             if(样.length) 待问点位={列:q.列, 样本:样};
+          }
+          /* ★ 2026-08-24：凡是【有列号又没被用上】的列，一律收进「要问的列」——
+             不管引擎给它安的是什么理由。老板：「一整列，你凭什么不问就扔掉。」
+             ⚠ 收的是列，不是格：一格读不懂是那一格的事，一整列没归宿才是这儿要问的。 */
+          if(q.列&&!待问列[q.列]&&!用上了[q.列]){
+            var 样2=[], 头2="";
+            for(var j=0;j<rows.length&&样2.length<8;j++){
+              var v2=String(((rows[j]||[])[q.列-1])==null?"":rows[j][q.列-1]).trim();
+              if(!v2) continue;
+              if(!头2&&j<3&&!/[0-9]/.test(v2)) { 头2=v2; continue; }   /* 头几行里不带数字的当表头 */
+              if(样2.indexOf(v2)<0) 样2.push(v2);
+            }
+            if(样2.length) 待问列[q.列]={列:q.列, 表头:头2, 样本:样2,
+                                        猜:(q.问点位?"点位":(q.类型==="数量"?"数量":"点位"))};
           }
           if(q.说) 全问.push(q.说);
           /* ★★ 2026-08-18 帐要销平 ★★
@@ -5822,7 +5918,7 @@ window.addEventListener("unhandledrejection",function(ev){
     if(份.length===1&&出货的表.length>1) return null;
     /* ★ 帐没销平 —— 近道不算数。带着已知的错交差，比多花一次 AI 贵得多。 */
     if(硬伤.length) return null;
-    return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位,
+    return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位, 待问列:待问列,
              表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
   }
 
@@ -5855,7 +5951,11 @@ window.addEventListener("unhandledrejection",function(ev){
        ⚠ 整段包起来：这是条近道，它自己出毛病绝不许拖累主流程 ——
          走不通就当没有这条近道，照旧往下走本子、走 AI。 */
     try{
-      var 抓好了=抓取试一把(份);
+      /* ★ 2026-08-24：这家教过这张表怎么读吗？教过就直接套，一句不问。
+         老板 8/24 亲口确认的目的：「只有出现另外一种新的表格、或者从来没见过的表格，才会问。」 */
+      var 列键=null, 教过=null;
+      try{ 列键=列读法键(份,1); 教过=查列读法(列键); }catch(e){ 教过=null; }
+      var 抓好了=抓取试一把(份, 教过?{列读法:教过.读}:undefined);
       /* ★★ 2026-08-22：近道抓完【也要过一遍秤】——摊出来一样货都没有，就是没走通。
          老板 8/22 拖佛山俱之盛那张（祺之盛那种「明细写在下一行」的表）撞出来的：
            近道把「210串(210串)」的数量整个漏掉、把最右边那列的「0」当成点位号，
@@ -5882,6 +5982,25 @@ window.addEventListener("unhandledrejection",function(ev){
            ⚠ 走的是【排名单】那一套（问这排 / 排记），页面里早就有，不另起第二份。
              它按【名字】记，不按表、不按客户 —— 同一个点位名换家客户也认得。
            ⚠ 答过了就不再弹：这排是什么() 里六成名字有答案就直接用。 */
+        /* ★★ 2026-08-24：这家【没教过这张表】、又有整列没归宿 —— 一列一列问「这是什么」。
+           老板：「一整列，你凭什么不问就扔掉。」问完按「客户＋这张表长什么样」记住，
+           同一家再发同样的表，一句不问。
+           ⚠ 教过的（上面已经把答案套进去了）就不会再走到这儿。
+           ⚠ 这条走在旧的「排名单」前面：旧那套只问「这一排是不是点位」，
+             问不了「这一列到底是什么」，而且答完不记在这张表名下。 */
+        var 待列=Object.keys(抓好了.待问列||{}).map(function(k){ return 抓好了.待问列[k]; })
+                   .sort(function(a,b){ return a.列-b.列; });
+        if(!教过&&待列.length){
+          问这几列(待列, function(答){
+            var 有答=答&&Object.keys(答).length;
+            if(有答){ try{ 存列读法(列键,答); }catch(e){} }
+            var 再2=null;
+            if(有答){ try{ 再2=抓取试一把(份,{列读法:答}); }catch(e){ 再2=null; } }
+            收尾(再2||抓好了,null,
+              有答?"按长相直接抓的（那几列是你点的，这家以后不再问）":"按长相直接抓的，没问 AI、没花钱");
+          });
+          return;
+        }
         var 待=抓好了.待问点位;
         if(待){
           var 判点=这排是什么(待.样本);
