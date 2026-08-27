@@ -904,25 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260825d"></script>
-<script src="对照-预置.js?v=20260825d"></script>
-<script src="数据-常用规格.js?v=20260825d"></script>
-<script src="数据-换算.js?v=20260825d"></script>
-<script src="数据-客户量纲.js?v=20260825d"></script>
-<script src="引擎-读文件.js?v=20260825d"></script>
-<script src="数据-商户名.js?v=20260825d"></script>
-<script src="导出-观麦.js?v=20260825d"></script>
-<script src="引擎-解析.js?v=20260825d"></script>
-<script src="引擎-读结构.js?v=20260825d"></script>
-<script src="引擎-认表.js?v=20260825d"></script>
-<script src="新-按内容认单.js?v=20260825d"></script>
-<script src="引擎-抓取.js?v=20260825d"></script>
-<script src="引擎-点位册.js?v=20260825d"></script>
-<script src="引擎-匹配.js?v=20260825d"></script>
-<script src="数据-切法规矩.js?v=20260825d"></script>
-<script src="引擎-断句规矩.js?v=20260825d"></script>
-<script src="引擎-学分法.js?v=20260825d"></script>
-<script src="引擎-OCR.js?v=20260825d"></script>
+<script src="数据-价格库.js?v=20260827a"></script>
+<script src="对照-预置.js?v=20260827a"></script>
+<script src="数据-常用规格.js?v=20260827a"></script>
+<script src="数据-换算.js?v=20260827a"></script>
+<script src="数据-客户量纲.js?v=20260827a"></script>
+<script src="引擎-读文件.js?v=20260827a"></script>
+<script src="数据-商户名.js?v=20260827a"></script>
+<script src="导出-观麦.js?v=20260827a"></script>
+<script src="引擎-解析.js?v=20260827a"></script>
+<script src="引擎-读结构.js?v=20260827a"></script>
+<script src="引擎-认表.js?v=20260827a"></script>
+<script src="新-按内容认单.js?v=20260827a"></script>
+<script src="引擎-抓取.js?v=20260827a"></script>
+<script src="引擎-点位册.js?v=20260827a"></script>
+<script src="引擎-匹配.js?v=20260827a"></script>
+<script src="数据-切法规矩.js?v=20260827a"></script>
+<script src="引擎-断句规矩.js?v=20260827a"></script>
+<script src="引擎-学分法.js?v=20260827a"></script>
+<script src="引擎-OCR.js?v=20260827a"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260825d";
+  var 版本号 = "v20260827a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5654,9 +5654,25 @@ window.addEventListener("unhandledrejection",function(ev){
     for(var c=0;c<宽&&c<20;c++){ var v=String(h[c]==null?"":h[c]).trim(); if(v) 词.push(v.slice(0,8)); }
     return 宽+"×"+词.sort().join(",").slice(0,120);
   }
+  /* 表头不一定在第一行 —— OCR 常把「鸿盛采购单」「采购日期…共7页 第3页」
+     这种标题也一起塞进表格里。只认第一行的下场（2026-08-27 鸿盛那两页撞出来的）：
+       第 2 页 → 6×单价,总数量,菜名,订菜分布清单,订菜总数,金额　（第一行就是表头）
+       第 3 页 → 6×鸿盛采购单　　　　　　　　　　　　　　　　　（标题被塞进表里了）
+     同一张表的两页记成两把钥匙；合并发的时候只认头一张，先拖哪一页钥匙就跟着变。
+     50 张真表离线量过：13 张原来记的是标题 ——「第1页/共1页」「2026/8/1」
+     「8月1日,补贷单」，钥匙里含日期和页码、天天在变，那几家等于永远学不会。
+     ⚠ 判据借引擎那份【像表头】，不在这儿另写一套（CLAUDE.md：匹配逻辑只准一份）。
+     ⚠ 只往下找 4 行，找不到就照旧用第一行 —— 真没表头的表本来就该退回原样。 */
+  function 表头在第几行(rows){
+    var T=window.GM_TABLE;
+    if(T&&T.像表头) for(var i=0;i<(rows||[]).length&&i<4;i++){
+      if(T.像表头(rows[i])) return i+1;
+    }
+    return 1;
+  }
   function 列读法键(份,起){
     var 头=(份&&份[0]&&份[0].grid&&份[0].grid[0]&&份[0].grid[0].rows)||[];
-    return (custId(ST.ci)||"")+"|"+表长相(头,起||1);
+    return (custId(ST.ci)||"")+"|"+表长相(头,起||表头在第几行(头));
   }
   function 查列读法(键){ return (OV.列读法||{})[键]||null; }
   function 存列读法(键,读){
@@ -5843,7 +5859,28 @@ window.addEventListener("unhandledrejection",function(ev){
   function 抓取试一把(份,选项){
     var G=window.GM_抓取;
     if(!G||!G.抓) return null;
-    var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 待问列={}, 硬伤=[];
+    /* 每一行都过秤：明细加起来 = 表上写的总数。
+       只给下面那条【豁免】当门槛用 —— 没有总数可对的、有一段没数量的、对不上的，
+       一律不算过秤。宁可多花一次 AI，也不许带着算不平的账出单。
+       ⚠ 定义在函数【里面】：测试-读不懂就别拍板.js 是把这个函数整段抠出来单独跑的，
+         放外面它就看不见（2026-08-27 当场红过一次）。 */
+    function 全行过得了秤(行){
+      if(!(行||[]).length) return false;
+      return 行.every(function(L){
+        var 总=L&&L.表上总数;
+        if(总==null||总===""||isNaN(+总)) return false;
+        var 段=(L&&L.分布)||[];
+        if(!段.length) return false;
+        var 和=0;
+        for(var i=0;i<段.length;i++){
+          var q=段[i]&&段[i].数量;
+          if(q==null||q===""||isNaN(+q)) return false;
+          和+=(+q);
+        }
+        return Math.abs(和-(+总))<0.01;
+      });
+    }
+    var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 待问列={}, 硬伤=[], 豁免=[];
     (份||[]).forEach(function(z){
       ((z&&z.grid)||[]).forEach(function(sh){
         var rows=(sh&&sh.rows)||[];
@@ -5908,14 +5945,29 @@ window.addEventListener("unhandledrejection",function(ev){
           /* ⚠ 只拦【可能动到那四样】的（什么东西／多少／什么单位／送去哪里）。
              规格、备注读不懂不影响开单 —— 那是 CLAUDE.md 头一条铁律画的线，
              这儿复用它，不另画一条。拦它们等于白花一次 AI。 */
-          if(!q.问点位&&!q.要手工填&&["规格","备注","别的"].indexOf(q.类型)<0)
-            硬伤.push(q.说||q.为什么||q.类型||"没读懂");
+          /* ★★ 2026-08-27：这一列【已经派上用场了】，引擎那本账却还挂着「没算进单子里」
+             —— 两本账对不上，不许拿它把一条读对了的近道判死。
+             老板拖鸿盛采购单撞出来的：「总数量」那列已经被挑去当对账用了
+             （挑的列里明写着 校验:第2列），可账上照旧记一笔「整列像数量，没算进单子里」，
+             页面把这笔当硬伤 → 整条近道作废 → 转去花钱问 AI。
+             而近道读出来的其实一格不差：千张 21 = 6+1+7+3+4、老豆腐 14 = 2+2+10 …
+             ⚠ 豁免不是白给 —— 豁免过的表必须【每一行都过秤】，见下面那道闸。
+               50 张真表离线量过：救回 15 张（原来每次都白花 AI），误伤 0 张；
+               其中 8 张表上没有总数可对、1 张（江云 嫩豆腐 表上 8.5 段和 14.5）对不上，
+               这 9 张过不了秤，照旧当硬伤转去问 AI —— 不许它们带着算不平的账出单。 */
+          if(!q.问点位&&!q.要手工填&&["规格","备注","别的"].indexOf(q.类型)<0){
+            if(q.列&&用上了[q.列]) 豁免.push(q.说||q.为什么||q.类型||"没读懂");
+            else 硬伤.push(q.说||q.为什么||q.类型||"没读懂");
+          }
         });
       });
     });
     if(!全行.length) return null;
     /* 一份文件里不止一张表出了货 —— 定不下来，交回方法一 */
     if(份.length===1&&出货的表.length>1) return null;
+    /* ★ 豁免过的（那一列其实已经用上了）要过秤才放行 —— 过不了就放回硬伤堆里。
+       秤只有一杆：明细加起来 = 表上写的总数。这是本地能拿到的唯一硬证据。 */
+    if(豁免.length&&!全行过得了秤(全行)) 硬伤=硬伤.concat(豁免);
     /* ★ 帐没销平 —— 近道不算数。带着已知的错交差，比多花一次 AI 贵得多。 */
     if(硬伤.length) return null;
     return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位, 待问列:待问列,
