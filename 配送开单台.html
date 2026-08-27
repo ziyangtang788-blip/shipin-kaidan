@@ -904,25 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260827b"></script>
-<script src="对照-预置.js?v=20260827b"></script>
-<script src="数据-常用规格.js?v=20260827b"></script>
-<script src="数据-换算.js?v=20260827b"></script>
-<script src="数据-客户量纲.js?v=20260827b"></script>
-<script src="引擎-读文件.js?v=20260827b"></script>
-<script src="数据-商户名.js?v=20260827b"></script>
-<script src="导出-观麦.js?v=20260827b"></script>
-<script src="引擎-解析.js?v=20260827b"></script>
-<script src="引擎-读结构.js?v=20260827b"></script>
-<script src="引擎-认表.js?v=20260827b"></script>
-<script src="新-按内容认单.js?v=20260827b"></script>
-<script src="引擎-抓取.js?v=20260827b"></script>
-<script src="引擎-点位册.js?v=20260827b"></script>
-<script src="引擎-匹配.js?v=20260827b"></script>
-<script src="数据-切法规矩.js?v=20260827b"></script>
-<script src="引擎-断句规矩.js?v=20260827b"></script>
-<script src="引擎-学分法.js?v=20260827b"></script>
-<script src="引擎-OCR.js?v=20260827b"></script>
+<script src="数据-价格库.js?v=20260827c"></script>
+<script src="对照-预置.js?v=20260827c"></script>
+<script src="数据-常用规格.js?v=20260827c"></script>
+<script src="数据-换算.js?v=20260827c"></script>
+<script src="数据-客户量纲.js?v=20260827c"></script>
+<script src="引擎-读文件.js?v=20260827c"></script>
+<script src="数据-商户名.js?v=20260827c"></script>
+<script src="导出-观麦.js?v=20260827c"></script>
+<script src="引擎-解析.js?v=20260827c"></script>
+<script src="引擎-读结构.js?v=20260827c"></script>
+<script src="引擎-认表.js?v=20260827c"></script>
+<script src="新-按内容认单.js?v=20260827c"></script>
+<script src="引擎-抓取.js?v=20260827c"></script>
+<script src="引擎-点位册.js?v=20260827c"></script>
+<script src="引擎-匹配.js?v=20260827c"></script>
+<script src="数据-切法规矩.js?v=20260827c"></script>
+<script src="引擎-断句规矩.js?v=20260827c"></script>
+<script src="引擎-学分法.js?v=20260827c"></script>
+<script src="引擎-OCR.js?v=20260827c"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260827b";
+  var 版本号 = "v20260827c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5729,6 +5729,16 @@ window.addEventListener("unhandledrejection",function(ev){
     var 例=window.GM_学分法.挑例子(料)||{原文:""};
     if(第三步挑第几>=法们.length) 第三步挑第几=0;
     var f=法们[第三步挑第几];
+    /* ★★ 2026-08-27 老板拖朱鲜生那张长单当场看到的：
+         上面摆着【白豆干】那一格的原文，底下却写着「分成 2 份：大 14斤 / 大只的 20斤」
+         —— 那是【大豆泡】那一格的结果。两格不是同一格，人根本没法判断对不对。
+       根子：原文取的是 挑例子()（整列里最难的那格），
+             结果取的是 f.份（几种分法 里存的，整列里【第一个切得出的】那格）。
+       修法：拿摆出来的那一格，当场用这一种分法切一遍，摆切出来的东西。
+       ⚠ 切不出来就退回 f.份，绝不摆一个空的（宁可摆得糙，也不许摆到别的格上去）。 */
+    var 份=null;
+    try{ 份=window.GM_学分法.切一格(String(例.原文||""), f.分隔, f.合连点); }catch(e){ 份=null; }
+    if(!份||!份.length) 份=f.份||[];
     var 全对=(f.量过&&f.对===f.量过);
     var h='<div class="muted" style="margin-bottom:8px">这一格里挤着好几个送货点，分不开我不会自己拼一个。</div>'+
       '<div style="font-family:Consolas,monospace;font-size:13.5px;background:var(--field);'+
@@ -5736,14 +5746,14 @@ window.addEventListener("unhandledrejection",function(ev){
       'word-break:break-all;line-height:1.85">'+esc(String(例.原文).slice(0,300))+'</div>'+
       '<div style="border:1px solid var(--line2);background:var(--panel);border-radius:10px;'+
       'padding:12px 14px;max-width:520px;margin-bottom:12px">'+
-      '<div style="font-size:15px;font-weight:700;margin-bottom:6px">分成 '+f.份.length+' 份</div>';
-    f.份.slice(0,5).forEach(function(g){
+      '<div style="font-size:15px;font-weight:700;margin-bottom:6px">分成 '+份.length+' 份</div>';
+    份.slice(0,5).forEach(function(g){
       h+='<div style="font-family:Consolas,monospace;font-size:12.5px;color:var(--ink2);'+
          'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
          esc(String(g.code||"？").slice(0,30))+'　<b style="color:var(--acc);font-weight:400">'+
          (g.qty==null?"没有数量":(g.qty+(g.unit||"")))+'</b></div>';
     });
-    if(f.份.length>5) h+='<div class="muted" style="font-size:12.5px">…还有 '+(f.份.length-5)+' 份</div>';
+    if(份.length>5) h+='<div class="muted" style="font-size:12.5px">…还有 '+(份.length-5)+' 份</div>';
     if(f.量过) h+='<div style="margin-top:8px;font-size:12.5px;color:'+(全对?"var(--ok)":"var(--sale)")+'">'+
       (全对?("✓ 这一列 "+f.量过+" 行加起来都跟表上对得上")
            :("△ 这一列 "+f.量过+" 行里只有 "+f.对+" 行对得上"))+'</div>';
