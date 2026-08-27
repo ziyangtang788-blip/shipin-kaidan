@@ -904,25 +904,25 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260827a"></script>
-<script src="对照-预置.js?v=20260827a"></script>
-<script src="数据-常用规格.js?v=20260827a"></script>
-<script src="数据-换算.js?v=20260827a"></script>
-<script src="数据-客户量纲.js?v=20260827a"></script>
-<script src="引擎-读文件.js?v=20260827a"></script>
-<script src="数据-商户名.js?v=20260827a"></script>
-<script src="导出-观麦.js?v=20260827a"></script>
-<script src="引擎-解析.js?v=20260827a"></script>
-<script src="引擎-读结构.js?v=20260827a"></script>
-<script src="引擎-认表.js?v=20260827a"></script>
-<script src="新-按内容认单.js?v=20260827a"></script>
-<script src="引擎-抓取.js?v=20260827a"></script>
-<script src="引擎-点位册.js?v=20260827a"></script>
-<script src="引擎-匹配.js?v=20260827a"></script>
-<script src="数据-切法规矩.js?v=20260827a"></script>
-<script src="引擎-断句规矩.js?v=20260827a"></script>
-<script src="引擎-学分法.js?v=20260827a"></script>
-<script src="引擎-OCR.js?v=20260827a"></script>
+<script src="数据-价格库.js?v=20260827b"></script>
+<script src="对照-预置.js?v=20260827b"></script>
+<script src="数据-常用规格.js?v=20260827b"></script>
+<script src="数据-换算.js?v=20260827b"></script>
+<script src="数据-客户量纲.js?v=20260827b"></script>
+<script src="引擎-读文件.js?v=20260827b"></script>
+<script src="数据-商户名.js?v=20260827b"></script>
+<script src="导出-观麦.js?v=20260827b"></script>
+<script src="引擎-解析.js?v=20260827b"></script>
+<script src="引擎-读结构.js?v=20260827b"></script>
+<script src="引擎-认表.js?v=20260827b"></script>
+<script src="新-按内容认单.js?v=20260827b"></script>
+<script src="引擎-抓取.js?v=20260827b"></script>
+<script src="引擎-点位册.js?v=20260827b"></script>
+<script src="引擎-匹配.js?v=20260827b"></script>
+<script src="数据-切法规矩.js?v=20260827b"></script>
+<script src="引擎-断句规矩.js?v=20260827b"></script>
+<script src="引擎-学分法.js?v=20260827b"></script>
+<script src="引擎-OCR.js?v=20260827b"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +935,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260827a";
+  var 版本号 = "v20260827b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5626,7 +5626,10 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!料.length){ 回调(false); return; }
     var 法们=[]; try{ 法们=学.几种分法(料); }catch(e){ 回调(false); return; }
     if(!法们.length){ 回调(false); return; }          /* 一种都切不出来 → 退回老弹窗 */
-    var 定=学.不用问吗(法们);
+    /* ★ 2026-08-27：把整列的料一起交过去 —— 多过一道「切出来的地址像不像地址」。
+       朱鲜生那张：账平了（14+20=34）、也没得选，可地址记成了「大」「大只的」，
+       旧写法据此一句不问就立了规矩。判据只看反常，整列一个样的照旧不问。 */
+    var 定=学.不用问吗(法们,料);
     /* 账已经证明了、而且用的就是通用那套 → 现状已经是它，什么都不用做 */
     if(定&&定.分隔==="通用"){ 回调(false); return; }
     if(定){                                            /* 账证明了某一条学过的规矩更对 → 直接立，不问 */
