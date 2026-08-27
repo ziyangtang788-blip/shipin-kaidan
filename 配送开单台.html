@@ -904,26 +904,26 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260827f"></script>
-<script src="对照-预置.js?v=20260827f"></script>
-<script src="数据-常用规格.js?v=20260827f"></script>
-<script src="数据-换算.js?v=20260827f"></script>
-<script src="数据-客户量纲.js?v=20260827f"></script>
-<script src="引擎-读文件.js?v=20260827f"></script>
-<script src="数据-商户名.js?v=20260827f"></script>
-<script src="导出-观麦.js?v=20260827f"></script>
-<script src="引擎-解析.js?v=20260827f"></script>
-<script src="引擎-读结构.js?v=20260827f"></script>
-<script src="引擎-认表.js?v=20260827f"></script>
-<script src="新-按内容认单.js?v=20260827f"></script>
-<script src="引擎-抓取.js?v=20260827f"></script>
-<script src="引擎-点位册.js?v=20260827f"></script>
-<script src="引擎-匹配.js?v=20260827f"></script>
-<script src="数据-切法规矩.js?v=20260827f"></script>
-<script src="引擎-断句规矩.js?v=20260827f"></script>
-<script src="引擎-碎片类.js?v=20260827f"></script>
-<script src="引擎-学分法.js?v=20260827f"></script>
-<script src="引擎-OCR.js?v=20260827f"></script>
+<script src="数据-价格库.js?v=20260827g"></script>
+<script src="对照-预置.js?v=20260827g"></script>
+<script src="数据-常用规格.js?v=20260827g"></script>
+<script src="数据-换算.js?v=20260827g"></script>
+<script src="数据-客户量纲.js?v=20260827g"></script>
+<script src="引擎-读文件.js?v=20260827g"></script>
+<script src="数据-商户名.js?v=20260827g"></script>
+<script src="导出-观麦.js?v=20260827g"></script>
+<script src="引擎-解析.js?v=20260827g"></script>
+<script src="引擎-读结构.js?v=20260827g"></script>
+<script src="引擎-认表.js?v=20260827g"></script>
+<script src="新-按内容认单.js?v=20260827g"></script>
+<script src="引擎-抓取.js?v=20260827g"></script>
+<script src="引擎-点位册.js?v=20260827g"></script>
+<script src="引擎-匹配.js?v=20260827g"></script>
+<script src="数据-切法规矩.js?v=20260827g"></script>
+<script src="引擎-断句规矩.js?v=20260827g"></script>
+<script src="引擎-碎片类.js?v=20260827g"></script>
+<script src="引擎-学分法.js?v=20260827g"></script>
+<script src="引擎-OCR.js?v=20260827g"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -936,7 +936,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260827f";
+  var 版本号 = "v20260827g";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -4157,21 +4157,73 @@ window.addEventListener("unhandledrejection",function(ev){
       .catch(function(){ ordRender([]); });
   }
 
+  /* ════════ 按日期折叠 ★（2026-08-27）════════
+     老板：「现在的数据太多了，然后给他按在订单列表那里，给他按日期做成折叠，
+     　　　 然后可以看到每天的总数」「总数看开了多少单，有多少总金额」
+
+     ⚠ 日期取【单号里那 8 位】—— 他是指着 XS20260827-25 说「这都是一天的」。
+       取不到才退回下单日，绝不让哪一行没有归宿（一行没归宿就等于凭空少一张单）。
+     ⚠ 只折最新那天之外的：一进来就全收起，人会以为单子没了。 */
+  function 单号那天(o){
+    var m=/(\d{8})/.exec(String((o&&o.order_no)||""));
+    if(m) return m[1].slice(0,4)+"-"+m[1].slice(4,6)+"-"+m[1].slice(6,8);
+    var d=String((o&&o.order_date)||"").trim();
+    return d||"没有日期";
+  }
+  function 收起哪天(天,收){
+    var tb=$("ord-rows"); if(!tb) return;
+    Array.prototype.forEach.call(tb.querySelectorAll('tr[data-day="'+天+'"]'),function(tr){
+      if(tr.className==="ord-day") return;
+      tr.hidden=!!收;
+      /* 明细那一行是点开「明细」之后插进来的，跟着一起收 */
+      var next=tr.nextSibling;
+      if(next&&next.className==="ord-det") next.hidden=!!收;
+    });
+    var 头=tb.querySelector('tr.ord-day[data-day="'+天+'"] .ord-day-arrow');
+    if(头) 头.textContent=收?"▸":"▾";
+  }
+
   function ordRender(rows){
     var tb=$("ord-rows"); if(!tb) return;
-    tb.innerHTML=rows.map(function(o){
-      var n=(o.line_count!==undefined)?o.line_count:((o.lines||[]).length);
-      return '<tr><td><code>'+esc(o.order_no||"")+'</code></td>'
-        +'<td>'+esc(o.order_date||"")+'</td>'
-        +'<td>'+esc(o.deliver_date||"")+'</td>'
-        +'<td>'+esc(o.customer_name||o.customer_id||"")+
-          (o.shop?'<br><span class="muted">'+esc(o.shop)+'</span>':'')+'</td>'
-        +'<td style="text-align:right">'+n+'</td>'
-        +'<td style="text-align:right">'+n2(o.total_amount||0)+'</td>'
-        +'<td><button class="btn ghost sm" data-no="'+esc(o.order_no||"")+'">明细</button>'
-        +' <button class="btn ghost sm ordre" data-no="'+esc(o.order_no||"")+'"'
-        +' title="调回开单台，可以加行、改数量，存回去还是这个单号">调出来改</button></td></tr>';
-    }).join("");
+    /* 按天归堆，天的先后照原来的行序（后端已经按新到旧给了） */
+    var 天序=[], 堆={};
+    rows.forEach(function(o){
+      var d=单号那天(o);
+      if(!堆[d]){ 堆[d]={行:[],张:0,钱:0}; 天序.push(d); }
+      堆[d].行.push(o); 堆[d].张++; 堆[d].钱+=(+o.total_amount||0);
+    });
+    var h="";
+    天序.forEach(function(d,i){
+      var 收=(i>0);                       /* 头一天摊开，别的先收着 */
+      h+='<tr class="ord-day" data-day="'+esc(d)+'" style="cursor:pointer">'
+        +'<td colspan="7" style="background:var(--field);font-weight:700;padding:9px 12px">'
+        +'<span class="ord-day-arrow" style="display:inline-block;width:14px;color:var(--acc)">'
+        +(收?"▸":"▾")+'</span> '+esc(d)
+        +'<span class="muted" style="font-weight:400;margin-left:14px">'+堆[d].张+' 张</span>'
+        +'<span style="float:right;color:var(--acc)">'+n2(堆[d].钱)+'</span>'
+        +'</td></tr>';
+      堆[d].行.forEach(function(o){
+        var n=(o.line_count!==undefined)?o.line_count:((o.lines||[]).length);
+        h+='<tr data-day="'+esc(d)+'"'+(收?' hidden':'')+'><td><code>'+esc(o.order_no||"")+'</code></td>'
+          +'<td>'+esc(o.order_date||"")+'</td>'
+          +'<td>'+esc(o.deliver_date||"")+'</td>'
+          +'<td>'+esc(o.customer_name||o.customer_id||"")+
+            (o.shop?'<br><span class="muted">'+esc(o.shop)+'</span>':'')+'</td>'
+          +'<td style="text-align:right">'+n+'</td>'
+          +'<td style="text-align:right">'+n2(o.total_amount||0)+'</td>'
+          +'<td><button class="btn ghost sm" data-no="'+esc(o.order_no||"")+'">明细</button>'
+          +' <button class="btn ghost sm ordre" data-no="'+esc(o.order_no||"")+'"'
+          +' title="调回开单台，可以加行、改数量，存回去还是这个单号">调出来改</button></td></tr>';
+      });
+    });
+    tb.innerHTML=h;
+    Array.prototype.forEach.call(tb.querySelectorAll("tr.ord-day"),function(tr){
+      tr.addEventListener("click",function(){
+        var d=tr.getAttribute("data-day");
+        var 箭=tr.querySelector(".ord-day-arrow");
+        收起哪天(d, 箭&&箭.textContent==="▾");
+      });
+    });
     $("ord-empty").hidden=rows.length>0;
     $("ord-empty").textContent=ORD.online?"这个范围里没有单":"本机还没有开过单";
     $("ord-count").textContent=rows.length?(rows.length+" 张"):"";
