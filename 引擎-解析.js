@@ -604,29 +604,13 @@
          　让我先选客户就行了呀。然后选完客户剩下的自动再补上。」
          不加这道闸，测试-选完客户重读.js 当场红三条 —— 那三条守的正是这个顺序，
          而且它还兼着测「学过的规矩那条线接没接上」，抢跑就把那个测试测空了。 */
-    if(整格是明细&&有客户){
-      var 词们F=s.split(/\s+/).filter(function(x){ return String(x).trim(); });
-      var 地址F=[], 数量F=[], 顺F=[];
-      var 量reF=new RegExp("^([0-9]+(?:\\.[0-9]+)?)\\s*("+U1+")$");
-      var 号尾F=/[A-Za-z]{0,3}[0-9]{1,4}(?:-[0-9]{1,3})?$/;
-      词们F.forEach(function(w){
-        var mq=w.match(量reF);
-        if(mq){ 数量F.push({qty:parseFloat(mq[1]),unit:mq[2]}); 顺F.push({t:"q",i:数量F.length-1}); return; }
-        if(/[一-龥]/.test(w)&&号尾F.test(w)){ 地址F.push(w); 顺F.push({t:"a"}); return; }
-        顺F.push({t:"n",w:w});
-      });
-      if(地址F.length&&地址F.length===数量F.length){
-        var listF=[];
-        for(var fi=0;fi<地址F.length;fi++)
-          listF.push({qty:数量F[fi].qty,unit:数量F[fi].unit,code:地址F[fi],note:""});
-        var 上量F=-1;
-        顺F.forEach(function(x){
-          if(x.t==="q") 上量F=x.i;
-          else if(x.t==="n"&&上量F>=0&&listF[上量F])
-            listF[上量F].note=(listF[上量F].note?listF[上量F].note+" ":"")+x.w;
-        });
-        return 出(listF,"");
-      }
+    if(整格是明细&&有客户&&root.GM_碎片){
+      /* ⚠ 切的逻辑【只有一份】，在 引擎-碎片类.js 里（CLAUDE.md：匹配逻辑只准一份）。
+         这儿只是拿它的【默认角色表】当第 8 种写法用；
+         人教过的那份角色表走的是 引擎-认表.js 摊明细 里那条整列过账的路。 */
+      var lF=null;
+      try{ lF=root.GM_碎片.照角色切(s,root.GM_碎片.角色表默认()); }catch(e){ lF=null; }
+      if(lF&&lF.length) return 出(lF,"");
     }
 
     /* E5 只有一段的尖括号写法：( ) 15斤〈176A〉

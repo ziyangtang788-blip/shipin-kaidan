@@ -904,25 +904,26 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260827d"></script>
-<script src="对照-预置.js?v=20260827d"></script>
-<script src="数据-常用规格.js?v=20260827d"></script>
-<script src="数据-换算.js?v=20260827d"></script>
-<script src="数据-客户量纲.js?v=20260827d"></script>
-<script src="引擎-读文件.js?v=20260827d"></script>
-<script src="数据-商户名.js?v=20260827d"></script>
-<script src="导出-观麦.js?v=20260827d"></script>
-<script src="引擎-解析.js?v=20260827d"></script>
-<script src="引擎-读结构.js?v=20260827d"></script>
-<script src="引擎-认表.js?v=20260827d"></script>
-<script src="新-按内容认单.js?v=20260827d"></script>
-<script src="引擎-抓取.js?v=20260827d"></script>
-<script src="引擎-点位册.js?v=20260827d"></script>
-<script src="引擎-匹配.js?v=20260827d"></script>
-<script src="数据-切法规矩.js?v=20260827d"></script>
-<script src="引擎-断句规矩.js?v=20260827d"></script>
-<script src="引擎-学分法.js?v=20260827d"></script>
-<script src="引擎-OCR.js?v=20260827d"></script>
+<script src="数据-价格库.js?v=20260827f"></script>
+<script src="对照-预置.js?v=20260827f"></script>
+<script src="数据-常用规格.js?v=20260827f"></script>
+<script src="数据-换算.js?v=20260827f"></script>
+<script src="数据-客户量纲.js?v=20260827f"></script>
+<script src="引擎-读文件.js?v=20260827f"></script>
+<script src="数据-商户名.js?v=20260827f"></script>
+<script src="导出-观麦.js?v=20260827f"></script>
+<script src="引擎-解析.js?v=20260827f"></script>
+<script src="引擎-读结构.js?v=20260827f"></script>
+<script src="引擎-认表.js?v=20260827f"></script>
+<script src="新-按内容认单.js?v=20260827f"></script>
+<script src="引擎-抓取.js?v=20260827f"></script>
+<script src="引擎-点位册.js?v=20260827f"></script>
+<script src="引擎-匹配.js?v=20260827f"></script>
+<script src="数据-切法规矩.js?v=20260827f"></script>
+<script src="引擎-断句规矩.js?v=20260827f"></script>
+<script src="引擎-碎片类.js?v=20260827f"></script>
+<script src="引擎-学分法.js?v=20260827f"></script>
+<script src="引擎-OCR.js?v=20260827f"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -935,7 +936,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260827d";
+  var 版本号 = "v20260827f";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1059,6 +1060,7 @@ window.addEventListener("unhandledrejection",function(ev){
        ⚠ 跟读法本不是一回事：读法本记的是 AI 答的整份读法（表头在第几行、哪列是什么），
          这本只记【人亲手点过的那几列】，专治「一整列被悄悄扔掉」。 */
     if(!OV.列读法)OV.列读法={};
+    if(!OV.碎片角色)OV.碎片角色={};
     /* 「帮我认一下」学到的断句规矩。跟预置那份（数据-切法规矩.js）合起来用 ——
        预置那份是代码里带的，这份是人后来教的，两边都要认，不然教一次只顶一次。 */
     if(!OV.切法)OV.切法=[];
@@ -1224,6 +1226,13 @@ window.addEventListener("unhandledrejection",function(ev){
     });
     /* 列读法：跟读法本一个待遇 —— 本机没有的收下，两边都有就听【确认时间晚】的那份 */
     if(!OV.列读法) OV.列读法={};
+    if(!OV.碎片角色) OV.碎片角色={};
+    /* 碎片角色：跟列读法一个待遇 —— 本机没有的收下，两边都有听【确认时间晚】的 */
+    Object.keys(d.碎片角色||{}).forEach(function(k){
+      var a3=OV.碎片角色[k], b3=d.碎片角色[k];
+      if(!a3){ OV.碎片角色[k]=b3; 变++; return; }
+      if((b3&&b3.确认于||"")>(a3.确认于||"")){ OV.碎片角色[k]=b3; 变++; }
+    });
     Object.keys(d.列读法||{}).forEach(function(k){
       var a2=OV.列读法[k], b2=d.列读法[k];
       if(!a2){ OV.列读法[k]=b2; 变++; return; }
@@ -5565,18 +5574,129 @@ window.addEventListener("unhandledrejection",function(ev){
     /* 补完还剩的，这时候才轮到问人 —— 走第 3 步那块地（2026-08-24 换的入口）。
        ⚠ 老弹窗 问怎么切() 留着没删：它是【退路】——
          新的那条但凡自己出毛病，照旧回到老弹窗，绝不让人卡在没得问的地方。 */
-    if(剩>0) 学一次分法(合, function(成){
-      if(成===true){ 重摊一遍("学会了，又读了一遍"); return; }
-      /* ★「分不开，我自己填」是人明说的 —— 绝不许接着再弹一个老窗问同一件事。
-         那正是老板 8/23 说的「不是什么东西都是要问的」。 */
-      if(成==="算了") return;
-      问怎么切(读不懂条们(合), function(新们){
-        if(!新们.length) return;
-        存切法规矩(新们);
-        重摊一遍("学会了，又读了一遍");
+    /* ★ 2026-08-27：先试【碎片角色】那一层 —— 它比切法规矩更根本，
+       而且绝大多数时候一句不问（账能证明的直接用，无解的直接让路）。
+       它自己搞定了就重摊一遍收工；搞不定才轮到下面那两层。 */
+    if(剩>0) 学一次碎片角色(合, function(成碎){
+      if(成碎===true){ 重摊一遍("这一格怎么分，学会了"); return; }
+      if(成碎==="算了") return;
+      学一次分法(合, function(成){
+        if(成===true){ 重摊一遍("学会了，又读了一遍"); return; }
+        /* ★「分不开，我自己填」是人明说的 —— 绝不许接着再弹一个老窗问同一件事。
+           那正是老板 8/23 说的「不是什么东西都是要问的」。 */
+        if(成==="算了") return;
+        问怎么切(读不懂条们(合), function(新们){
+          if(!新们.length) return;
+          存切法规矩(新们);
+          重摊一遍("学会了，又读了一遍");
+        });
       });
     });
   }
+  /* ════════ 明细那一格：这一类碎片是什么　★（2026-08-27）════════
+     老板原话：「核心不是说它是字母还是纯数字，不能靠这些，你要靠一整列这样子的学习机制。
+     　　　　　　你把它拆开，文字跟字母就可以拆开了。问这一整列是什么。」
+
+     跟【这一列是什么】（8/24 那套）是同一个机制，往格子里再走一层：
+       8/24 问的是「这张表第 4 列是什么」　（表格的列）
+       这儿问的是「这一格里的字母数字是什么」（格子里的列）
+
+     ⚠ 问之前先自己算（老板 8/23「账能证明的就没有问的必要」）：
+         过账的路 0 条 → 一句不问，原样走老路
+         　　　　 1 条 → 一句不问，直接用（账已经证明了）
+         　　　 ≥2 条 → 才问，因为真有岔路
+       20 张真表离线量过：18 张无解、2 张只有一条路、【0 张要问】。
+       所以这个窗现在一次都不会弹 —— 它是退路，等真出现岔路的表才用得上。
+     ⚠ 答完按【客户＋这张表长什么样】记住，跟 列读法 同一把钥匙，下次一句不问。 */
+  function 学一次碎片角色(合,回调){
+    var F=window.GM_碎片, 读=ST.重摊&&ST.重摊.读法;
+    if(!F||!读||读.分布列==null){ 回调(false); return; }
+    var 键=null; try{ 键=列读法键(ST.重摊.份,读.表头在第几行); }catch(e){ 键=null; }
+    /* 教过了就直接套，一句不问 */
+    var 教过=键?查碎片角色(键):null;
+    if(教过){
+      if(读.碎片角色&&JSON.stringify(读.碎片角色)===JSON.stringify(教过)){ 回调(false); return; }
+      ST.重摊.读法=Object.keys(读).reduce(function(o,k){ o[k]=读[k]; return o; },{});
+      ST.重摊.读法.碎片角色=教过;
+      回调(true); return;
+    }
+    var 料=[], 起=(读.表头在第几行==null?1:(+读.表头在第几行||0));
+    (ST.重摊.份||[]).forEach(function(z){
+      ((z&&z.grid)||[]).forEach(function(sh){
+        var rows=(sh&&sh.rows)||[];
+        for(var i=起;i<rows.length;i++){
+          var r=rows[i]||[];
+          var 文=String(r[读.分布列-1]==null?"":r[读.分布列-1]).trim();
+          if(!文) continue;
+          var c校=(读.合计列!=null?读.合计列:读.数量列), 校=null;
+          if(c校){ var m=/^([0-9]+(?:\.[0-9]+)?)/.exec(String(r[c校-1]==null?"":r[c校-1]).trim());
+                   if(m) 校=parseFloat(m[1]); }
+          料.push({原文:文,表上总数:校});
+        }
+      });
+    });
+    if(料.length<2){ 回调(false); return; }
+    var 解们=[]; try{ 解们=F.找角色表(料)||[]; }catch(e){ 回调(false); return; }
+    if(!解们.length){ 回调(false); return; }                 /* 无解 —— 问了也没用 */
+    function 用它(表){
+      if(键) try{ 存碎片角色(键,表); }catch(e){}
+      ST.重摊.读法=Object.keys(读).reduce(function(o,k){ o[k]=读[k]; return o; },{});
+      ST.重摊.读法.碎片角色=表;
+      回调(true);
+    }
+    if(解们.length===1){ 用它(解们[0]); return; }              /* 只有一条路 —— 账证明了，不问 */
+    摆碎片角色窗(料,解们,用它,function(){ 回调("算了"); });
+  }
+
+  var 碎片挑第几=0;
+  function 摆碎片角色窗(料,解们,用它,算了){
+    碎片挑第几=0; 画碎片角色窗(料,解们,用它,算了);
+  }
+  function 画碎片角色窗(料,解们,用它,算了){
+    var F=window.GM_碎片;
+    if(碎片挑第几>=解们.length) 碎片挑第几=0;
+    var 表=解们[碎片挑第几];
+    /* 拿【最难的那一格】摆给他看，而且摆的原文和摆的结果必须是同一格
+       —— 8/27 老弹窗就栽在这上头（上面摆白豆干、底下摆大豆泡的结果）。 */
+    var 例=null;
+    料.forEach(function(x){
+      var f=(String(x.原文).match(/\s/g)||[]).length*100+String(x.原文).length;
+      if(!例||f>例.f) 例={原文:x.原文,f:f};
+    });
+    var 份=[]; try{ 份=F.照角色切(例.原文,表)||[]; }catch(e){ 份=[]; }
+    var h='<div class="muted" style="margin-bottom:8px">这一格里的东西，哪些是送货点、哪些是数量？'+
+          '点一次，以后这家发同样的表就不问了。</div>'+
+          '<div style="font-family:Consolas,monospace;font-size:13.5px;background:var(--field);'+
+          'border:1px solid var(--line);border-radius:8px;padding:11px 13px;margin-bottom:10px;'+
+          'word-break:break-all;line-height:1.85">'+esc(String(例.原文).slice(0,300))+'</div>'+
+          '<div class="muted" style="margin-bottom:6px;font-size:12.5px">这么分：</div>'+
+          '<div style="border:1px solid var(--line2);background:var(--panel);border-radius:10px;'+
+          'padding:12px 14px;max-width:560px;margin-bottom:10px">';
+    份.slice(0,6).forEach(function(g){
+      h+='<div style="font-family:Consolas,monospace;font-size:12.5px;color:var(--ink2);'+
+         'white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
+         esc(String(g.code||"？").slice(0,34))+'　<b style="color:var(--acc);font-weight:400">'+
+         (g.qty==null?"没有数量":(g.qty+(g.unit||"")))+'</b>'+
+         (g.note?('　<span class="muted">'+esc(String(g.note).slice(0,20))+'</span>'):'')+'</div>';
+    });
+    if(份.length>6) h+='<div class="muted" style="font-size:12.5px">…还有 '+(份.length-6)+' 份</div>';
+    h+='</div><div class="muted" style="font-size:12.5px;margin-bottom:12px">'+
+       Object.keys(表).map(function(k){ return esc(k)+" → "+esc(表[k]); }).join("　｜　")+
+       '<br>这一列 '+料.length+' 行加起来都跟表上对得上</div>'+
+       '<div class="btn-row">'+
+       '<button class="btn" id="sp-ok">对，就这么分</button>'+
+       (解们.length>1?'<button class="btn ghost" id="sp-next">换一种看看（还有 '+(解们.length-1)+' 种）</button>':'')+
+       '<button class="btn ghost" id="sp-no">分不开，我自己填</button></div>';
+    $("learn-title").textContent="这一格里，哪些是送货点？";
+    $("learn-body").innerHTML=h;
+    $("stp-learn").hidden=false;
+    $("sp-ok").onclick=function(){ 关第三步(); 用它(表); };
+    if($("sp-next")) $("sp-next").onclick=function(){
+      碎片挑第几=(碎片挑第几+1)%解们.length; 画碎片角色窗(料,解们,用它,算了);
+    };
+    $("sp-no").onclick=function(){ 关第三步(); 算了(); };
+  }
+
   function 重摊一遍(话){
     var 合2=照读法摊(ST.重摊.份, ST.重摊.读法);
     if(!合2||!合2.行.length) return;
@@ -5684,6 +5804,17 @@ window.addEventListener("unhandledrejection",function(ev){
     OV.列读法[键]={ 读:读, 客户:(ST.ci>=0?DATA.custs[ST.ci][1]:""),
                     确认于:new Date().toISOString().slice(0,16).replace("T"," ") };
     ovTouch("列读法",键); ovSave(); ovPush();
+  }
+  /* ★ 碎片角色：明细那一格切碎之后，「这一类是什么」的答案。
+     跟 列读法 一模一样的待遇 —— 同一把钥匙（客户＋这张表长什么样）、同一套存法。
+     老板 2026-08-27 定的底层逻辑，详见 引擎-碎片类.js 头上那段。 */
+  function 查碎片角色(键){ var r=(OV.碎片角色||{})[键]; return (r&&r.表)?r.表:null; }
+  function 存碎片角色(键,表){
+    if(!键||!表) return;
+    if(!OV.碎片角色) OV.碎片角色={};
+    OV.碎片角色[键]={ 表:表, 客户:(ST.ci>=0?DATA.custs[ST.ci][1]:""),
+                      确认于:new Date().toISOString().slice(0,16).replace("T"," ") };
+    ovTouch("碎片角色",键); ovSave(); ovPush();
   }
 
   /* 一列一列问「这是什么」。问完把答案交回去，由调用方重抓一遍。 */

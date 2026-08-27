@@ -183,7 +183,7 @@ function findOrder(no) {
    「来新表得先调 AI 识别正确之后交给人去判断，好了之后给他一个专注的表。」
    ⚠ 合并这儿【必须列出来】：这个 out 是白名单，漏掉一个字段，
      换台电脑一同步就被整份抹掉，人还以为是自己没教过。 */
-const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, 列读法: {}, px: {}, padd: {}, plog: [] };
+const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, 列读法: {}, 碎片角色: {}, px: {}, padd: {}, plog: [] };
 
 function loadOverlay() {
   const o = readJSON(OVERLAY_FILE, null);
@@ -211,6 +211,9 @@ function mergeOverlay(base, incoming) {
        跟读法本一个待遇：一张表样一条，后确认的盖前面的。
        ⚠ 漏在这张名单外面 = 页面推上来整份被丢掉，教了等于没教（8/18 padd 那个洞）。 */
     列读法: Object.assign({}, base.列读法, incoming.列读法 || {}),
+    /* 碎片角色 = 「明细那一格切碎之后，这一类碎片是什么」（2026-08-27 老板定的底层逻辑）。
+       跟 列读法 一个待遇 —— 漏了这一行，换台电脑一撞版本，教会的就被静默抹掉。 */
+    碎片角色: Object.assign({}, base.碎片角色, incoming.碎片角色 || {}),
     /* ★ 2026-08-18：px / padd / plog 原来【不在这张名单里】，
        页面推上来整份被丢掉 —— 老板 8/18 撞了一天的那个洞。
 
