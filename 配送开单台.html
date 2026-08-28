@@ -904,26 +904,26 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260828c"></script>
-<script src="对照-预置.js?v=20260828c"></script>
-<script src="数据-常用规格.js?v=20260828c"></script>
-<script src="数据-换算.js?v=20260828c"></script>
-<script src="数据-客户量纲.js?v=20260828c"></script>
-<script src="引擎-读文件.js?v=20260828c"></script>
-<script src="数据-商户名.js?v=20260828c"></script>
-<script src="导出-观麦.js?v=20260828c"></script>
-<script src="引擎-解析.js?v=20260828c"></script>
-<script src="引擎-读结构.js?v=20260828c"></script>
-<script src="引擎-认表.js?v=20260828c"></script>
-<script src="新-按内容认单.js?v=20260828c"></script>
-<script src="引擎-抓取.js?v=20260828c"></script>
-<script src="引擎-点位册.js?v=20260828c"></script>
-<script src="引擎-匹配.js?v=20260828c"></script>
-<script src="数据-切法规矩.js?v=20260828c"></script>
-<script src="引擎-断句规矩.js?v=20260828c"></script>
-<script src="引擎-碎片类.js?v=20260828c"></script>
-<script src="引擎-学分法.js?v=20260828c"></script>
-<script src="引擎-OCR.js?v=20260828c"></script>
+<script src="数据-价格库.js?v=20260828d"></script>
+<script src="对照-预置.js?v=20260828d"></script>
+<script src="数据-常用规格.js?v=20260828d"></script>
+<script src="数据-换算.js?v=20260828d"></script>
+<script src="数据-客户量纲.js?v=20260828d"></script>
+<script src="引擎-读文件.js?v=20260828d"></script>
+<script src="数据-商户名.js?v=20260828d"></script>
+<script src="导出-观麦.js?v=20260828d"></script>
+<script src="引擎-解析.js?v=20260828d"></script>
+<script src="引擎-读结构.js?v=20260828d"></script>
+<script src="引擎-认表.js?v=20260828d"></script>
+<script src="新-按内容认单.js?v=20260828d"></script>
+<script src="引擎-抓取.js?v=20260828d"></script>
+<script src="引擎-点位册.js?v=20260828d"></script>
+<script src="引擎-匹配.js?v=20260828d"></script>
+<script src="数据-切法规矩.js?v=20260828d"></script>
+<script src="引擎-断句规矩.js?v=20260828d"></script>
+<script src="引擎-碎片类.js?v=20260828d"></script>
+<script src="引擎-学分法.js?v=20260828d"></script>
+<script src="引擎-OCR.js?v=20260828d"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -936,7 +936,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260828c";
+  var 版本号 = "v20260828d";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5690,6 +5690,54 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!数读不懂(合)) return;
     问一次怎么拆(合);
   }
+  /* ════════ 「这一样在第几列」—— 两条线索打架时问一句　★（2026-08-28）════════
+     识别说表头「汇总合计」在第 4 列，可它说的第一格内容却在第 6 列 —— 两边对不上。
+     原来这种情况直接报错停住，整张单出不来，货一样都读不出。
+     老板 8/28：「这一列定不下来，就问我『这一列是什么』，我答一次你记住，别拦死。」
+
+     ⚠ 摆的是【那一列真长什么样】：表头 + 头三格内容。人扫一眼就知道点哪个，
+       不用去数第几列（数格子正是这套东西一直在犯的错）。
+     ⚠ 一样一样问，答完接着问下一样；中途「先不管」就退回原来的报错，不硬闯。 */
+  function 问哪一列(要挑的,rows,回调){
+    var 第=0, 定={};
+    function 那列长啥样(c){
+      var 头="", 样=[];
+      for(var i=0;i<rows.length&&样.length<3;i++){
+        var v=String((rows[i]||[])[c-1]==null?"":rows[i][c-1]).trim();
+        if(!v) continue;
+        if(!头&&i<4&&!/[0-9]/.test(v)){ 头=v; continue; }
+        样.push(v);
+      }
+      return { 头:头, 样:样 };
+    }
+    function 下一样(){
+      if(第>=要挑的.length){ 关第三步(); 回调(定); return; }
+      var q=要挑的[第];
+      var h='<div class="muted" style="margin-bottom:10px">这一样在哪一列，我拿不准 —— '+
+            '你点一下，以后这家发同样的表就不问了。</div>'+
+            '<div style="font-size:15px;font-weight:700;margin-bottom:10px">'+
+            '「'+esc(q.名字)+'」是下面哪一列？</div><div class="btn-row" style="flex-wrap:wrap">';
+      q.候选.forEach(function(c){
+        var s=那列长啥样(c);
+        h+='<button class="btn" data-c="'+c+'" style="text-align:left;margin-bottom:6px">'+
+           (s.头?('<b>'+esc(s.头)+'</b>'):'<b class="muted">（没表头）</b>')+
+           '<br><span class="muted" style="font-family:Consolas,monospace;font-size:12px">'+
+           esc(s.样.join(" ／ ").slice(0,44)||"（这一列是空的）")+'</span></button>';
+      });
+      h+='<button class="btn ghost" id="nl-no">先不管</button></div>';
+      $("learn-title").textContent="这一样在哪一列？";
+      $("learn-body").innerHTML=h;
+      $("stp-learn").hidden=false;
+      Array.prototype.forEach.call($("learn-body").querySelectorAll("button[data-c]"),function(b){
+        b.addEventListener("click",function(){
+          定[q.字段]=+b.getAttribute("data-c"); 第++; 下一样();
+        });
+      });
+      $("nl-no").onclick=function(){ 关第三步(); 回调(null); };
+    }
+    下一样();
+  }
+
   /* ════════ 明细那一格：这一类碎片是什么　★（2026-08-27）════════
      老板原话：「核心不是说它是字母还是纯数字，不能靠这些，你要靠一整列这样子的学习机制。
      　　　　　　你把它拆开，文字跟字母就可以拆开了。问这一整列是什么。」
@@ -6453,6 +6501,37 @@ window.addEventListener("unhandledrejection",function(ev){
         var 头张=份[0]&&份[0].grid&&份[0].grid[0];
         var 认=N.认((头张&&(头张.rows||头张))||[], 答);
         if(认.要问的){
+          /* ★★ 2026-08-28：能摆出候选列的，【问一句】，别拦死。
+             老板那天拖一张表，屏幕上只有一句
+               「校验数：表头『汇总合计』在第 4 列，可它说的第一格内容却在第 6 列」
+             整张单就出不来了，货一样都没读出来。他问「学习功能呢，为什么没出来」——
+             因为它停在识别这一步，学习还没轮到；而这一问（这一列是什么）
+             那时候只装在【近道】那条路上，这条路没有。
+             老板：「这一列定不下来，就问我，我答一次你记住，别拦死。」
+             ⚠ 答完存进【读法本】—— 那本来就是存「这张表怎么读」的地方，
+               不另起一套。下次同一张表，本子那条路直接命中，一句不问。 */
+          var rows头=(头张&&(头张.rows||头张))||[];
+          if((认.要挑的||[]).length&&rows头.length){
+            问哪一列(认.要挑的,rows头,function(人定的){
+              if(!人定的){
+                $("btn-ocr").disabled=false;
+                识别败了("这张表有几处定不下来，得你看一眼：\n・"+认.要问的.join("\n・"),
+                         答.版式==="矩阵");
+                return;
+              }
+              var 认2=N.认(rows头,答,人定的);
+              if(认2.要问的){
+                $("btn-ocr").disabled=false;
+                识别败了("这张表有几处定不下来，得你看一眼：\n・"+认2.要问的.join("\n・"),
+                         答.版式==="矩阵");
+                return;
+              }
+              读法=认2.读法; 记下的=(认2.要紧的||[]).concat(认2.记下的||[]);
+              读法.拿不准的=记下的;
+              接着摊();
+            });
+            return;
+          }
           $("btn-ocr").disabled=false;
           /* 交叉表定不下来 → 不给「硬读」那条路（见 识别败了 那段：它一扫必散） */
           识别败了("这张表有几处定不下来，得你看一眼：\n・"+认.要问的.join("\n・"),
@@ -6462,6 +6541,11 @@ window.addEventListener("unhandledrejection",function(ev){
         读法=认.读法; 记下的=(认.要紧的||[]).concat(认.记下的||[]);
         读法.拿不准的=记下的;
       }
+      接着摊();
+
+      /* ★ 2026-08-28 抽成一个函数：问完「这一列是什么」之后要回到这儿接着走。
+         原来这一段直接写在下面，人一答完就没路回来了。 */
+      function 接着摊(){
       /* 多个文件各摊各的，行拼起来 —— 跟本子那条路共用同一份 照读法摊，
          不许再抄一份：抄第二份就会出现「这条路好了那条路还是坏的」。 */
       var 合=照读法摊(份,读法);
@@ -6484,6 +6568,7 @@ window.addEventListener("unhandledrejection",function(ev){
            这儿再写一遍就会出现两句话，而且问句还赖着不走。 */
         问读法对不对(读法,合,fp,function(){});
       });
+      }
     }).catch(function(e){
       $("btn-ocr").disabled=false; 识别败了("识别没连上："+(e.message||e));
     });
