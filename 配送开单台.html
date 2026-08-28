@@ -904,26 +904,26 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260827g"></script>
-<script src="对照-预置.js?v=20260827g"></script>
-<script src="数据-常用规格.js?v=20260827g"></script>
-<script src="数据-换算.js?v=20260827g"></script>
-<script src="数据-客户量纲.js?v=20260827g"></script>
-<script src="引擎-读文件.js?v=20260827g"></script>
-<script src="数据-商户名.js?v=20260827g"></script>
-<script src="导出-观麦.js?v=20260827g"></script>
-<script src="引擎-解析.js?v=20260827g"></script>
-<script src="引擎-读结构.js?v=20260827g"></script>
-<script src="引擎-认表.js?v=20260827g"></script>
-<script src="新-按内容认单.js?v=20260827g"></script>
-<script src="引擎-抓取.js?v=20260827g"></script>
-<script src="引擎-点位册.js?v=20260827g"></script>
-<script src="引擎-匹配.js?v=20260827g"></script>
-<script src="数据-切法规矩.js?v=20260827g"></script>
-<script src="引擎-断句规矩.js?v=20260827g"></script>
-<script src="引擎-碎片类.js?v=20260827g"></script>
-<script src="引擎-学分法.js?v=20260827g"></script>
-<script src="引擎-OCR.js?v=20260827g"></script>
+<script src="数据-价格库.js?v=20260828b"></script>
+<script src="对照-预置.js?v=20260828b"></script>
+<script src="数据-常用规格.js?v=20260828b"></script>
+<script src="数据-换算.js?v=20260828b"></script>
+<script src="数据-客户量纲.js?v=20260828b"></script>
+<script src="引擎-读文件.js?v=20260828b"></script>
+<script src="数据-商户名.js?v=20260828b"></script>
+<script src="导出-观麦.js?v=20260828b"></script>
+<script src="引擎-解析.js?v=20260828b"></script>
+<script src="引擎-读结构.js?v=20260828b"></script>
+<script src="引擎-认表.js?v=20260828b"></script>
+<script src="新-按内容认单.js?v=20260828b"></script>
+<script src="引擎-抓取.js?v=20260828b"></script>
+<script src="引擎-点位册.js?v=20260828b"></script>
+<script src="引擎-匹配.js?v=20260828b"></script>
+<script src="数据-切法规矩.js?v=20260828b"></script>
+<script src="引擎-断句规矩.js?v=20260828b"></script>
+<script src="引擎-碎片类.js?v=20260828b"></script>
+<script src="引擎-学分法.js?v=20260828b"></script>
+<script src="引擎-OCR.js?v=20260828b"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -936,7 +936,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260827g";
+  var 版本号 = "v20260828b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -3259,6 +3259,16 @@ window.addEventListener("unhandledrejection",function(ev){
       /* 手动加的、「只钉这一行」的、调出来冻住的，都不许被重算冲掉 ——
          冲掉就等于人白点了一次，或者悄悄改了已经出过的单。 */
       if(L.manual||L.pinned||L.冻) return;
+      /* ★ 2026-08-28：这家的点位只留编号。
+         老板：「把朱鲜生的单点位哪里识别出来只要字母跟数字，不要中文，只有他一家这样。」
+         规矩挂在客户身上（数据-客户量纲.js 里那张表），别家一个字不动。
+         ⚠ 幂等：A59-2 再收一次还是 A59-2，rematch 跑几遍结果都一样。
+         ⚠ 抠不出编号的原样留着 —— 点位丢了货就不知道送哪儿，比留一串长名字严重。 */
+      if(window.GM_客户点位写法&&window.GM_客户点位写法.收窄点位){
+        (L.segs||[]).forEach(function(g){
+          if(g&&g.code) g.code=window.GM_客户点位写法.收窄点位(cid,g.code);
+        });
+      }
       /* ★ 客户量纲（2026-08-19 老板：好好多按公斤下单，仓库按斤，数量 ×2，豆腐串不动）。
          ⚠⚠ 这里【必须幂等】—— rematch 换客户、改单位、重画都会跑，
             不打标记的话乘一次就翻一倍，跑四次就是 16 倍，而且金额跟着翻、
@@ -5626,10 +5636,25 @@ window.addEventListener("unhandledrejection",function(ev){
     /* 补完还剩的，这时候才轮到问人 —— 走第 3 步那块地（2026-08-24 换的入口）。
        ⚠ 老弹窗 问怎么切() 留着没删：它是【退路】——
          新的那条但凡自己出毛病，照旧回到老弹窗，绝不让人卡在没得问的地方。 */
-    /* ★ 2026-08-27：先试【碎片角色】那一层 —— 它比切法规矩更根本，
-       而且绝大多数时候一句不问（账能证明的直接用，无解的直接让路）。
-       它自己搞定了就重摊一遍收工；搞不定才轮到下面那两层。 */
-    if(剩>0) 学一次碎片角色(合, function(成碎){
+    if(剩>0) 问一次怎么拆(合);
+  }
+
+  /* ════════ 「明细那一格怎么拆」—— 三层，从根到梢试一遍 ════════
+     老板 2026-08-28 挖出来的底层逻辑：
+       「一张单无非就是什么东西、有多少、单位是什么、送去哪里，然后再备注。
+       　按这些去抓取，不要搞得太复杂。」
+       「这一列，品名很多词自己可以认得出来，无非是明细那里他怎么拆分的问题。」
+     —— 前三样系统自己认得出（品名有词库、数量是数字、单位有单位表），
+        唯一认不出的是【送去哪里】埋在明细那一格里，得拆。
+        所以学习要学的【只有这一件事】。
+
+     ⚠ 只有这一份：客户定了重读() 和【识别完那一刻】都调它，
+       不许抄第二份（CLAUDE.md：匹配逻辑只准一份）。
+       两条路各挂一半，正是老板 8/28 说的「学习不是某条路，是应该总的」。
+     ⚠ 三层的先后：碎片角色（最根本）→ 学分法 → 老弹窗（退路）。
+       每一层「算了」都当场收手 —— 人明说了自己填，绝不许换个窗再问一遍同一件事。 */
+  function 问一次怎么拆(合){
+    学一次碎片角色(合, function(成碎){
       if(成碎===true){ 重摊一遍("这一格怎么分，学会了"); return; }
       if(成碎==="算了") return;
       学一次分法(合, function(成){
@@ -5644,6 +5669,26 @@ window.addEventListener("unhandledrejection",function(ev){
         });
       });
     });
+  }
+
+  /* ════════ 识别完那一刻就问，不等你点客户　★（2026-08-28）════════
+     老板 8/28：「没拆开要问了才出单。」
+     8-27 朱鲜生那张就卡在这儿 —— 屏幕上明明白白印着「读出 19 样货，
+     其中 19 格没读懂」，它却一声不吭，等你点完客户才弹。
+
+     ⚠ 客户用【猜出来的那家】：上面 applyGuess 刚猜过（「看着像 广东朱鲜生」），
+       拿它查教过的读法 —— 教过直接套、一句不问；没教过才问。
+       猜错了有兜底：你点客户时 客户定了重读() 会拿真客户再读一遍，覆盖回来。
+     ⚠ 只在【真有格子没拆开】时才叫。20 张真表里 18 张一个字不问。
+     ⚠ ST.重摊 必须是【这一趟】的：认表再摊平() 开头会先清掉上一单的，
+       走近道那条路它是 null —— 那条路上没有格子可问，不许拿上一单的去问。 */
+  function 识别完就问(){
+    if(!ST.重摊||!ST.重摊.读法) return;
+    var 合=null;
+    try{ 合=照读法摊(ST.重摊.份, ST.重摊.读法); }catch(e){ 合=null; }
+    if(!合||!合.行.length) return;
+    if(!数读不懂(合)) return;
+    问一次怎么拆(合);
   }
   /* ════════ 明细那一格：这一类碎片是什么　★（2026-08-27）════════
      老板原话：「核心不是说它是字母还是纯数字，不能靠这些，你要靠一整列这样子的学习机制。
@@ -6173,6 +6218,11 @@ window.addEventListener("unhandledrejection",function(ev){
   function 认表再摊平(份,key){
     var T=window.GM_TABLE, S=window.GM_STRUCT;
     $("btn-ocr").disabled=true;
+    /* ★ 2026-08-28：先把上一单的重摊数据清掉。
+       这一趟走认表那条路，照读法摊() 会把它重新填上；走近道那条路它就一直是 null。
+       不清的下场：近道走通、又有格子没读懂时，【识别完就问】会拿上一单的格子来问 ——
+       问的不是眼前这张单，人根本看不懂在问什么。 */
+    ST.重摊=null;
 
     var fp=表样指纹(份);
 
@@ -6525,6 +6575,11 @@ window.addEventListener("unhandledrejection",function(ev){
        ⚠ 图片那条路有一模一样的两行，在「识别完成」那个 ocr-msg 下面，改这儿记得看那儿。 */
     if(!重来) 话答过=[];
     问要不要加(结构报告&&结构报告.只有话);
+    /* ★ 2026-08-28：明细那一格没拆开 → 【当场】问，不等人点客户。
+       老板：「没拆开要问了才出单」。见 识别完就问() 那段的说明。
+       ⚠ 重来（选完客户那一趟）不在这儿问 —— 那趟有 客户定了重读() 管着，
+         两处都问就是同一件事弹两遍。 */
+    if(!重来 && 读不懂 > 0) 识别完就问();
     if(!重来) (ST.custOK?$("card-match"):$("auto-cust")).scrollIntoView({behavior:"smooth",block:"center"});
     /* ★ 2026-08-21：识别完的【总出口】叫一次回头核 —— 跟 收下文字 那头一个道理。
        认表、明细切段、本子那条路都从这儿出去，挂在这里就一条都漏不掉。
