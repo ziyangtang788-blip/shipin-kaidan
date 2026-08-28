@@ -904,26 +904,26 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260828b"></script>
-<script src="对照-预置.js?v=20260828b"></script>
-<script src="数据-常用规格.js?v=20260828b"></script>
-<script src="数据-换算.js?v=20260828b"></script>
-<script src="数据-客户量纲.js?v=20260828b"></script>
-<script src="引擎-读文件.js?v=20260828b"></script>
-<script src="数据-商户名.js?v=20260828b"></script>
-<script src="导出-观麦.js?v=20260828b"></script>
-<script src="引擎-解析.js?v=20260828b"></script>
-<script src="引擎-读结构.js?v=20260828b"></script>
-<script src="引擎-认表.js?v=20260828b"></script>
-<script src="新-按内容认单.js?v=20260828b"></script>
-<script src="引擎-抓取.js?v=20260828b"></script>
-<script src="引擎-点位册.js?v=20260828b"></script>
-<script src="引擎-匹配.js?v=20260828b"></script>
-<script src="数据-切法规矩.js?v=20260828b"></script>
-<script src="引擎-断句规矩.js?v=20260828b"></script>
-<script src="引擎-碎片类.js?v=20260828b"></script>
-<script src="引擎-学分法.js?v=20260828b"></script>
-<script src="引擎-OCR.js?v=20260828b"></script>
+<script src="数据-价格库.js?v=20260828c"></script>
+<script src="对照-预置.js?v=20260828c"></script>
+<script src="数据-常用规格.js?v=20260828c"></script>
+<script src="数据-换算.js?v=20260828c"></script>
+<script src="数据-客户量纲.js?v=20260828c"></script>
+<script src="引擎-读文件.js?v=20260828c"></script>
+<script src="数据-商户名.js?v=20260828c"></script>
+<script src="导出-观麦.js?v=20260828c"></script>
+<script src="引擎-解析.js?v=20260828c"></script>
+<script src="引擎-读结构.js?v=20260828c"></script>
+<script src="引擎-认表.js?v=20260828c"></script>
+<script src="新-按内容认单.js?v=20260828c"></script>
+<script src="引擎-抓取.js?v=20260828c"></script>
+<script src="引擎-点位册.js?v=20260828c"></script>
+<script src="引擎-匹配.js?v=20260828c"></script>
+<script src="数据-切法规矩.js?v=20260828c"></script>
+<script src="引擎-断句规矩.js?v=20260828c"></script>
+<script src="引擎-碎片类.js?v=20260828c"></script>
+<script src="引擎-学分法.js?v=20260828c"></script>
+<script src="引擎-OCR.js?v=20260828c"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -936,7 +936,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260828b";
+  var 版本号 = "v20260828c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6201,6 +6201,51 @@ window.addEventListener("unhandledrejection",function(ev){
             else 硬伤.push(q.说||q.为什么||q.类型||"没读懂");
           }
         });
+        /* ★★ 2026-08-28：读完【跟原文对一遍】——
+           明细那一格里明摆着有的编号（A59-2 / 5-9 / C3-2），读出来一个都没进点位，
+           那就是【整格没拆开】，这条近道不算数，让给下面会拆的那条路。
+
+           老板 8-28 那张朱鲜生撞出来的，链条是这样：
+             OCR 把表头「明细」抄成了「限额」→ 表的指纹跟着变
+             → 读法本里 17 条一条都对不上 → 掉进这条「按长相直接抓」
+             → 它把【整格当成一个点位】，数量直接拿总数列的 34 顶上
+             → 一段 34 = 表上 34，【账正好平】，所有闸门全放行，一句不问就出单
+           钱一分不差，19 行货全压在一个点上 —— 跟 8/18 那次事故一模一样。
+
+           ⛔ 老板 8-28 点的题：「账能证明的就不问」这条不够 ——
+              把整格当成一坨，账永远是平的。所以光靠秤拦不住，必须跟原文对。
+           ⚠ 这不是「拦住不给出单」：拦下来是让给认表那条路，那条路上有碎片类会拆，
+              拆不开才轮到问人。老板：「不是加闸拦它，是让它用同一套办法读。」
+           ⛔ 判据不能写成「原文里的编号在不在读出来的点位里」——
+              整格当成一个点位名的时候，那一整串【本身就含着】A59-2，一找就找到，
+              等于白查（8-28 当场试过一次，一张都拦不住）。
+              要按【个数】比：原文里有几个编号，就该读出几段。
+           ⚠ 判据卡到最松：整列至少 3 个编号，而且【段数少了三分之一以上】才算。
+              9 张有编号可对的真表离线量过，只有这一张被拦，别的一张不动。 */
+        /* ⛔ 不许只盯【分布列】：8-28 那张 OCR 把表头「明细」抄成「限额」，
+           近道压根不认识这个词，把那一列挑成了【备注】——
+           30 个点位编号一个都没当点位，而且一句账都没记，一路绿灯。
+           所以这儿扫【每一列】，拿编号最多的那一列来比。 */
+        try{
+          var 号re=/[A-Za-z]{1,3}[0-9]{1,4}(?:-[0-9]{1,3})?|[0-9]{1,3}-[0-9]{1,2}/g;
+          var 宽9=0;
+          rows.forEach(function(rr){ if(rr&&rr.length>宽9) 宽9=rr.length; });
+          var 最多号=0;
+          for(var c9=1;c9<=宽9;c9++){
+            var 这列=0;
+            for(var q9=1;q9<rows.length;q9++){
+              var 文9=String((rows[q9]||[])[c9-1]==null?"":rows[q9][c9-1]).trim();
+              if(!文9) continue;
+              号re.lastIndex=0;
+              这列+=(文9.match(号re)||[]).length;
+            }
+            if(这列>最多号) 最多号=这列;
+          }
+          var 段数9=0;
+          (r.行||[]).forEach(function(L){ 段数9+=((L.分布||[]).length); });
+          if(最多号>=3&&段数9<最多号*0.67)
+            硬伤.push("表上有 "+最多号+" 个点位编号，只读出 "+段数9+" 段 —— 整格没拆开");
+        }catch(e){}
       });
     });
     if(!全行.length) return null;
