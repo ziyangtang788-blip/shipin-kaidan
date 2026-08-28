@@ -904,27 +904,27 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260828h"></script>
-<script src="对照-预置.js?v=20260828h"></script>
-<script src="数据-常用规格.js?v=20260828h"></script>
-<script src="数据-换算.js?v=20260828h"></script>
-<script src="数据-客户量纲.js?v=20260828h"></script>
-<script src="引擎-读文件.js?v=20260828h"></script>
-<script src="数据-商户名.js?v=20260828h"></script>
-<script src="导出-观麦.js?v=20260828h"></script>
-<script src="引擎-解析.js?v=20260828h"></script>
-<script src="引擎-读结构.js?v=20260828h"></script>
-<script src="引擎-认表.js?v=20260828h"></script>
-<script src="新-按内容认单.js?v=20260828h"></script>
-<script src="引擎-抓取.js?v=20260828h"></script>
-<script src="引擎-点位册.js?v=20260828h"></script>
-<script src="引擎-匹配.js?v=20260828h"></script>
-<script src="数据-切法规矩.js?v=20260828h"></script>
-<script src="引擎-断句规矩.js?v=20260828h"></script>
-<script src="引擎-碎片类.js?v=20260828h"></script>
-<script src="引擎-认列.js?v=20260828h"></script>
-<script src="引擎-学分法.js?v=20260828h"></script>
-<script src="引擎-OCR.js?v=20260828h"></script>
+<script src="数据-价格库.js?v=20260828i"></script>
+<script src="对照-预置.js?v=20260828i"></script>
+<script src="数据-常用规格.js?v=20260828i"></script>
+<script src="数据-换算.js?v=20260828i"></script>
+<script src="数据-客户量纲.js?v=20260828i"></script>
+<script src="引擎-读文件.js?v=20260828i"></script>
+<script src="数据-商户名.js?v=20260828i"></script>
+<script src="导出-观麦.js?v=20260828i"></script>
+<script src="引擎-解析.js?v=20260828i"></script>
+<script src="引擎-读结构.js?v=20260828i"></script>
+<script src="引擎-认表.js?v=20260828i"></script>
+<script src="新-按内容认单.js?v=20260828i"></script>
+<script src="引擎-抓取.js?v=20260828i"></script>
+<script src="引擎-点位册.js?v=20260828i"></script>
+<script src="引擎-匹配.js?v=20260828i"></script>
+<script src="数据-切法规矩.js?v=20260828i"></script>
+<script src="引擎-断句规矩.js?v=20260828i"></script>
+<script src="引擎-碎片类.js?v=20260828i"></script>
+<script src="引擎-认列.js?v=20260828i"></script>
+<script src="引擎-学分法.js?v=20260828i"></script>
+<script src="引擎-OCR.js?v=20260828i"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -937,7 +937,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260828h";
+  var 版本号 = "v20260828i";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6462,6 +6462,24 @@ window.addEventListener("unhandledrejection",function(ev){
          近道走不通就当没有这条近道，照旧问识别。 */
     var 记=null;
     try{ 记=查读法本(fp,骨fp); }catch(e){ 记=null; }
+    /* ★★ 2026-08-28 老板拖真单当场撞的：本子里那份是【按旧规矩认的】就得作废。
+       B 认完的读法会存进本子，下次同一张表直接套、不再认一遍 —— 这本来是对的。
+       可 B 的规则一改，本子里按昨天规则存的那份照样在用：
+         g 版把「参考线路」那列清掉了、h 版不再传合计列，
+         老板那边却还套着 f 版存的那份 —— 屏幕上照旧一屏「9 行对不上」，
+         各段读成 8 板（那是线路号），合计 122 而不是 236。
+       ⛔ 走本子这条路【根本不经过 认列()】，所以后来修多少遍都救不了它，
+          只能靠这道版本闸。见 引擎-认列.js 里 认法版本 那段。
+       ⚠ 只管 B 自己认的那些；AI 认的、人教的读法一个字都不动。 */
+    try{
+      if(记&&记.读法&&(记.读法.认法版本!==undefined||/碎片类/.test(记.读法.怎么来的||""))){
+        var 现认法版=(window.GM_整表碎片&&window.GM_整表碎片.认法版本)||0;
+        if(记.读法.认法版本!==现认法版){
+          忘掉读法(记.键); 记=null;
+          $("ocr-msg").textContent="这张表记着的读法是按老规矩认的 —— 重新认一遍…";
+        }
+      }
+    }catch(e){}
     if(记) try{
       var 合本=照读法摊(份,记.读法);
       /* ★★ 2026-08-22：套完本子【要过一遍秤】—— 摊出来一行像样的都没有，就是这份读法坏了。
