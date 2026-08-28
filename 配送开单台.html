@@ -904,27 +904,27 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260828e"></script>
-<script src="对照-预置.js?v=20260828e"></script>
-<script src="数据-常用规格.js?v=20260828e"></script>
-<script src="数据-换算.js?v=20260828e"></script>
-<script src="数据-客户量纲.js?v=20260828e"></script>
-<script src="引擎-读文件.js?v=20260828e"></script>
-<script src="数据-商户名.js?v=20260828e"></script>
-<script src="导出-观麦.js?v=20260828e"></script>
-<script src="引擎-解析.js?v=20260828e"></script>
-<script src="引擎-读结构.js?v=20260828e"></script>
-<script src="引擎-认表.js?v=20260828e"></script>
-<script src="新-按内容认单.js?v=20260828e"></script>
-<script src="引擎-抓取.js?v=20260828e"></script>
-<script src="引擎-点位册.js?v=20260828e"></script>
-<script src="引擎-匹配.js?v=20260828e"></script>
-<script src="数据-切法规矩.js?v=20260828e"></script>
-<script src="引擎-断句规矩.js?v=20260828e"></script>
-<script src="引擎-碎片类.js?v=20260828e"></script>
-<script src="引擎-认列.js?v=20260828e"></script>
-<script src="引擎-学分法.js?v=20260828e"></script>
-<script src="引擎-OCR.js?v=20260828e"></script>
+<script src="数据-价格库.js?v=20260828f"></script>
+<script src="对照-预置.js?v=20260828f"></script>
+<script src="数据-常用规格.js?v=20260828f"></script>
+<script src="数据-换算.js?v=20260828f"></script>
+<script src="数据-客户量纲.js?v=20260828f"></script>
+<script src="引擎-读文件.js?v=20260828f"></script>
+<script src="数据-商户名.js?v=20260828f"></script>
+<script src="导出-观麦.js?v=20260828f"></script>
+<script src="引擎-解析.js?v=20260828f"></script>
+<script src="引擎-读结构.js?v=20260828f"></script>
+<script src="引擎-认表.js?v=20260828f"></script>
+<script src="新-按内容认单.js?v=20260828f"></script>
+<script src="引擎-抓取.js?v=20260828f"></script>
+<script src="引擎-点位册.js?v=20260828f"></script>
+<script src="引擎-匹配.js?v=20260828f"></script>
+<script src="数据-切法规矩.js?v=20260828f"></script>
+<script src="引擎-断句规矩.js?v=20260828f"></script>
+<script src="引擎-碎片类.js?v=20260828f"></script>
+<script src="引擎-认列.js?v=20260828f"></script>
+<script src="引擎-学分法.js?v=20260828f"></script>
+<script src="引擎-OCR.js?v=20260828f"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -937,7 +937,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260828e";
+  var 版本号 = "v20260828f";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6159,8 +6159,11 @@ window.addEventListener("unhandledrejection",function(ev){
   /* 认表再摊平 是同步起头的（算指纹、查本子、拼骨架都在 await 之前），
      而且「忘掉重认」那个按钮是从 runOcr 外面调它的 —— 那条路 跑识别 兜不住，
      所以这儿也得自己接一层。 */
-  function 认表跑一趟(份,key){
-    try{ 认表再摊平(份,key); }catch(e){ 识别炸了("认表",e); }
+  /* 跳过自认 = 人已经在「这一列是什么」那个窗里点过一轮了，还是读不出来 ——
+     这一趟直接走 AI，不许再自己认一遍。不加这个开关就是死循环：
+     认不出 → 问人 → 还是读不出 → 重跑 → 又认不出 → 又问人（2026-08-28 差点栽）。 */
+  function 认表跑一趟(份,key,跳过自认){
+    try{ 认表再摊平(份,key,跳过自认); }catch(e){ 识别炸了("认表",e); }
   }
 
   /* ═══════════════════════════════════════════════════
@@ -6343,7 +6346,7 @@ window.addEventListener("unhandledrejection",function(ev){
              表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
   }
 
-  function 认表再摊平(份,key){
+  function 认表再摊平(份,key,跳过自认){
     var T=window.GM_TABLE, S=window.GM_STRUCT;
     $("btn-ocr").disabled=true;
     /* ★ 2026-08-28：先把上一单的重摊数据清掉。
@@ -6504,6 +6507,75 @@ window.addEventListener("unhandledrejection",function(ev){
          ★ 忘掉这一下会同步到服务器（ovForget），别台电脑也不会再照那份错的读。 */
       忘掉读法(记.键);
     }catch(e){ /* 近道自己坏了：当没有本子，往下走识别那条老路 */ }
+
+    /* ①.5 ★★ 新单自己认一遍列（老板 2026-08-28 的「B」）★★
+       ──────────────────────────────────────────────
+       走到这儿说明：近道抓不动、两把钥匙也都没查到 —— 这就是一张【没见过的新表】。
+
+       老板 8/28：「新来的订单才要学。」「不然你新带来的还是没入口。」
+
+       以前这里只剩「问 AI 认表」一条路，而 AI 看的是压缩过的骨架（头 4 行 + 尾 2 行）。
+       轩宝 8/28 那张就是这么把 18 行货读成 1 行的：
+         抬头压了 4 层 → 头 4 行全是抬头，AI 一行货都没看见
+         → 只好拿它唯一看得见的最后一行「猪红」当第一样货
+         → 从第 22 行开始读，前面 17 行一个字都没进来
+         → 三道对账（说好几行/第一样/最后一样）还全部自动对上，一句不问
+
+       自己认列不看表头一个字，只看【每一列装的是什么】：
+         货名有词库、数字一眼看得出、单位有单位表、地址是一坨中文。
+       认得出就出单，一个 token 都不花；认不出照旧往下走 AI 那条老路（后路留着）。
+
+       ⚠ 认出来的读法【照样要人点头才记住】—— 跟 AI 那条路一个待遇，机器不许偷偷记。
+       ⚠ 排在本子后面：学过的优先（老板 8/4 定的）。 */
+    try{
+      var GZ=window.GM_整表碎片;
+      var rows0=份&&份[0]&&份[0].grid&&份[0].grid[0]&&份[0].grid[0].rows;
+      if(GZ&&GZ.认列&&!跳过自认&&rows0&&rows0.length){
+        /* 出单这一段两处共用（自己认出来的、人点完之后再认一遍）——
+           抄两份就会出现「人点完那条路没接上后面」。 */
+        var 出单自认=function(认果){
+          var 备=(认果&&!认果.要问的)?GZ.备好(rows0,认果):null;
+          if(!备) return false;
+          var 合自=T.摊平([{n:1,rows:备.rows}],备.读法);
+          if(!合自||!合自.行.length) return false;
+          收尾(合自,null,备.读法.怎么来的||"自己认出来的（一个 token 都没花）",function(){
+            问读法对不对(备.读法,合自,fp,function(){},骨fp);
+          });
+          return true;
+        };
+        var 认了=GZ.认列(rows0);
+        if(出单自认(认了)) return;
+
+        /* ★ 认不出来 → 一列一列问（老板 8/28：「认不出的时候肯定是问我啊，
+           　 你最多不就是 5 列嘛…我可以接受点 5 次」）。
+           只问【算不出来的那几列】—— 算得出的一句不问
+           （老板 8/27：「有知道的已经跑通了，那些就不需要问」）。
+           ⚠ 用的是现成的「问这几列」那个窗，不另起一套。 */
+        var 待自=(认了&&认了.候选)||[];
+        if(待自.length){
+          问这几列(待自.map(function(q){
+            return { 列:q.列, 样本:q.样本, 猜:q.猜, 表头:"" };
+          }),function(答){
+            var 人定={};
+            Object.keys(答||{}).forEach(function(k){
+              var 角=答[k], c=+k;
+              if(角==="品名") 人定.品名列=c;
+              else if(角==="数量") 人定.数量列=c;
+              else if(角==="单位") 人定.单位列=c;
+              else if(角==="点位"||角==="分布") 人定.地址列=c;
+            });
+            var 再=null;
+            try{ 再=GZ.认列(rows0,人定); }catch(e){ 再=null; }
+            if(再) 再.怎么来的="自己认的（那几列是你点的）";
+            if(出单自认(再)) return;
+            /* 人点完还是摊不出来 —— 别把人晾着，照旧退回去问 AI */
+            $("ocr-msg").textContent="按你点的还是读不出来，换个法子再试一次…";
+            认表跑一趟(份,key,true);
+          });
+          return;
+        }
+      }
+    }catch(e){ /* 自己认这条路坏了：当没有它，照旧往下问 AI */ }
 
     $("ocr-msg").textContent="正在看这个表怎么读…（几秒，很省）";
     var 骨=份.map(function(z){

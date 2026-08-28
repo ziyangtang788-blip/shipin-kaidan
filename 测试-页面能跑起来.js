@@ -926,7 +926,7 @@ async function 跑读法本() {
   /* ── 第一次：本子里没有，该问识别，问完该弹「对吗」 ── */
   win.fetch = 假识别;
   let 第一次出错 = null;
-  try { T.认表跑一趟(裕丰份, "假密钥"); } catch (e) { 第一次出错 = e; }
+  try { T.认表跑一趟(裕丰份, "假密钥", true); } catch (e) { 第一次出错 = e; }
   ok("★ 认表这一步不许抛出去（抛了页面就是死在那儿不动）", !第一次出错,
     第一次出错 && (第一次出错.message + "\n      " + String(第一次出错.stack || "").split("\n")[1]));
   await 等一轮();
@@ -972,10 +972,14 @@ async function 跑读法本() {
   ok("★ 存的是那份读法本身（表头=0 不许丢）", 条.读法 && 条.读法.表头在第几行 === 0, JSON.stringify(条.读法));
   ok("记了确认时间（人要看得见是什么时候点的头）", /^\d{4}-\d{2}-\d{2} /.test(条.确认于 || ""), 条.确认于);
 
+  /* ⚠ 2026-08-28：第三个参数 true =「这一趟别自己认列，直接走 AI」。
+     加了 B（新单自己认四样）之后，裕丰这张 B 一把就认出来了，压根不问 AI ——
+     那是对的，但这一段守的是【认表 + 读法本】那条链，得让它真走到。
+     B 认不出来时照旧落到这条链上，那条路一个字没动。 */
   /* ── 第二次：同一张表再来，该走本子，一次识别都不许问 ── */
   EL["raw"].value = "";
   let 第二次出错 = null;
-  try { T.认表跑一趟(裕丰份, "假密钥"); } catch (e) { 第二次出错 = e; }
+  try { T.认表跑一趟(裕丰份, "假密钥", true); } catch (e) { 第二次出错 = e; }
   ok("第二次也不许抛", !第二次出错, 第二次出错 && 第二次出错.message);
   await 等一轮();
   ok("★ 第二次一次识别都没问（省的就是这笔钱）", 问了几次识别 === 1, "总共问了 " + 问了几次识别 + " 次");
@@ -998,7 +1002,7 @@ async function 跑读法本() {
   const k = Object.keys(T.拿OV().读法本)[0];
   T.拿OV().读法本[k].读法 = { 用第几张表: 1, 版式: "明细", 商品列: 9, 数量列: 9 };  /* 指向不存在的列 */
   EL["raw"].value = "";
-  try { T.认表跑一趟(裕丰份, "假密钥"); } catch (e) { ok("表改版那趟不许抛", false, e.message); }
+  try { T.认表跑一趟(裕丰份, "假密钥", true); } catch (e) { ok("表改版那趟不许抛", false, e.message); }
   await 等一轮();
   ok("★ 本子上那份读不出货 → 忘掉它，别硬套出一张缺货的单",
     !T.拿OV().读法本[k], JSON.stringify(Object.keys(T.拿OV().读法本)));
@@ -1025,7 +1029,7 @@ async function 跑读法本() {
   win.fetch = () => Promise.resolve({ json: () => Promise.resolve({ error: { message: "余额不足" } }) });
   EL["ocr-msg"].innerHTML = "正在看这个表怎么读…";
   EL["btn-ocr"].disabled = true;
-  T.认表跑一趟(裕丰份, "假密钥");
+  T.认表跑一趟(裕丰份, "假密钥", true);
   await 等一轮();
   ok("★ 识别返回错误时要说出来（以前这儿直接 ReferenceError，页面死掉）",
     /余额不足/.test(EL["ocr-msg"].innerHTML || ""), (EL["ocr-msg"].innerHTML || "").slice(0, 200));
@@ -1040,7 +1044,7 @@ async function 跑读法本() {
     json: () => Promise.resolve({ content: [{ type: "text", text: JSON.stringify({ 用第几张表: 1, 版式: "明细", 表头在第几行: 1, 商品列: 99, 数量列: 98 }) }] })
   });
   EL["btn-ocr"].disabled = true;
-  T.认表跑一趟(裕丰份, "假密钥");
+  T.认表跑一趟(裕丰份, "假密钥", true);
   await 等一轮();
   ok("★ 按识别说的读法摊不出货，要说出来而不是卡住",
     /摊不出货来|没看懂/.test(EL["ocr-msg"].innerHTML || ""), (EL["ocr-msg"].innerHTML || "").slice(0, 200));
