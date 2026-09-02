@@ -904,27 +904,27 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260902b"></script>
-<script src="对照-预置.js?v=20260902b"></script>
-<script src="数据-常用规格.js?v=20260902b"></script>
-<script src="数据-换算.js?v=20260902b"></script>
-<script src="数据-客户量纲.js?v=20260902b"></script>
-<script src="引擎-读文件.js?v=20260902b"></script>
-<script src="数据-商户名.js?v=20260902b"></script>
-<script src="导出-观麦.js?v=20260902b"></script>
-<script src="引擎-解析.js?v=20260902b"></script>
-<script src="引擎-读结构.js?v=20260902b"></script>
-<script src="引擎-认表.js?v=20260902b"></script>
-<script src="新-按内容认单.js?v=20260902b"></script>
-<script src="引擎-抓取.js?v=20260902b"></script>
-<script src="引擎-点位册.js?v=20260902b"></script>
-<script src="引擎-匹配.js?v=20260902b"></script>
-<script src="数据-切法规矩.js?v=20260902b"></script>
-<script src="引擎-断句规矩.js?v=20260902b"></script>
-<script src="引擎-碎片类.js?v=20260902b"></script>
-<script src="引擎-认列.js?v=20260902b"></script>
-<script src="引擎-学分法.js?v=20260902b"></script>
-<script src="引擎-OCR.js?v=20260902b"></script>
+<script src="数据-价格库.js?v=20260902c"></script>
+<script src="对照-预置.js?v=20260902c"></script>
+<script src="数据-常用规格.js?v=20260902c"></script>
+<script src="数据-换算.js?v=20260902c"></script>
+<script src="数据-客户量纲.js?v=20260902c"></script>
+<script src="引擎-读文件.js?v=20260902c"></script>
+<script src="数据-商户名.js?v=20260902c"></script>
+<script src="导出-观麦.js?v=20260902c"></script>
+<script src="引擎-解析.js?v=20260902c"></script>
+<script src="引擎-读结构.js?v=20260902c"></script>
+<script src="引擎-认表.js?v=20260902c"></script>
+<script src="新-按内容认单.js?v=20260902c"></script>
+<script src="引擎-抓取.js?v=20260902c"></script>
+<script src="引擎-点位册.js?v=20260902c"></script>
+<script src="引擎-匹配.js?v=20260902c"></script>
+<script src="数据-切法规矩.js?v=20260902c"></script>
+<script src="引擎-断句规矩.js?v=20260902c"></script>
+<script src="引擎-碎片类.js?v=20260902c"></script>
+<script src="引擎-认列.js?v=20260902c"></script>
+<script src="引擎-学分法.js?v=20260902c"></script>
+<script src="引擎-OCR.js?v=20260902c"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -937,7 +937,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260902b";
+  var 版本号 = "v20260902c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5603,15 +5603,20 @@ window.addEventListener("unhandledrejection",function(ev){
          客户定了重读() 拿着客户号本地再摊一遍（纯代码算，不调 AI、不花钱）。 */
     读法.客户号=custId(ST.ci)||"";
     var 合={抬头:{},行:[],没读懂的:[],表怎么读的:null}, 成=0;
+    /* ★ 份数账（2026-09-02）：放进来几份、真出了货的有几份。
+       收尾() 那道总闸靠这两个数拦「放两张只出一张」。
+       ⚠ 只认【出了货】的份 —— 摊出 0 行跟没摊是一回事，不许算数。 */
+    合._共几份=(份||[]).length;
     份.forEach(function(z){
       var J=T.摊平(z.grid,读法);
-      if(!J) return;
+      if(!J||!(J.行||[]).length) return;
       成++;
       合.行=合.行.concat(J.行||[]);
       合.没读懂的=合.没读懂的.concat(J.没读懂的||[]);
       if(!合.表怎么读的) 合.表怎么读的=J.表怎么读的;
       Object.keys(J.抬头||{}).forEach(function(k){ if(!合.抬头[k]) 合.抬头[k]=J.抬头[k]; });
     });
+    合._出货几份=成;
     /* 原料留着 —— 选完客户要拿同一份格子再摊一遍。留的是 grid，不是文字，
        所以重摊跟第一遍一模一样准，不是拿摊出来的文字再解析一次。 */
     ST.重摊 = 成 ? {份:份, 读法:读法, 读不懂数:数读不懂(合)} : null;
@@ -6208,7 +6213,11 @@ window.addEventListener("unhandledrejection",function(ev){
       });
     }
     var 出货的表=[], 全行=[], 全问=[], 待问点位=null, 待问列={}, 硬伤=[], 豁免=[];
+    /* ★ 份数账（2026-09-02）—— 见 收尾() 那道总闸。按【份】数，不是按表数：
+       一份里有好几张工作表是另一回事，这儿量的是「拖进来的每个文件都读到了吗」。 */
+    var 出货的份=0;
     (份||[]).forEach(function(z){
+      var 这份出货了=false;
       ((z&&z.grid)||[]).forEach(function(sh){
         var rows=(sh&&sh.rows)||[];
         if(!rows.length) return;
@@ -6216,6 +6225,7 @@ window.addEventListener("unhandledrejection",function(ev){
         try{ r=G.抓(rows,选项||{}); }catch(e){ return; }
         if(!r||!(r.行||[]).length) return;
         出货的表.push(1);
+        这份出货了=true;
         全行=全行.concat(r.行);
         /* ★ 已经派上用场的列不许再问 —— 它们只是【某几格】读不干净，
            那是格子的事，不是「这一列是什么」的事。问了就是骚扰。 */
@@ -6333,6 +6343,7 @@ window.addEventListener("unhandledrejection",function(ev){
             硬伤.push("表上有 "+最多号+" 个点位编号，只读出 "+段数9+" 段 —— 整格没拆开");
         }catch(e){}
       });
+      if(这份出货了) 出货的份++;
     });
     if(!全行.length) return null;
     /* 一份文件里不止一张表出了货 —— 定不下来，交回方法一 */
@@ -6343,6 +6354,7 @@ window.addEventListener("unhandledrejection",function(ev){
     /* ★ 帐没销平 —— 近道不算数。带着已知的错交差，比多花一次 AI 贵得多。 */
     if(硬伤.length) return null;
     return { 抬头:{}, 行:全行, 没读懂的:全问, 待问点位:待问点位, 待问列:待问列,
+             _共几份:(份||[]).length, _出货几份:出货的份,
              表怎么读的:{ 版式:"按长相直接抓（一次 AI 都没问）" } };
   }
 
@@ -6362,6 +6374,9 @@ window.addEventListener("unhandledrejection",function(ev){
     /* 收尾：横轴问一句 + 收下格子表。本子那条路和识别那条路【共用这一份】——
        抄第二份就会出现「这条路好了那条路还是坏的」（CLAUDE.md：匹配逻辑只准一份）。 */
     function 收尾(合,用量,怎么读的,之后){
+      /* ★ 份数总闸排在最前面 —— 拦住了就连「这排是什么」「读法对不对」都不该弹：
+         单都没出，问他这张表怎么读没有意义。 */
+      if(!份数够(合)) return;
       var 样本=横轴样本(合);
       var 判=这排是什么(样本);
       if(判.要问&&样本.length){
@@ -6556,6 +6571,44 @@ window.addEventListener("unhandledrejection",function(ev){
           if(!备) return false;
           var 合自=T.摊平([{n:1,rows:备.rows}],备.读法);
           if(!合自||!合自.行.length) return false;
+          /* ★★ 2026-09-02：一次拖进来几份就摊几份 —— 原来这儿只摊 份[0]。
+             老板 9/2 拖广显那张两页单（客户微信里发的两张图）：
+               第 1 页 18 行读得好好的，第 2 页 13 行货【一格都没进来】，
+               屏幕上看着就是「只识别了 1 张」。
+             ⛔ 这是 8/28 加这条新路时留的坑：别的路（照记住的读法、问 AI、按长相抓）
+                都是几份一起摊的，只有这条写死了第一份。单张测永远测不出来。
+
+             ⚠ 后面每一份都拿【第一份认出来的列】去认，不许各认各的 ——
+               广显那张第二页自己认会栽在「序号列和数量列都是满的数字，
+               认不出哪列是数量」上；套第一页的列一摊就是 13 行、合计 474，
+               跟单子上印的「数量 474.00」一分不差。
+             ⚠ 后面哪一份认不出、摊不出、或者算出来的读法跟第一份对不上 ——
+               整条路作废（return false），退回去走 AI 那条【本来就是多份一起】的路。
+               宁可多花一次 AI，也绝不许闷着少一页货出单。 */
+          var 备们=[备];
+          var 人定={品名列:认果.品名列, 数量列:认果.数量列,
+                    单位列:认果.单位列, 地址列:认果.地址列};
+          for(var qi=1;qi<(份||[]).length;qi++){
+            var rowsN=份[qi]&&份[qi].grid&&份[qi].grid[0]&&份[qi].grid[0].rows;
+            if(!rowsN||!rowsN.length) return false;
+            var 认N=null;
+            try{ 认N=GZ.认列(rowsN,人定); }catch(e){ return false; }
+            var 备N=(认N&&!认N.要问的)?GZ.备好(rowsN,认N,custId(ST.ci)):null;
+            if(!备N) return false;
+            /* 读法对不上就别硬拼：重摊那一趟（选完客户补拆）用的是第一份的读法，
+               表头行、分布列不一样的话，拿它去摊后面几份就是错位。 */
+            if(备N.读法.表头在第几行!==备.读法.表头在第几行
+               ||备N.读法.分布列!==备.读法.分布列
+               ||备N.读法.点位名列!==备.读法.点位名列) return false;
+            var 合N=T.摊平([{n:1,rows:备N.rows}],备N.读法);
+            if(!合N||!合N.行.length) return false;
+            合自.行=合自.行.concat(合N.行||[]);
+            合自.没读懂的=(合自.没读懂的||[]).concat(合N.没读懂的||[]);
+            备们.push(备N);
+          }
+          /* 记份数账 —— 走到这儿其实每一份都成了（少一份上面就 return 了），
+             记上是给总闸留证据：将来这段再改坏，闸拦得住。 */
+          合自._共几份=(份||[]).length; 合自._出货几份=备们.length;
           /* ★★ 2026-09-01 老板拖朱鲜生真单撞的，这一句是命门：
              他家「一格挤好几段」那种，切段那条规矩【要等选完客户才出手】——
              那是老板 8/11 自己定的顺序：
@@ -6569,7 +6622,12 @@ window.addEventListener("unhandledrejection",function(ev){
                 存原始的份，重摊出来跟第一遍就不是一回事了。
              ⚠ 客户号不用我操心：照读法摊() 自己会填当下选中的那家（见它第一行）。 */
           try{
-            ST.重摊={ 份:[{name:"自己认的", grid:[{n:1, rows:备.rows}]}],
+            /* ⚠ 几份就存几份 —— 只存第一份的话，选完客户补拆那一趟
+               照样只补第一页，后面几页的数量永远空着（9/1 朱鲜生那个命门）。 */
+            ST.重摊={ 份:备们.map(function(b,bi){
+                        return {name:"自己认的"+(bi?("·第"+(bi+1)+"份"):""),
+                                grid:[{n:1, rows:b.rows}]};
+                      }),
                       读法:备.读法, 读不懂数:数读不懂(合自) };
           }catch(e){ ST.重摊=null; }
           收尾(合自,null,备.读法.怎么来的||"自己认出来的（一个 token 都没花）",function(){
@@ -6767,8 +6825,37 @@ window.addEventListener("unhandledrejection",function(ev){
     回头核(null,底,null);
   }
 
+  /* ════════ 份数总闸 ★★（2026-09-02）════════
+     老板 9/2：「我要的不是这两个单没问题，我要的全部没问题。」
+
+     他拖广显那张两页单，第二页 13 行货一格都没进来，屏幕上照旧一片绿。
+     根子在「新单自己认列」那条路只摊了第一份 —— 那一条我修了，可是
+     出单的路有四条（按长相抓／照记住的读法／自己认／问 AI），将来还会加，
+     每条都自己数一遍份数，早晚再漏一条。
+
+     所以闸不设在某一条路上，设在【所有路的总出口】：
+       拖进来几份，就得有几份出了货；少一份就拦下来说明白，绝不闷着收单。
+
+     ⚠ 宁可不出单，也不许少一页货出单（CLAUDE.md 头一条：认错必须为 0）。
+       真有一份不是订单（多发的图、封面、聊天截图），
+       在缩略图那排把它点掉，再识别一次 —— 路留着，不是死堵。
+     ⚠ 没记账的路（_共几份 是 undefined）一律放行：这道闸只管
+       「明明拖了好几份」这件事，不许它顺手拦住本来就好好的单份路。 */
+  function 份数够(J){
+    var 共=J&&J._共几份, 出=J&&J._出货几份;
+    if(!(共>1)) return true;                 /* 单份 / 没记账 —— 不归这道闸管 */
+    if(!(出>=0)) return true;
+    if(出>=共) return true;
+    $("btn-ocr").disabled=false;
+    识别败了("这次放进来 "+共+" 份，只读出了 "+出+" 份的货 —— 还有 "+(共-出)+
+             " 份一格都没读到，所以没给你出单（少一页货，比多花一次识别贵得多）。"+
+             " 两个办法：一份一份放；那一份要不是订单（多发的图、封面），"+
+             "在下面缩略图那排点掉它再识别一次。");
+    return false;
+  }
   function 收下格子表(J,怎么读的,用量,重来){
     var S=window.GM_STRUCT;
+    if(!份数够(J)) return;                   /* ★ 总闸：少一份货，一律不收 */
     var 摊=S.结构变文字(J);
     var hint="";
     摊=摊.replace(/^#\s*客户\s*[:：]\s*(.+)$/m,function(m,p1){ hint=p1.trim(); return ""; }).trim();
@@ -7062,7 +7149,11 @@ window.addEventListener("unhandledrejection",function(ev){
        ⛔ 采用规矩在引擎里：每一行都切得出、每行的和都跟总数一分不差才返回东西，
           差一条它自己返回 null，这儿就当没发生过，原样掉进下面的老路。
           58 份真表离线扫过：只有朱鲜生 8-20 那张命中，零误伤。 */
-    if(OCR走通&&OCR文本.length&&PDFS.length===0&&TXTS.length===0
+    /* ⚠ 2026-09-02：这条只走【一份】。
+       它是把几份的字拼成一坨再切的，切出来的行认不出「哪一行来自哪一份」——
+       份数总闸量不了它，少一页也看不出来。多份一律让给下面的认表那条（那条按份摊、过闸）。
+       朱鲜生那张（唯一命中这条的真表）本来就是一份，行为一个字没变。 */
+    if(OCR走通&&OCR文本.length===1&&PDFS.length===0&&TXTS.length===0
        &&window.GM_抓取&&window.GM_抓取.OCR表切格子表){
       var 明细格子表=window.GM_抓取.OCR表切格子表(
         OCR文本.map(function(t){ return t.text; }).join("\n"));
