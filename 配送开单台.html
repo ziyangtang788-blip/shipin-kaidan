@@ -904,27 +904,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260906e"></script>
-<script src="对照-预置.js?v=20260906e"></script>
-<script src="数据-常用规格.js?v=20260906e"></script>
-<script src="数据-换算.js?v=20260906e"></script>
-<script src="数据-客户量纲.js?v=20260906e"></script>
-<script src="引擎-读文件.js?v=20260906e"></script>
-<script src="数据-商户名.js?v=20260906e"></script>
-<script src="导出-观麦.js?v=20260906e"></script>
-<script src="引擎-解析.js?v=20260906e"></script>
-<script src="引擎-读结构.js?v=20260906e"></script>
-<script src="引擎-认表.js?v=20260906e"></script>
-<script src="新-按内容认单.js?v=20260906e"></script>
-<script src="引擎-抓取.js?v=20260906e"></script>
-<script src="引擎-点位册.js?v=20260906e"></script>
-<script src="引擎-匹配.js?v=20260906e"></script>
-<script src="数据-切法规矩.js?v=20260906e"></script>
-<script src="引擎-断句规矩.js?v=20260906e"></script>
-<script src="引擎-碎片类.js?v=20260906e"></script>
-<script src="引擎-认列.js?v=20260906e"></script>
-<script src="引擎-学分法.js?v=20260906e"></script>
-<script src="引擎-OCR.js?v=20260906e"></script>
+<script src="数据-价格库.js?v=20260906f"></script>
+<script src="对照-预置.js?v=20260906f"></script>
+<script src="数据-常用规格.js?v=20260906f"></script>
+<script src="数据-换算.js?v=20260906f"></script>
+<script src="数据-客户量纲.js?v=20260906f"></script>
+<script src="引擎-读文件.js?v=20260906f"></script>
+<script src="数据-商户名.js?v=20260906f"></script>
+<script src="导出-观麦.js?v=20260906f"></script>
+<script src="引擎-解析.js?v=20260906f"></script>
+<script src="引擎-读结构.js?v=20260906f"></script>
+<script src="引擎-认表.js?v=20260906f"></script>
+<script src="新-按内容认单.js?v=20260906f"></script>
+<script src="引擎-抓取.js?v=20260906f"></script>
+<script src="引擎-点位册.js?v=20260906f"></script>
+<script src="引擎-匹配.js?v=20260906f"></script>
+<script src="数据-切法规矩.js?v=20260906f"></script>
+<script src="引擎-断句规矩.js?v=20260906f"></script>
+<script src="引擎-碎片类.js?v=20260906f"></script>
+<script src="引擎-总闸.js?v=20260906f"></script>
+<script src="引擎-认列.js?v=20260906f"></script>
+<script src="引擎-学分法.js?v=20260906f"></script>
+<script src="引擎-OCR.js?v=20260906f"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -937,7 +938,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260906e";
+  var 版本号 = "v20260906f";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -5619,7 +5620,7 @@ window.addEventListener("unhandledrejection",function(ev){
     合._出货几份=成;
     /* 原料留着 —— 选完客户要拿同一份格子再摊一遍。留的是 grid，不是文字，
        所以重摊跟第一遍一模一样准，不是拿摊出来的文字再解析一次。 */
-    ST.重摊 = 成 ? {份:份, 读法:读法, 读不懂数:数读不懂(合), 账不平数:账不平(合)} : null;
+    ST.重摊 = 成 ? {份:份, 读法:读法, 读不懂数:数读不懂(合), 账不平数:账不平(合), 没拆开数:没拆开(合)} : null;
     return 成?合:null;
   }
 
@@ -5671,6 +5672,13 @@ window.addEventListener("unhandledrejection",function(ev){
     });
     return n;
   }
+  /* ★★ 没拆开：明摆着好几段，出单只出了一段　（2026-09-06 老板定的总闸第三条）
+     判据和为什么都在 引擎-总闸.js 里 —— 页面【不留第二份】，测试和页面用同一份。
+     老板原话：「不论是列出问题还是拆出问题都要跳出来……不要直接就出单。」 */
+  function 没拆开(合){
+    var G=window.GM_总闸;
+    return (G&&G.没拆开)?G.没拆开(合):0;
+  }
   /* 还剩下读不懂的，攒成「帮我认一下」要问的条子。
      截断的那种不问 —— 那是 OCR 把尾巴切了，教了也没用，得让人分开截图重发。 */
   function 读不懂条们(合){
@@ -5698,7 +5706,7 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!ST.重摊||ST.ci<0) return;
     关第三步();                                /* 上一单的问题不许留在屏上 */
     /* ★ 账不平也算「还没读对」（老板 9/2）—— 见 账不平() 那段说明。 */
-    if(!(ST.重摊.读不懂数>0)&&!(ST.重摊.账不平数>0)) return;   /* 第一遍就全读对了，不折腾 */
+    if(!(ST.重摊.读不懂数>0)&&!(ST.重摊.账不平数>0)&&!(ST.重摊.没拆开数>0)) return;   /* 第一遍就全读对了，不折腾 */
     var 原=ST.重摊.读不懂数;
     var 合=照读法摊(ST.重摊.份, ST.重摊.读法);  /* 这一趟客户号有了，学过的规矩才轮得上 */
     if(!合||!合.行.length) return;
@@ -5710,7 +5718,8 @@ window.addEventListener("unhandledrejection",function(ev){
     /* 补完还剩的，这时候才轮到问人 —— 走第 3 步那块地（2026-08-24 换的入口）。
        ⚠ 老弹窗 问怎么切() 留着没删：它是【退路】——
          新的那条但凡自己出毛病，照旧回到老弹窗，绝不让人卡在没得问的地方。 */
-    if(剩>0||账不平(合)) 问一次怎么拆(合);
+    /* ★ 2026-09-06 加上「没拆开」——见 没拆开() 那段。老板：任何地方不齐都要跳出来。 */
+    if(剩>0||账不平(合)||没拆开(合)) 问一次怎么拆(合);
   }
 
   /* ════════ 「明细那一格怎么拆」—— 三层，从根到梢试一遍 ════════
@@ -5763,7 +5772,7 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!合||!合.行.length) return;
     /* ★ 账不平也要叫学习一次（老板 9/2）—— 见 账不平() 那段说明。
        读出一半跟一个字没读出来，在系统眼里原来一模一样，学习都轮不到出手。 */
-    if(!数读不懂(合)&&!账不平(合)) return;
+    if(!数读不懂(合)&&!账不平(合)&&!没拆开(合)) return;
     问一次怎么拆(合);
   }
   /* ════════ 「这一样在第几列」—— 两条线索打架时问一句　★（2026-08-28）════════
@@ -6664,7 +6673,7 @@ window.addEventListener("unhandledrejection",function(ev){
                         return {name:"自己认的"+(bi?("·第"+(bi+1)+"份"):""),
                                 grid:[{n:1, rows:b.rows}]};
                       }),
-                      读法:备.读法, 读不懂数:数读不懂(合自), 账不平数:账不平(合自) };
+                      读法:备.读法, 读不懂数:数读不懂(合自), 账不平数:账不平(合自), 没拆开数:没拆开(合自) };
           }catch(e){ ST.重摊=null; }
           收尾(合自,null,备.读法.怎么来的||"自己认出来的（一个 token 都没花）",function(){
             问读法对不对(备.读法,合自,fp,function(){},骨fp);
