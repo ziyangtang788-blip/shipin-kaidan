@@ -904,27 +904,27 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260906c"></script>
-<script src="对照-预置.js?v=20260906c"></script>
-<script src="数据-常用规格.js?v=20260906c"></script>
-<script src="数据-换算.js?v=20260906c"></script>
-<script src="数据-客户量纲.js?v=20260906c"></script>
-<script src="引擎-读文件.js?v=20260906c"></script>
-<script src="数据-商户名.js?v=20260906c"></script>
-<script src="导出-观麦.js?v=20260906c"></script>
-<script src="引擎-解析.js?v=20260906c"></script>
-<script src="引擎-读结构.js?v=20260906c"></script>
-<script src="引擎-认表.js?v=20260906c"></script>
-<script src="新-按内容认单.js?v=20260906c"></script>
-<script src="引擎-抓取.js?v=20260906c"></script>
-<script src="引擎-点位册.js?v=20260906c"></script>
-<script src="引擎-匹配.js?v=20260906c"></script>
-<script src="数据-切法规矩.js?v=20260906c"></script>
-<script src="引擎-断句规矩.js?v=20260906c"></script>
-<script src="引擎-碎片类.js?v=20260906c"></script>
-<script src="引擎-认列.js?v=20260906c"></script>
-<script src="引擎-学分法.js?v=20260906c"></script>
-<script src="引擎-OCR.js?v=20260906c"></script>
+<script src="数据-价格库.js?v=20260906d"></script>
+<script src="对照-预置.js?v=20260906d"></script>
+<script src="数据-常用规格.js?v=20260906d"></script>
+<script src="数据-换算.js?v=20260906d"></script>
+<script src="数据-客户量纲.js?v=20260906d"></script>
+<script src="引擎-读文件.js?v=20260906d"></script>
+<script src="数据-商户名.js?v=20260906d"></script>
+<script src="导出-观麦.js?v=20260906d"></script>
+<script src="引擎-解析.js?v=20260906d"></script>
+<script src="引擎-读结构.js?v=20260906d"></script>
+<script src="引擎-认表.js?v=20260906d"></script>
+<script src="新-按内容认单.js?v=20260906d"></script>
+<script src="引擎-抓取.js?v=20260906d"></script>
+<script src="引擎-点位册.js?v=20260906d"></script>
+<script src="引擎-匹配.js?v=20260906d"></script>
+<script src="数据-切法规矩.js?v=20260906d"></script>
+<script src="引擎-断句规矩.js?v=20260906d"></script>
+<script src="引擎-碎片类.js?v=20260906d"></script>
+<script src="引擎-认列.js?v=20260906d"></script>
+<script src="引擎-学分法.js?v=20260906d"></script>
+<script src="引擎-OCR.js?v=20260906d"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -937,7 +937,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260906c";
+  var 版本号 = "v20260906d";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6635,7 +6635,62 @@ window.addEventListener("unhandledrejection",function(ev){
           });
           return true;
         };
-        var 认了=GZ.认列(rows0);
+        /* ★★ 2026-09-06 老板定的：「一整列丢掉之前先弹窗问一下要不要丢掉，
+           　 这是别的东西。如果他选择别的东西，就把选择给他，让他去选
+           　 是备注啊，还是点位啊，还是什么其他东西。」
+
+           为什么非补这一条：8/24 那道「这一列是什么」的窗一直都在，可它【只装在
+           近道那条路上】。8/28 加的这条「自己认列」的新路自己清整列，谁都不问 ——
+           老板 9/4 那张补货单就是这么栽的：第一列「单位编码」（022567 / 770024…）
+           其实就是送到哪里，被当成没用的数字列整列清空，18 样货点位全是白的。
+           ⚠ 不新造判据（我原来那套「同一个号跨几样货」的猜法当场作废了）——
+             就用现成的这道窗、现成的 列读法 记忆，一个字都不另起。
+           ⚠ 教过就不再问：按「这家客户 + 这张表长什么样」记，同一家同样的表一句不问。
+           ⚠ 代价老板自己认的：像轩宝「参考线路」那种列，第一次也会问一下，
+             点「不用」就记住了。19 张真表离线量过：一共只会问 4 次。 */
+        var 列键B=null, 教过B=null;
+        try{ 列键B=列读法键(份,1); 教过B=列键B?查列读法(列键B):null; }catch(e){ 教过B=null; }
+        function 人定从答(答){
+          var 人定={};
+          Object.keys(答||{}).forEach(function(k){
+            var 角=答[k], c=+k;
+            if(角==="品名") 人定.品名列=c;
+            else if(角==="数量") 人定.数量列=c;
+            else if(角==="单位") 人定.单位列=c;
+            else if(角==="点位"||角==="分布") 人定.地址列=c;
+            else if(角==="备注"||角==="规格") 人定.备注列=c;
+            /* 「不用」什么都不填 —— 照旧落进「该清掉」那份名单里 */
+          });
+          return 人定;
+        }
+        var 认了=GZ.认列(rows0, 教过B?人定从答(教过B.读):undefined);
+        /* 要被整列清掉、里面又真有东西、这家又没教过 —— 先问，别闷头清 */
+        if(认了&&!认了.要问的&&!教过B){
+          var 待丢=[];
+          (认了.杂数列||[]).forEach(function(c){
+            var 样=[], 头="";
+            for(var jz=0;jz<rows0.length&&样.length<6;jz++){
+              var vz=String(((rows0[jz]||[])[c-1])==null?"":rows0[jz][c-1]).trim();
+              if(!vz) continue;
+              if(!头&&jz<3&&!/[0-9]/.test(vz)){ 头=vz; continue; }   /* 头几行里不带数字的当表头 */
+              if(样.indexOf(vz)<0) 样.push(vz);
+            }
+            if(样.length) 待丢.push({列:c, 表头:头, 样本:样, 猜:"不用"});
+          });
+          if(待丢.length){
+            问这几列(待丢,function(答){
+              if(答&&Object.keys(答).length){ try{ 存列读法(列键B,答); }catch(e){} }
+              var 再B=null;
+              try{ 再B=GZ.认列(rows0,人定从答(答)); }catch(e){ 再B=null; }
+              if(再B&&!再B.要问的) 再B.怎么来的="自己认的（那几列是你点的，这家以后不再问）";
+              if(出单自认(再B&&!再B.要问的?再B:认了)) return;
+              /* 人点完还是摊不出来 —— 别把人晾着，照旧退回去问 AI */
+              $("ocr-msg").textContent="按你点的还是读不出来，换个法子再试一次…";
+              认表跑一趟(份,key,true);
+            });
+            return;
+          }
+        }
         if(出单自认(认了)) return;
 
         /* ★ 认不出来 → 一列一列问（老板 8/28：「认不出的时候肯定是问我啊，

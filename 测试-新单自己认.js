@@ -133,11 +133,12 @@ L("\n【三、认不出来的时候】");
 L("\n【四、页面真接上了没】");
 {
   const H = require("fs").readFileSync(path.resolve(__dirname, "配送开单台.html"), "utf8");
-  ok("页面调了 认列", /GZ\.认列\(rows0\)/.test(H));
+  /* ⚠ 2026-09-06 起这一句带上了参数（把教过的列读法套进去），所以只认前半截 */
+  ok("页面调了 认列", /GZ\.认列\(rows0/.test(H));
   ok("★ 排在本子【后面】（学过的优先，老板 8/4 定的）",
-    H.indexOf("查读法本(fp,骨fp)") < H.indexOf("GZ.认列(rows0)"));
+    H.indexOf("查读法本(fp,骨fp)") < H.indexOf("GZ.认列(rows0"));
   ok("★ 排在问 AI【前面】（不然还是 AI 先看那 6 行）",
-    H.indexOf("GZ.认列(rows0)") < H.indexOf("正在看这个表怎么读"));
+    H.indexOf("GZ.认列(rows0") < H.indexOf("正在看这个表怎么读"));
   ok("★ 认不出来会一列一列问（复用现成那个窗，没另起一套）",
     /问这几列\(待自/.test(H) && (H.match(/function 问这几列\(/g) || []).length === 1);
   ok("★ 人点的答案翻回去重认一遍", /GZ\.认列\(rows0,人定\)/.test(H));
