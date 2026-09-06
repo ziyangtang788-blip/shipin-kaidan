@@ -904,28 +904,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260906f"></script>
-<script src="对照-预置.js?v=20260906f"></script>
-<script src="数据-常用规格.js?v=20260906f"></script>
-<script src="数据-换算.js?v=20260906f"></script>
-<script src="数据-客户量纲.js?v=20260906f"></script>
-<script src="引擎-读文件.js?v=20260906f"></script>
-<script src="数据-商户名.js?v=20260906f"></script>
-<script src="导出-观麦.js?v=20260906f"></script>
-<script src="引擎-解析.js?v=20260906f"></script>
-<script src="引擎-读结构.js?v=20260906f"></script>
-<script src="引擎-认表.js?v=20260906f"></script>
-<script src="新-按内容认单.js?v=20260906f"></script>
-<script src="引擎-抓取.js?v=20260906f"></script>
-<script src="引擎-点位册.js?v=20260906f"></script>
-<script src="引擎-匹配.js?v=20260906f"></script>
-<script src="数据-切法规矩.js?v=20260906f"></script>
-<script src="引擎-断句规矩.js?v=20260906f"></script>
-<script src="引擎-碎片类.js?v=20260906f"></script>
-<script src="引擎-总闸.js?v=20260906f"></script>
-<script src="引擎-认列.js?v=20260906f"></script>
-<script src="引擎-学分法.js?v=20260906f"></script>
-<script src="引擎-OCR.js?v=20260906f"></script>
+<script src="数据-价格库.js?v=20260906g"></script>
+<script src="对照-预置.js?v=20260906g"></script>
+<script src="数据-常用规格.js?v=20260906g"></script>
+<script src="数据-换算.js?v=20260906g"></script>
+<script src="数据-客户量纲.js?v=20260906g"></script>
+<script src="引擎-读文件.js?v=20260906g"></script>
+<script src="数据-商户名.js?v=20260906g"></script>
+<script src="导出-观麦.js?v=20260906g"></script>
+<script src="引擎-解析.js?v=20260906g"></script>
+<script src="引擎-读结构.js?v=20260906g"></script>
+<script src="引擎-认表.js?v=20260906g"></script>
+<script src="新-按内容认单.js?v=20260906g"></script>
+<script src="引擎-抓取.js?v=20260906g"></script>
+<script src="引擎-点位册.js?v=20260906g"></script>
+<script src="引擎-匹配.js?v=20260906g"></script>
+<script src="数据-切法规矩.js?v=20260906g"></script>
+<script src="引擎-断句规矩.js?v=20260906g"></script>
+<script src="引擎-碎片类.js?v=20260906g"></script>
+<script src="引擎-总闸.js?v=20260906g"></script>
+<script src="引擎-认列.js?v=20260906g"></script>
+<script src="引擎-学分法.js?v=20260906g"></script>
+<script src="引擎-OCR.js?v=20260906g"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -938,7 +938,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260906f";
+  var 版本号 = "v20260906g";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -3117,6 +3117,31 @@ window.addEventListener("unhandledrejection",function(ev){
     return true;
   }
 
+  /* ★★ 明细没拆开 —— 出单那道门的第二把锁　（2026-09-06 老板定的总闸）
+     老板原话：「该有的明细都没有出来，这种你学习功能就跳出来，不要直接就出单。」
+     朱先生 9/6 那张：表上明明五个点位，出单只出一行，20 板全压在一个点上，
+     而且数量读得出来、账也是平的 —— 老那两道门（没看清 / 没下落）一道都拦不住。
+     ⛔ 只拦【证据确凿】这一条：原文那一段里明摆着两个以上点位。
+       账不平【故意不拦】—— 碧源那种块跟板混着写的，账天生就对不上，
+       拦了他天天开不了单（老板 9/6 当场点的）。账不平照旧只提醒。
+     ⚠ 数几段用 引擎-总闸.js 那一份，不在这儿另写。 */
+  function 明细没拆开(){
+    var G=window.GM_总闸;
+    if(!G||!G.明摆着几段) return false;
+    var 坏=[];
+    (ST.lines||[]).forEach(function(L){
+      var 段=(L&&L.segs)||[];
+      if(段.length!==1) return;
+      var d=段[0]||{};
+      var 串=String(d.code||d.点位名||d.原文||"");
+      if(G.明摆着几段(串)>=2) 坏.push((L.text||"")+"（"+G.明摆着几段(串)+"个点位挤成一行）");
+    });
+    if(!坏.length) return false;
+    提醒("这几样的明细没拆开，先拆开再出单：　"+坏.slice(0,6).join("；")+
+         (坏.length>6?("　… 共 "+坏.length+" 样"):""));
+    return true;
+  }
+
   function 跑一遍原文(){
     /* 调出来的老行是冻住的，整张重算会把它们解冻重认 ——
        那等于把已经出过的单悄悄改了，必须先问一句。 */
@@ -3639,6 +3664,7 @@ window.addEventListener("unhandledrejection",function(ev){
     if(数量还空着()){
       return;
     }
+    if(明细没拆开()) return;      /* 明细没拆开的更不许导 —— 货会发错地方 */
     var E=window.GM_EXPORT;
     if(!E){ 提醒("导出模块没加载（导出-观麦.js）","红"); return; }
     var R=compute();
@@ -5840,7 +5866,12 @@ window.addEventListener("unhandledrejection",function(ev){
      ⚠ 答完按【客户＋这张表长什么样】记住，跟 列读法 同一把钥匙，下次一句不问。 */
   function 学一次碎片角色(合,回调){
     var F=window.GM_碎片, 读=ST.重摊&&ST.重摊.读法;
-    if(!F||!读||读.分布列==null){ 回调(false); return; }
+    /* ★★ 2026-09-06：源列 = 明细列，没有的话拿【点位名列】顶上。
+       老板 9/6 拖朱先生那张撞出来的：那张的读法是【点位名列】，
+       这儿只认 分布列，伸手一摸是空的 → 悄悄 回调(false) → 三层全空转 →
+       什么窗都不弹，单子直接出。「窗只会看一个抽屉，东西在另一个抽屉里。」 */
+    var 源列=(读&&(读.分布列||读.点位名列))||0;
+    if(!F||!读||!源列){ 回调(false); return; }
     var 键=null; try{ 键=列读法键(ST.重摊.份,读.表头在第几行); }catch(e){ 键=null; }
     /* 教过了就直接套，一句不问 */
     var 教过=键?查碎片角色(键):null;
@@ -5856,7 +5887,7 @@ window.addEventListener("unhandledrejection",function(ev){
         var rows=(sh&&sh.rows)||[];
         for(var i=起;i<rows.length;i++){
           var r=rows[i]||[];
-          var 文=String(r[读.分布列-1]==null?"":r[读.分布列-1]).trim();
+          var 文=String(r[源列-1]==null?"":r[源列-1]).trim();
           if(!文) continue;
           var c校=(读.合计列!=null?读.合计列:读.数量列), 校=null;
           if(c校){ var m=/^([0-9]+(?:\.[0-9]+)?)/.exec(String(r[c校-1]==null?"":r[c校-1]).trim());
@@ -5872,6 +5903,9 @@ window.addEventListener("unhandledrejection",function(ev){
       if(键) try{ 存碎片角色(键,表); }catch(e){}
       ST.重摊.读法=Object.keys(读).reduce(function(o,k){ o[k]=读[k]; return o; },{});
       ST.重摊.读法.碎片角色=表;
+      /* 源列是【点位名列】顶上来的 —— 学会怎么切之后要翻成分布列，
+         不然摊平那头照旧把整格当一个点位名，学了等于白学。 */
+      if(!读.分布列&&读.点位名列){ ST.重摊.读法.分布列=读.点位名列; ST.重摊.读法.点位名列=0; }
       回调(true);
     }
     if(解们.length===1){ 用它(解们[0]); return; }              /* 只有一条路 —— 账证明了，不问 */
@@ -5963,7 +5997,7 @@ window.addEventListener("unhandledrejection",function(ev){
         var 起=(读.表头在第几行==null?1:(+读.表头在第几行||0));
         for(var i=起;i<rows.length;i++){
           var r=rows[i]||[];
-          var 文=String(r[读.分布列-1]==null?"":r[读.分布列-1]).trim();
+          var 文=String(r[源列-1]==null?"":r[源列-1]).trim();
           if(!文) continue;
           var 校=null;
           var c校=(读.合计列!=null?读.合计列:读.数量列);
@@ -7864,6 +7898,7 @@ window.addEventListener("unhandledrejection",function(ev){
       /* 识别没看清、还空着的必须先填 —— 空着确定，就是把一段货当 0 发出去。
          老板 2026-08-03：不确定的写 ?，我们自己输入。 */
       if(数量还空着()) return;              /* 跟「导观麦」共用同一份判断 */
+      if(明细没拆开()) return;              /* ★ 明细没拆开就不许出单（9/6 老板定的总闸） */
       if(点名没下落()) return;              /* ★ 有行没下落 → 拦住，见 点名报告 那段 */
       /* 存疑的行也会被一起学会 —— 学会 = 以后不再问。
          所以先说清楚还剩几行是机器自己挑的，让人有机会回去看一眼。
