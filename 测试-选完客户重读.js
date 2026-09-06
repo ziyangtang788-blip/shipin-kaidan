@@ -182,7 +182,7 @@ function 数几处(k) { return H.split(k).length - 1; }
      不剥掉注释就会把说明文字当成调用，位置全算错。 */
   const 剥 = s => s.replace(/\/\*[\s\S]*?\*\//g, "");
   const 段 = 剥(H.slice(i定, i尾 < 0 ? i定 + 3000 : i尾));
-  const i剩 = 段.indexOf("if(剩>0)");
+  const i剩 = 段.indexOf("if(剩>0");   /* 2026-09-02：后面接了「||账不平(合)」，只对到这儿 */
   const 问人 = ["问怎么切", "学一次分法"].filter(x => 段.indexOf(x) >= 0);
   该("问人只在「选完客户重读之后还剩读不懂」时才问（传图那一刻一个窗都不弹）",
     i剩 >= 0 && 问人.length > 0 && 问人.every(x => 段.indexOf(x) > i剩));
