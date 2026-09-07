@@ -114,9 +114,11 @@ L("═══ 页面那头：服务器传回来的，收不收得下 ═══");
   }
   const OV = { maps: {}, gmap: {}, mem: {}, spots: [], gone: {}, dirty: {}, spotbook: {}, px: {}, padd: {}, plog: [], shops: {}, 切法: [], 排名单: {}, 读法本: {} };
   let 重建过 = 0;
-  const 假 = { applyAdd: () => 重建过++, applyPX: () => { }, buildIndex: () => { }, window: {} };
-  const ovAdopt = new Function("OV", "applyAdd", "applyPX", "buildIndex", "window",
-    src + "; return ovAdopt;")(OV, 假.applyAdd, 假.applyPX, 假.buildIndex, 假.window);
+  /* ⚠ 2026-09-07 起 ovAdopt 还会叫 applyCust（新增的客户也要接回 DATA.custs）——
+     不喂给它就会在 try 里静默炸掉，重建索引那一步压根没跑。 */
+  const 假 = { applyCust: () => { }, applyAdd: () => 重建过++, applyPX: () => { }, buildIndex: () => { }, window: {} };
+  const ovAdopt = new Function("OV", "applyCust", "applyAdd", "applyPX", "buildIndex", "window",
+    src + "; return ovAdopt;")(OV, 假.applyCust, 假.applyAdd, 假.applyPX, 假.buildIndex, 假.window);
 
   const 服务器那份 = mergeOverlay(空(), Object.assign({}, A, { shops: { S2947: ["总店", "分店"] } }));
   ovAdopt(服务器那份);

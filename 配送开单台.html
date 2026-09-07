@@ -601,6 +601,21 @@
           <button id="cl-f1" aria-pressed="false">改过的</button>
           <button id="cl-f2" aria-pressed="false">有缺价的</button>
         </div>
+        <!-- ★ 2026-09-07 老板：「现在这个问题是不可以直接加客户，把这个功能加上去。」 -->
+        <button class="btn sm" id="cl-add">＋ 新增客户</button>
+      </div>
+      <!-- 新增客户那一格：只问两样 —— 客户名、观麦报价单ID。
+           号是老板自己填的（他 9/7 拍的）：观麦那边的号我们编不出来，
+           填了以后导观麦、重新导价格才对得上人。 -->
+      <div id="cl-addbox" hidden style="background:var(--field);border:1px solid var(--line2);
+           border-radius:var(--r-s);padding:12px 14px;margin-bottom:14px">
+        <div class="searchbar" style="margin-bottom:8px">
+          <input type="text" id="nc-name" placeholder="客户名，如 广东乐禾菜云信息科技有限公司" style="max-width:340px">
+          <input type="text" id="nc-id" placeholder="观麦报价单ID，如 S19241" style="max-width:180px">
+          <button class="btn sm" id="nc-ok">加进去</button>
+          <button class="btn ghost sm" id="nc-cancel">取消</button>
+        </div>
+        <div class="s" id="nc-msg">加完点进这家，就能把观麦导出的报价单拖进去，一次把货和价都读进来。</div>
       </div>
       <div class="cards" id="cl-grid"></div>
       <div class="empty" id="cl-empty" hidden>没有匹配的客户</div>
@@ -621,8 +636,24 @@
       <div class="searchbar">
         <input type="text" id="cd-q" placeholder="搜这家客户的商品">
         <button class="btn sm" id="cd-add">＋ 新增品类</button>
+        <!-- ★ 2026-09-07 老板：「可以直接拉文档进来，自动匹配对应的价格、品名、名称。
+             但必须要文档再拉过来，对应匹配，然后再验证一遍。」
+             所以这里【只读、只摆出来】，点了「确认入库」才真的存。 -->
+        <button class="btn sm" id="cd-import">从报价单导入</button>
+        <input type="file" id="cd-file" accept=".xlsx,.xlsm,.csv,.docx" hidden>
         <button class="btn ghost sm" id="cd-reset">全部还原成观麦的</button>
         <span class="muted" id="cd-count"></span>
+      </div>
+
+      <!-- 报价单读出来先摆在这儿，一条一条看过再入库 -->
+      <div id="cd-impbox" hidden style="background:var(--field);border:1px solid var(--line2);
+           border-radius:var(--r-s);padding:12px 14px;margin-bottom:14px">
+        <div class="s" id="cd-imp-msg" style="margin-bottom:8px"></div>
+        <div id="cd-imp-body" style="max-height:340px;overflow:auto;margin-bottom:10px"></div>
+        <div class="btn-row">
+          <button class="btn sm" id="cd-imp-ok">确认入库</button>
+          <button class="btn ghost sm" id="cd-imp-cancel">取消</button>
+        </div>
       </div>
 
       <div id="cd-addbox" hidden style="background:var(--field);border:1px solid var(--line2);
@@ -908,28 +939,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907g"></script>
-<script src="对照-预置.js?v=20260907g"></script>
-<script src="数据-常用规格.js?v=20260907g"></script>
-<script src="数据-换算.js?v=20260907g"></script>
-<script src="数据-客户量纲.js?v=20260907g"></script>
-<script src="引擎-读文件.js?v=20260907g"></script>
-<script src="数据-商户名.js?v=20260907g"></script>
-<script src="导出-观麦.js?v=20260907g"></script>
-<script src="引擎-解析.js?v=20260907g"></script>
-<script src="引擎-读结构.js?v=20260907g"></script>
-<script src="引擎-认表.js?v=20260907g"></script>
-<script src="新-按内容认单.js?v=20260907g"></script>
-<script src="引擎-抓取.js?v=20260907g"></script>
-<script src="引擎-点位册.js?v=20260907g"></script>
-<script src="引擎-匹配.js?v=20260907g"></script>
-<script src="数据-切法规矩.js?v=20260907g"></script>
-<script src="引擎-断句规矩.js?v=20260907g"></script>
-<script src="引擎-碎片类.js?v=20260907g"></script>
-<script src="引擎-总闸.js?v=20260907g"></script>
-<script src="引擎-认列.js?v=20260907g"></script>
-<script src="引擎-学分法.js?v=20260907g"></script>
-<script src="引擎-OCR.js?v=20260907g"></script>
+<script src="数据-价格库.js?v=20260907h"></script>
+<script src="对照-预置.js?v=20260907h"></script>
+<script src="数据-常用规格.js?v=20260907h"></script>
+<script src="数据-换算.js?v=20260907h"></script>
+<script src="数据-客户量纲.js?v=20260907h"></script>
+<script src="引擎-读文件.js?v=20260907h"></script>
+<script src="数据-商户名.js?v=20260907h"></script>
+<script src="导出-观麦.js?v=20260907h"></script>
+<script src="引擎-解析.js?v=20260907h"></script>
+<script src="引擎-读结构.js?v=20260907h"></script>
+<script src="引擎-认表.js?v=20260907h"></script>
+<script src="新-按内容认单.js?v=20260907h"></script>
+<script src="引擎-抓取.js?v=20260907h"></script>
+<script src="引擎-点位册.js?v=20260907h"></script>
+<script src="引擎-匹配.js?v=20260907h"></script>
+<script src="数据-切法规矩.js?v=20260907h"></script>
+<script src="引擎-断句规矩.js?v=20260907h"></script>
+<script src="引擎-碎片类.js?v=20260907h"></script>
+<script src="引擎-总闸.js?v=20260907h"></script>
+<script src="引擎-认列.js?v=20260907h"></script>
+<script src="引擎-学分法.js?v=20260907h"></script>
+<script src="引擎-OCR.js?v=20260907h"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -942,7 +973,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907g";
+  var 版本号 = "v20260907h";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -999,7 +1030,7 @@ window.addEventListener("unhandledrejection",function(ev){
      全部挂在 OV 里，这样「导出备份」一个文件就全带走，将来搬去云端也只搬这一个包。 */
   /* spotbook = 点位册：一家一本，记住这家的送货点都叫什么。
      跟 maps（商品叫法）一个待遇 —— 存服务器，换电脑不丢。 */
-  var OV={maps:{},spots:[],mem:{},gmap:{},px:{},padd:{},plog:[],who:"",spotbook:{}}, OV_FIXED=0;
+  var OV={maps:{},spots:[],mem:{},gmap:{},px:{},padd:{},plog:[],who:"",spotbook:{},cadd:{}}, OV_FIXED=0;
 
   /* 把老的教学记录救回来。
      以前学习只按「完整文本」存键，可 OCR 每次吐出来的写法都不一样：
@@ -1149,6 +1180,13 @@ window.addEventListener("unhandledrejection",function(ev){
        界面还亮着「忘掉重学」。线上已经攒了 4 条这种死键。
        ⚠ who 不同步：那是「这台机器前面坐的是谁」。 */
     var 品价变了=0;
+    /* ★ 2026-09-07 新增的客户：按号收下，本机没有的就收。
+       ⚠ 漏了这一段 = 这台电脑加的客户推上去了，换台电脑却看不到，
+         而且那家的价（padd）还在，指着一个不存在的客户 —— 跟 8/18 padd 那个洞一模一样。 */
+    if(!OV.cadd) OV.cadd={};
+    Object.keys(d.cadd||{}).forEach(function(cid){
+      if(OV.cadd[cid]===undefined){ OV.cadd[cid]=d.cadd[cid]; 变++; 品价变了++; }
+    });
     /* 新建的品：按 sku 去重收下 —— sku 带时间戳天生不撞，两台电脑各建各的都留着 */
     if(!OV.padd) OV.padd={};
     Object.keys(d.padd||{}).forEach(function(cid){
@@ -1193,7 +1231,7 @@ window.addEventListener("unhandledrejection",function(ev){
     });
     /* ⚠ 收下新品/新价之后必须重盖一遍、重建索引 —— 不然它们进了本子却配不上货，
        等于白同步（页面上还是「认不出」）。 */
-    if(品价变了){ try{ applyAdd(); applyPX(); buildIndex(); }catch(e){} }
+    if(品价变了){ try{ applyCust(); applyAdd(); applyPX(); buildIndex(); }catch(e){} }
     Object.keys(d.mem||{}).forEach(function(cid){ if(OV.mem[cid]===undefined){ OV.mem[cid]=d.mem[cid]; 变++; } });
     /* 点位册：服务器那份合进来，同一个点谁见得多听谁的 */
     if(!OV.spotbook) OV.spotbook={};
@@ -1301,6 +1339,19 @@ window.addEventListener("unhandledrejection",function(ev){
        改价那本账还是按【原始码】记的，不然一改码，之前改过的价就找不着了。 */
     DATA.items.forEach(function(it){ if(!it._o) it._o=[it[2],it[4],it[8],it[6],it[3],it[5]]; });
   }
+  /* ★★ 2026-09-07 老板：「不可以直接加客户，把这个功能加上去。」
+     价格库（数据-价格库.js）是死文件，页面写不了它 —— 新客户只能存覆盖层，
+     每次开机把它们接回 DATA.custs，后面搜索、下拉、开单、导观麦全都自动认得。
+     ⚠ 号重了就不接：库里已经有这个号，说明观麦那边本来就有这家，
+       接进去会出现两个同号客户，改价改到哪家都说不准。 */
+  function applyCust(){
+    Object.keys(OV.cadd||{}).forEach(function(cid){
+      if(!cid) return;
+      if(DATA.custs.some(function(c){ return c[0]===cid; })) return;
+      DATA.custs.push([cid, String((OV.cadd[cid]&&OV.cadd[cid].名)||cid)]);
+      CID2CI=null;      /* ★ 「号→第几家」那张缓存表作废，不作废新客户查不到 */
+    });
+  }
   /* 把新增的品类接到 DATA 里，接完索引、下拉、识别全都自动认得，不用各处特判 */
   function applyAdd(){
     Object.keys(OV.padd).forEach(function(cid){
@@ -1364,7 +1415,7 @@ window.addEventListener("unhandledrejection",function(ev){
     OV.padd[cid].push({prod:prod,alias:alias,unit:unit,
                        price:Math.round(price*100)/100,spec:spec,sku:sku});
     logChange(cid,prod,"新增品类","—",alias+" / "+unit+" / "+n2(price));
-    ovSave(); applyAdd(); applyPX(); buildIndex();
+    ovSave(); applyCust(); applyAdd(); applyPX(); buildIndex();
     return sku;
   }
 
@@ -3547,6 +3598,123 @@ window.addEventListener("unhandledrejection",function(ev){
     });
     if(搬) logChange(cid,label,"学过的对照跟着搬",老,String(新码||origOf(idx).code)+"（"+搬+" 条）");
     ovSave();
+  }
+
+  /* ══════ 从观麦报价单导入这家的货和价　★（2026-09-07）══════
+     老板：「可以直接拉文档进来，自动匹配对应的价格、品名、名称。
+     　　　但必须要文档再拉过来，对应匹配，然后再验证一遍。」
+     所以这儿分两步，中间一定停一下：
+       ① 读 → 对 → 【摆出来】：每一条读成什么、对上了库里哪个商品，全摆在屏幕上
+       ② 你点「确认入库」才真的存。不点，一个字都不落地。
+     ⚠ 认列靠【表头的名字】，不靠第几列 —— 观麦那份导出有 40 列，
+       列序哪天变了，按位置读就会整片读错，按名字读不会。
+     ⚠ 规格照老规矩规范：观麦写「1.0斤/斤」，库里一律「1斤/斤」（只削整数后的 .0）。
+     ⚠ 已经有的货（按观麦码认）跳过，不重复建。 */
+  var IMP=null;      /* 读出来待确认的那一批 */
+
+  function 报价单规范(s){
+    return String(s==null?"":s).replace(/(\d)\.0(?=[^\d])/g,"$1").replace(/(\d)\.0$/,"$1").trim();
+  }
+  function 读报价单(file){
+    var F=window.GM_FILE;
+    if(!F||!F.readXlsxGrid){ 提醒("读文件那套没加载起来"); return; }
+    var cid=CL.cid;
+    if(!cid){ 提醒("先点进一家客户再导"); return; }
+    file.arrayBuffer().then(function(ab){
+      var 名=String(file.name||"");
+      if(/.docx$/i.test(名)) return F.readDocxGrid(ab);
+      return F.readXlsxGrid(ab);
+    }).then(function(gs){
+      var 表=(gs&&gs[0]&&gs[0].rows)||[];
+      if(表.length<2) throw new Error("这份文件里没读到表格");
+      var 头=表[0].map(function(x){ return String(x==null?"":x).trim(); });
+      function 第(名们){ for(var i=0;i<名们.length;i++){ var k=头.indexOf(名们[i]); if(k>=0) return k; } return -1; }
+      var c={
+        spu名:第(["SPU名","商品名","品名"]),
+        叫法:第(["商品名(可修改)","商品名（可修改）","客户叫法(规格名)","规格名"]),
+        码:第(["商品ID(SKUID)","商品ID","规格编码","SKUID"]),
+        价:第(["单价(可修改)","单价（可修改）","销售价(元)","单价"]),
+        规格:第(["销售规格","规格"]),
+        状态:第(["销售状态(可修改，1上架，0下架)","销售状态","上架状态"])
+      };
+      if(c.叫法<0&&c.spu名<0) throw new Error("这份文件里没有「商品名」那一列，认不出是报价单");
+      var ci=custIndexById(cid), b=(ci>=0&&IDX.byCust[ci])||{sku:{}};
+      var 出=[];
+      for(var i=1;i<表.length;i++){
+        var r=表[i]||[];
+        var 叫法=String((c.叫法>=0?r[c.叫法]:r[c.spu名])||"").trim();
+        if(!叫法) continue;
+        var spu=String((c.spu名>=0?r[c.spu名]:"")||"").trim();
+        var 规=报价单规范(c.规格>=0?r[c.规格]:"");
+        var 单位=(规.split("/")[1]||"").trim();
+        var 价=parseFloat(String(c.价>=0?r[c.价]:"").replace(/[^d.]/g,""));
+        var 码=String((c.码>=0?r[c.码]:"")||"").trim().toUpperCase();
+        var 上架=(c.状态<0)||String(r[c.状态]).trim()==="1";
+        /* 对到我们已有的商品：先按【SPU名】原样找，再按去括号的名字找 */
+        var 对到="", pi=spu?DATA.prods.indexOf(spu):-1;
+        if(pi>=0) 对到=DATA.prods[pi];
+        else if(spu){
+          var 光=spu.replace(/[（(][^）)]*[)）]/g,"").trim();
+          for(var k=0;k<DATA.prods.length;k++){
+            var 那=DATA.prods[k].replace(/[（(][^）)]*[)）]/g,"").trim();
+            if(那&&那===光){ 对到=DATA.prods[k]; break; }
+          }
+        }
+        出.push({叫法:叫法,spu:spu,对到:对到,单位:单位||"斤",规格:规,
+                 价:(isFinite(价)?Math.round(价*100)/100:0),码:码,上架:上架,
+                 已有:!!(码&&b.sku&&b.sku[码]!==undefined)});
+      }
+      if(!出.length) throw new Error("读出来一条货都没有");
+      IMP={cid:cid,行:出,文件:String(file.name||"")};
+      摆报价单();
+    }).catch(function(e){
+      IMP=null; $("cd-impbox").hidden=true;
+      提醒("这份文件读不了："+(e&&e.message||e));
+    });
+  }
+
+  function 摆报价单(){
+    if(!IMP){ $("cd-impbox").hidden=true; return; }
+    var 新=IMP.行.filter(function(x){ return !x.已有; });
+    var 没码=新.filter(function(x){ return !x.码; }).length;
+    var 没对上=新.filter(function(x){ return !x.对到; }).length;
+    $("cd-imp-msg").innerHTML='读了「<b>'+esc(IMP.文件)+'</b>」：共 <b>'+IMP.行.length+'</b> 条，'+
+      '其中 <b>'+新.length+'</b> 条是这家还没有的'+
+      (没对上?('　<span class="tag warn">'+没对上+' 条在我们库里没对上同名商品</span>'):'')+
+      (没码?('　<span class="tag warn">'+没码+' 条没有观麦码</span>'):'')+
+      '　—— <b>看过再点「确认入库」</b>，不点一个字都不存。';
+    var h='<table class="tbl"><tr><th>#</th><th>这家怎么叫</th><th>对到我们的商品</th>'+
+          '<th>单位</th><th>销售规格</th><th class="num">价</th><th>观麦码</th><th>状态</th></tr>';
+    IMP.行.slice(0,400).forEach(function(x,i){
+      h+='<tr'+(x.已有?' class="off"':'')+'><td class="muted">'+(i+1)+'</td>'+
+        '<td>'+esc(x.叫法)+'</td>'+
+        '<td>'+(x.对到?esc(x.对到):'<span class="tag warn">库里没有同名的</span>')+'</td>'+
+        '<td>'+esc(x.单位)+'</td><td class="muted">'+esc(x.规格)+'</td>'+
+        '<td class="num">'+n2(x.价)+'</td>'+
+        '<td style="font-family:Consolas,monospace;font-size:12.5px">'+
+          (x.码?esc(x.码):'<span class="tag warn">没有</span>')+'</td>'+
+        '<td>'+(x.已有?'<span class="muted">已经有了，跳过</span>':(x.上架?'新增':'<span class="muted">观麦已下架</span>'))+'</td></tr>';
+    });
+    h+='</table>';
+    $("cd-imp-body").innerHTML=h;
+    $("cd-impbox").hidden=false;
+  }
+
+  function 入库报价单(){
+    if(!IMP||!IMP.行.length) return;
+    if(!needWho()) return;
+    var cid=IMP.cid, 加=0, 跳=0;
+    IMP.行.forEach(function(x){
+      if(x.已有){ 跳++; return; }
+      var sku=addProduct(cid,{prod:(x.对到||x.spu||x.叫法),alias:x.叫法,unit:x.单位,
+                              spec:x.规格,price:x.价,sku:x.码});
+      if(sku) 加++; else 跳++;
+    });
+    logChange(cid,IMP.文件,"从报价单导入","—",加+" 条进来了"+(跳?("，跳过 "+跳+" 条"):""));
+    ovSave(); applyCust(); applyAdd(); applyPX(); buildIndex();
+    IMP=null; $("cd-impbox").hidden=true;
+    renderCustDetail(); renderCustCards();
+    提醒("导好了：新增 "+加+" 条"+(跳?("，跳过 "+跳+" 条（已经有了或者没填对）"):""));
   }
 
   function pxUndo(sku,label){
@@ -7671,7 +7839,7 @@ window.addEventListener("unhandledrejection",function(ev){
     }
     /* 顺序有讲究：先读覆盖层，把新增品类接进 DATA、把改过的价盖上去，最后才建索引。
        反过来的话索引里还是观麦的老价，改了不生效。 */
-    DATA=window.GM_DATA; ovLoad(); applyAdd(); applyPX(); buildIndex();
+    DATA=window.GM_DATA; ovLoad(); applyCust(); applyAdd(); applyPX(); buildIndex();
     /* 版本戳：看不到 c 就是浏览器还在跑旧代码，Ctrl+F5 强制刷新 */
     $("data-pill").textContent=DATA.custs.length+" 客户 / "+DATA.items.length+" 条价格 · "+版本号;
     $("foot-note").textContent="价格库更新时间："+(DATA.updated||"未知")+"　·　对照和点位规则保存在本机浏览器。";
@@ -8089,6 +8257,38 @@ window.addEventListener("unhandledrejection",function(ev){
     $("cl-grid").addEventListener("click",function(e){
       var b=e.target.closest("[data-cid]"); if(b) openCust(b.getAttribute("data-cid"));
     });
+
+    /* ★★ 2026-09-07 新增客户（老板：「不可以直接加客户，把这个功能加上去」）。
+       只问两样：客户名 + 观麦报价单ID。号是他自己填的 ——
+       观麦那边的号我们编不出来，填了以后导观麦、重新导价格才对得上人。 */
+    $("cl-add").addEventListener("click",function(){
+      $("cl-addbox").hidden=!$("cl-addbox").hidden;
+      if(!$("cl-addbox").hidden) $("nc-name").focus();
+    });
+    $("nc-cancel").addEventListener("click",function(){ $("cl-addbox").hidden=true; });
+    $("nc-ok").addEventListener("click",function(){
+      var 名=String($("nc-name").value||"").trim();
+      var 号=String($("nc-id").value||"").trim().toUpperCase();
+      if(!名){ $("nc-msg").textContent="客户名不能空"; return; }
+      if(!/^S[0-9]{3,8}$/.test(号)){
+        $("nc-msg").textContent="观麦报价单ID 长这样：S19241 —— 大写 S 加一串数字。在观麦「报价单」那一页看得到。";
+        return;
+      }
+      if(DATA.custs.some(function(c){ return c[0]===号; })){
+        $("nc-msg").textContent="这个号已经有了：「"+DATA.custs.filter(function(c){return c[0]===号;})[0][1]+"」——直接点进去改就行。";
+        return;
+      }
+      if(!needWho()) return;
+      OV.cadd=OV.cadd||{};
+      OV.cadd[号]={名:名,建于:new Date().toISOString().slice(0,16).replace("T"," ")};
+      ovTouch("cadd",号);
+      logChange(号,名,"新增客户","—",号);
+      ovSave(); applyCust(); applyAdd(); applyPX(); buildIndex();
+      $("nc-name").value=""; $("nc-id").value="";
+      $("cl-addbox").hidden=true;
+      renderCustCards();
+      openCust(号);        /* 直接进这家，好接着把报价单拖进来 */
+    });
     $("cd-back").addEventListener("click",closeCust);
     $("cd-q").addEventListener("input",renderCustDetail);
 
@@ -8164,6 +8364,36 @@ window.addEventListener("unhandledrejection",function(ev){
           : "。没填观麦商品ID —— 导观麦时这一行的商品ID会留空，观麦按商品名配货");
       renderCustDetail();
     });
+
+    /* ★ 2026-09-07 报价单导入：点按钮选文件，或者直接拖到这张卡片上 */
+    $("cd-import").addEventListener("click",function(){ $("cd-file").click(); });
+    $("cd-file").addEventListener("change",function(){
+      var f=this.files&&this.files[0]; this.value="";
+      if(f) 读报价单(f);
+    });
+    $("cd-imp-cancel").addEventListener("click",function(){
+      IMP=null; $("cd-impbox").hidden=true;
+    });
+    $("cd-imp-ok").addEventListener("click",入库报价单);
+    /* 拖到这张卡片上也行。⚠ 要挡住冒泡 —— 页面全局那个「拖文件进来开单」
+       也在听拖放，不挡住的话一份报价单会被当成订单去识别。 */
+    (function(){
+      var 卡=$("cd-card")||document.getElementById("cd-card");
+      if(!卡) return;
+      ["dragenter","dragover"].forEach(function(ev){
+        卡.addEventListener(ev,function(e){ e.preventDefault(); e.stopPropagation();
+          卡.style.outline="2px dashed var(--accent)"; },true);
+      });
+      ["dragleave","drop"].forEach(function(ev){
+        卡.addEventListener(ev,function(e){ 卡.style.outline=""; },true);
+      });
+      卡.addEventListener("drop",function(e){
+        var f=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+        if(!f) return;
+        e.preventDefault(); e.stopPropagation();
+        读报价单(f);
+      },true);
+    })();
 
     $("cd-reset").addEventListener("click",function(){
       var cid=CL.cid, n=Object.keys(OV.px[cid]||{}).length;
