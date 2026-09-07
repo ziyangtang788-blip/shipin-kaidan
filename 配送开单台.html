@@ -633,6 +633,10 @@
           <input type="text" id="na-unit" placeholder="单位，如 斤" style="max-width:100px">
           <input type="text" id="na-spec" placeholder="销售规格（可空）" style="max-width:160px">
           <input type="text" id="na-price" placeholder="单价" style="max-width:90px">
+          <!-- ★ 2026-09-07 老板在这一页新建品，发现没这一格：「就导入不进去观麦」。
+               开单页那个就地新建的框 8/24 就有了（class="np-sku"），这一页当时漏了。
+               底下 addProduct() 本来就收 sku，就差前面这一格。 -->
+          <input type="text" id="na-sku" placeholder="观麦商品ID（可空）" style="max-width:150px">
           <button class="btn sm" id="na-ok">加进去</button>
           <button class="btn ghost sm" id="na-cancel">取消</button>
         </div>
@@ -904,28 +908,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907a"></script>
-<script src="对照-预置.js?v=20260907a"></script>
-<script src="数据-常用规格.js?v=20260907a"></script>
-<script src="数据-换算.js?v=20260907a"></script>
-<script src="数据-客户量纲.js?v=20260907a"></script>
-<script src="引擎-读文件.js?v=20260907a"></script>
-<script src="数据-商户名.js?v=20260907a"></script>
-<script src="导出-观麦.js?v=20260907a"></script>
-<script src="引擎-解析.js?v=20260907a"></script>
-<script src="引擎-读结构.js?v=20260907a"></script>
-<script src="引擎-认表.js?v=20260907a"></script>
-<script src="新-按内容认单.js?v=20260907a"></script>
-<script src="引擎-抓取.js?v=20260907a"></script>
-<script src="引擎-点位册.js?v=20260907a"></script>
-<script src="引擎-匹配.js?v=20260907a"></script>
-<script src="数据-切法规矩.js?v=20260907a"></script>
-<script src="引擎-断句规矩.js?v=20260907a"></script>
-<script src="引擎-碎片类.js?v=20260907a"></script>
-<script src="引擎-总闸.js?v=20260907a"></script>
-<script src="引擎-认列.js?v=20260907a"></script>
-<script src="引擎-学分法.js?v=20260907a"></script>
-<script src="引擎-OCR.js?v=20260907a"></script>
+<script src="数据-价格库.js?v=20260907b"></script>
+<script src="对照-预置.js?v=20260907b"></script>
+<script src="数据-常用规格.js?v=20260907b"></script>
+<script src="数据-换算.js?v=20260907b"></script>
+<script src="数据-客户量纲.js?v=20260907b"></script>
+<script src="引擎-读文件.js?v=20260907b"></script>
+<script src="数据-商户名.js?v=20260907b"></script>
+<script src="导出-观麦.js?v=20260907b"></script>
+<script src="引擎-解析.js?v=20260907b"></script>
+<script src="引擎-读结构.js?v=20260907b"></script>
+<script src="引擎-认表.js?v=20260907b"></script>
+<script src="新-按内容认单.js?v=20260907b"></script>
+<script src="引擎-抓取.js?v=20260907b"></script>
+<script src="引擎-点位册.js?v=20260907b"></script>
+<script src="引擎-匹配.js?v=20260907b"></script>
+<script src="数据-切法规矩.js?v=20260907b"></script>
+<script src="引擎-断句规矩.js?v=20260907b"></script>
+<script src="引擎-碎片类.js?v=20260907b"></script>
+<script src="引擎-总闸.js?v=20260907b"></script>
+<script src="引擎-认列.js?v=20260907b"></script>
+<script src="引擎-学分法.js?v=20260907b"></script>
+<script src="引擎-OCR.js?v=20260907b"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -938,7 +942,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907a";
+  var 版本号 = "v20260907b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -8037,12 +8041,17 @@ window.addEventListener("unhandledrejection",function(ev){
       if(!(parseFloat(price.replace(/[^\d.]/g,""))>=0)){ $("na-msg").textContent="单价要填个数字"; return; }
       if(!needWho()) return;
       var sku=addProduct(CL.cid,{prod:prod,alias:$("na-alias").value,unit:$("na-unit").value,
-                                 spec:$("na-spec").value,price:price});
+                                 spec:$("na-spec").value,price:price,
+                                 sku:$("na-sku").value});   /* ★ 9/7：观麦商品ID 一起传下去 */
       if(!sku){ $("na-msg").textContent="没加成，检查商品名和单价"; return; }
       if(ST.lines.length) renderMatch();
       renderCustKV();
-      ["na-prod","na-alias","na-unit","na-spec","na-price"].forEach(function(id){ $(id).value=""; });
-      $("na-msg").textContent="已加：「"+prod+"」";
+      ["na-prod","na-alias","na-unit","na-spec","na-price","na-sku"].forEach(function(id){ $(id).value=""; });
+      /* 填了真码就说一声、没填也说一声 —— 不然人不知道这单导观麦会不会卡 */
+      $("na-msg").textContent="已加：「"+prod+"」"+
+        (/^[A-Za-z]{1,2}[0-9]{5,12}$/.test(String($("na-sku").value||"").trim())
+          ? "，用的是你填的观麦商品ID"
+          : "。没填观麦商品ID —— 导观麦时这一行的商品ID会留空，观麦按商品名配货");
       renderCustDetail();
     });
 
