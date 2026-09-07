@@ -645,7 +645,7 @@
 
       <div class="tablewrap"><table>
         <thead><tr><th style="width:30px">#</th><th>你的商品名</th><th>该客户的叫法</th><th>单位</th>
-          <th>销售规格</th><th class="num" style="width:100px">该客户价</th><th style="width:120px">来源 / 删除</th>
+          <th>销售规格</th><th style="width:130px">观麦商品ID</th><th class="num" style="width:100px">该客户价</th><th style="width:120px">来源 / 删除</th>
           <th style="width:64px"></th></tr></thead>
         <tbody id="cd-rows"></tbody></table></div>
       <div class="empty" id="cd-empty" hidden>没有匹配的商品</div>
@@ -908,28 +908,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907e"></script>
-<script src="对照-预置.js?v=20260907e"></script>
-<script src="数据-常用规格.js?v=20260907e"></script>
-<script src="数据-换算.js?v=20260907e"></script>
-<script src="数据-客户量纲.js?v=20260907e"></script>
-<script src="引擎-读文件.js?v=20260907e"></script>
-<script src="数据-商户名.js?v=20260907e"></script>
-<script src="导出-观麦.js?v=20260907e"></script>
-<script src="引擎-解析.js?v=20260907e"></script>
-<script src="引擎-读结构.js?v=20260907e"></script>
-<script src="引擎-认表.js?v=20260907e"></script>
-<script src="新-按内容认单.js?v=20260907e"></script>
-<script src="引擎-抓取.js?v=20260907e"></script>
-<script src="引擎-点位册.js?v=20260907e"></script>
-<script src="引擎-匹配.js?v=20260907e"></script>
-<script src="数据-切法规矩.js?v=20260907e"></script>
-<script src="引擎-断句规矩.js?v=20260907e"></script>
-<script src="引擎-碎片类.js?v=20260907e"></script>
-<script src="引擎-总闸.js?v=20260907e"></script>
-<script src="引擎-认列.js?v=20260907e"></script>
-<script src="引擎-学分法.js?v=20260907e"></script>
-<script src="引擎-OCR.js?v=20260907e"></script>
+<script src="数据-价格库.js?v=20260907g"></script>
+<script src="对照-预置.js?v=20260907g"></script>
+<script src="数据-常用规格.js?v=20260907g"></script>
+<script src="数据-换算.js?v=20260907g"></script>
+<script src="数据-客户量纲.js?v=20260907g"></script>
+<script src="引擎-读文件.js?v=20260907g"></script>
+<script src="数据-商户名.js?v=20260907g"></script>
+<script src="导出-观麦.js?v=20260907g"></script>
+<script src="引擎-解析.js?v=20260907g"></script>
+<script src="引擎-读结构.js?v=20260907g"></script>
+<script src="引擎-认表.js?v=20260907g"></script>
+<script src="新-按内容认单.js?v=20260907g"></script>
+<script src="引擎-抓取.js?v=20260907g"></script>
+<script src="引擎-点位册.js?v=20260907g"></script>
+<script src="引擎-匹配.js?v=20260907g"></script>
+<script src="数据-切法规矩.js?v=20260907g"></script>
+<script src="引擎-断句规矩.js?v=20260907g"></script>
+<script src="引擎-碎片类.js?v=20260907g"></script>
+<script src="引擎-总闸.js?v=20260907g"></script>
+<script src="引擎-认列.js?v=20260907g"></script>
+<script src="引擎-学分法.js?v=20260907g"></script>
+<script src="引擎-OCR.js?v=20260907g"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -942,7 +942,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907e";
+  var 版本号 = "v20260907g";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1297,7 +1297,9 @@ window.addEventListener("unhandledrejection",function(ev){
   }
   /* 先把观麦原样拍个照，改价、还原都靠它 */
   function snapOrig(){
-    DATA.items.forEach(function(it){ if(!it._o) it._o=[it[2],it[4],it[8]]; });
+    /* ★ 2026-09-07 多存一样【原始的观麦码】—— 人在客户页改码之后，
+       改价那本账还是按【原始码】记的，不然一改码，之前改过的价就找不着了。 */
+    DATA.items.forEach(function(it){ if(!it._o) it._o=[it[2],it[4],it[8],it[6],it[3],it[5]]; });
   }
   /* 把新增的品类接到 DATA 里，接完索引、下拉、识别全都自动认得，不用各处特判 */
   function applyAdd(){
@@ -1317,6 +1319,8 @@ window.addEventListener("unhandledrejection",function(ev){
     snapOrig();
     DATA.items.forEach(function(it){
       it[2]=it._o[0]; it[4]=it._o[1]; it[8]=it._o[2];
+      if(it._o.length>3) it[6]=it._o[3];   /* ★ 码也先还原，不还原「改回去」就撤不掉 */
+      if(it._o.length>5){ it[3]=it._o[4]; it[5]=it._o[5]; }   /* 单位、销售规格同理 */
       it._del=0;                    /* ★ 每遍先擦干净，不擦「还原」就撤不掉删除 */
       var c=DATA.custs[it[0]]; if(!c) return;
       var x=OV.px[c[0]]&&OV.px[c[0]][it[6]]; if(!x) return;
@@ -1324,6 +1328,13 @@ window.addEventListener("unhandledrejection",function(ev){
       if(typeof x.p==="number") it[4]=x.p;
       if(x.alias) it[2]=x.alias;
       if(x.on!==undefined) it[8]=x.on;
+      /* ★ 2026-09-07 老板：「观麦商品编码直接在这里修改就可以了，单个修改。」
+         导观麦填的就是这个码（导出-观麦.js 取的是第 7 个字段）。 */
+      if(x.码) it[6]=x.码;
+      /* ★ 2026-09-07 老板：「我要的是什么都可以改的，不是只改码。」
+         单位和销售规格也进覆盖层 —— 观麦重导照样冲不掉。 */
+      if(x.单位) it[3]=x.单位;
+      if(x.规格!==undefined) it[5]=x.规格;
     });
   }
   /* 新增一个品类。两个地方要用（客户资料页的「＋新增品类」、开单时认不出就地新建），
@@ -1997,7 +2008,8 @@ window.addEventListener("unhandledrejection",function(ev){
   function custId(ci){ return DATA.custs[ci]?DATA.custs[ci][0]:""; }
   function custName(ci){ return DATA.custs[ci]?DATA.custs[ci][1]:""; }
   function item(i){ var it=DATA.items[i];
-    return {i:i,ci:it[0],pi:it[1],prod:DATA.prods[it[1]],alias:it[2],unit:it[3],price:it[4],spec:it[5],sku:it[6],on:it[8]}; }
+    return {i:i,ci:it[0],pi:it[1],prod:DATA.prods[it[1]],alias:it[2],unit:it[3],price:it[4],spec:it[5],
+            sku:it[6],原码:(it._o&&it._o.length>3?it._o[3]:it[6]),on:it[8]}; }
 
   function compute(){
     var rows=[],al={none:[],zero:[],doubt:[]};
@@ -3410,14 +3422,25 @@ window.addEventListener("unhandledrejection",function(ev){
       if(x) tr.className="edited";
       if(!t.on) tr.className+=" off";
       var src=x?'<span class="tag ok">改过</span>':'<span class="muted">观麦</span>';
+      /* ⚠ data-sku 一律用【原始码】—— 账本（改价/改叫法/删除/改码）都按它记。
+         人把码改了之后 t.sku 是新码，拿新码当键就找不着自己那条账了。 */
+      var 键=esc(t.原码||t.sku);
+      /* 自己编的假码（X 开头）导观麦会留空 —— 标出来，让人知道该补 */
+      var 假码=/^X/.test(String(t.sku||""));
       tr.innerHTML='<td class="muted">'+(n+1)+'</td>'+
         '<td>'+esc(t.prod)+'</td>'+
-        '<td><input class="ea" data-f="alias" data-sku="'+esc(t.sku)+'" value="'+esc(t.alias)+'"></td>'+
-        '<td>'+esc(t.unit)+'</td><td class="muted">'+esc(t.spec)+'</td>'+
-        '<td class="num"><input class="ed" data-f="price" data-sku="'+esc(t.sku)+'" value="'+
+        '<td><input class="ea" data-f="alias" data-sku="'+键+'" value="'+esc(t.alias)+'"></td>'+
+        '<td><input class="ea" data-f="unit" data-sku="'+键+'" value="'+esc(t.unit)+'"'+
+          ' style="max-width:70px;text-align:center"></td>'+
+        '<td><input class="ea" data-f="spec" data-sku="'+键+'" value="'+esc(t.spec)+'"'+
+          ' placeholder="可空" style="max-width:110px"></td>'+
+        '<td><input class="ea" data-f="code" data-sku="'+键+'" value="'+esc(假码?"":t.sku)+'"'+
+          ' placeholder="'+(假码?"没有，导观麦会留空":"")+'"'+
+          ' style="font-family:Consolas,monospace;font-size:12.5px'+(假码?";border-color:var(--warn)":"")+'"></td>'+
+        '<td class="num"><input class="ed" data-f="price" data-sku="'+键+'" value="'+
           (t.price>0?n2(t.price):"0.00")+'"></td>'+
-        '<td>'+src+' <button class="btn ghost sm" data-f="del" data-sku="'+esc(t.sku)+'">删除</button></td>'+
-        '<td>'+(x?'<button class="btn ghost sm" data-f="undo" data-sku="'+esc(t.sku)+'">还原</button>':'')+'</td>';
+        '<td>'+src+' <button class="btn ghost sm" data-f="del" data-sku="'+键+'">删除</button></td>'+
+        '<td>'+(x?'<button class="btn ghost sm" data-f="undo" data-sku="'+键+'">还原</button>':'')+'</td>';
       tb.appendChild(tr);
     });
     $("cd-empty").hidden=list.length>0;
@@ -3433,14 +3456,20 @@ window.addEventListener("unhandledrejection",function(ev){
     $("cd-log-empty").hidden=rows.length>0;
   }
 
-  var PXKEY={price:"p",alias:"alias",on:"on"};
+  var PXKEY={price:"p",alias:"alias",on:"on",code:"码",unit:"单位",spec:"规格"};
+  /* ⚠ 新码、原始码都要认得：页面上所有按钮传的都是【原始码】（那是账本的键），
+     可 it[6] 上盖的已经是改过的新码了。两个都比，才找得到。 */
   function findItem(ci,sku){
-    for(var k=0;k<DATA.items.length;k++){ if(DATA.items[k][0]===ci&&DATA.items[k][6]===sku) return k; }
+    for(var k=0;k<DATA.items.length;k++){ var it=DATA.items[k];
+      if(it[0]!==ci) continue;
+      if(it[6]===sku||(it._o&&it._o[3]===sku)) return k; }
     return -1;
   }
   function origOf(idx){
     var it=DATA.items[idx];
-    return it._o?{alias:it._o[0],price:it._o[1],on:it._o[2]}:{alias:it[2],price:it[4],on:it[8]};
+    return it._o?{alias:it._o[0],price:it._o[1],on:it._o[2],code:(it._o.length>3?it._o[3]:it[6]),
+                  unit:(it._o.length>5?it._o[4]:it[3]),spec:(it._o.length>5?it._o[5]:it[5])}
+                :{alias:it[2],price:it[4],on:it[8],code:it[6],unit:it[3],spec:it[5]};
   }
   /* 改一格：写覆盖层 → 留痕 → 重盖重建索引。
      改回跟观麦一模一样时就把这条覆盖删掉，不留垃圾，卡片上的「改过」计数才准。 */
@@ -3483,6 +3512,41 @@ window.addEventListener("unhandledrejection",function(ev){
     }
     logChange(cid,label,"删除","在这家清单里","已删掉"+(自建?"（自己建的，还原也回不来）":""));
     pxCommit(); renderCustDetail();
+  }
+
+  /* ★★ 2026-09-07 老板：「有一些导入不到观麦，我要在这里可以修改，
+     把观麦商品编码直接在这里修改就可以了，单个修改。」
+     导观麦「商品ID」那一列填的就是这个码（导出-观麦.js 取第 7 个字段）；
+     码不对观麦就报「商品不存在」，整单进不去。
+
+     ⚠ 这个码不只是印出去的字 —— 它还是【学过的对照】的落点：
+       OV.maps 里存的是「这个客户的这个词 → 这个码」。
+       改了码不搬对照，这家教过的词就全部指向一个不存在的码，等于白教。
+       所以下面改完码，顺手把指向老码的对照一条条改指到新码。
+     ⚠ 账本（改价/改叫法/删除）照旧按【原始码】记 —— 改码不搬账本，
+       不然改一次码，之前改过的价就找不着了。 */
+  function 改观麦码(原码,新码,label){
+    var cid=CL.cid, ci=custIndexById(cid), idx=findItem(ci,原码);
+    if(idx<0) return;
+    新码=String(新码==null?"":新码).trim().toUpperCase();
+    var 老 = (DATA.items[idx]&&DATA.items[idx][6])||原码;
+    if(新码===老) return;
+    /* 空 = 改回观麦原来的码 */
+    if(新码&&!/^[A-Z]{1,2}[0-9]{5,12}$/.test(新码)){
+      提醒("观麦的商品ID 长这样：D3196709 / C1854179 —— 字母开头，后面一串数字。" +
+           "「"+新码+"」不像，没给你存（清空则改回观麦原来的码）。");
+      renderCustDetail(); return;
+    }
+    pxSet(原码,"code",新码||origOf(idx).code,label,"观麦商品ID",老||"(空)",新码||"(改回观麦的)");
+    /* 学过的对照跟着搬：指向老码的，改指到新码 */
+    var 搬=0;
+    Object.keys(OV.maps||{}).forEach(function(k){
+      if(k.indexOf(cid+"||")!==0) return;
+      if(OV.maps[k]!==老) return;
+      OV.maps[k]=新码||origOf(idx).code; 搬++; ovTouch("maps",k);
+    });
+    if(搬) logChange(cid,label,"学过的对照跟着搬",老,String(新码||origOf(idx).code)+"（"+搬+" 条）");
+    ovSave();
   }
 
   function pxUndo(sku,label){
@@ -8030,11 +8094,26 @@ window.addEventListener("unhandledrejection",function(ev){
 
     /* ---- 改价 / 改叫法 / 停售 / 还原 ---- */
     $("cd-rows").addEventListener("change",function(e){
-      var el=e.target, f=el.getAttribute("data-f"); if(f!=="price"&&f!=="alias") return;
+      var el=e.target, f=el.getAttribute("data-f");
+      if(f!=="price"&&f!=="alias"&&f!=="code"&&f!=="unit"&&f!=="spec") return;
       var sku=el.getAttribute("data-sku"), ci=custIndexById(CL.cid), idx=findItem(ci,sku);
       if(idx<0) return;
       var t=item(idx), o=origOf(idx);
       if(!needWho()){ renderCustDetail(); return; }
+      /* ★ 2026-09-07 老板：观麦商品ID 就地改，一行一行改 —— 见 改观麦码() 那段。 */
+      if(f==="code"){ 改观麦码(sku,el.value,t.prod); return; }
+      /* 单位改错了会按错的秤算钱，所以空的一律不收；销售规格可以空 */
+      if(f==="unit"){
+        var u=String(el.value).trim();
+        if(!u){ 提醒("单位不能空 —— 空了就不知道按斤还是按板算钱了"); renderCustDetail(); return; }
+        if(u===t.unit){ renderCustDetail(); return; }
+        pxSet(sku,"unit",u,t.prod,"单位",t.unit,u); return;
+      }
+      if(f==="spec"){
+        var sp=String(el.value).trim();
+        if(sp===t.spec){ renderCustDetail(); return; }
+        pxSet(sku,"spec",sp,t.prod,"销售规格",t.spec||"(空)",sp||"(空)"); return;
+      }
       if(f==="price"){
         var v=parseFloat(String(el.value).replace(/[^\d.\-]/g,""));
         if(!(v>=0)){ 提醒("单价要填个数字"); renderCustDetail(); return; }
