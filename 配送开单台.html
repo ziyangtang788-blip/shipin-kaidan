@@ -645,7 +645,7 @@
 
       <div class="tablewrap"><table>
         <thead><tr><th style="width:30px">#</th><th>你的商品名</th><th>该客户的叫法</th><th>单位</th>
-          <th>销售规格</th><th class="num" style="width:100px">该客户价</th><th style="width:120px">来源 / 停售</th>
+          <th>销售规格</th><th class="num" style="width:100px">该客户价</th><th style="width:120px">来源 / 删除</th>
           <th style="width:64px"></th></tr></thead>
         <tbody id="cd-rows"></tbody></table></div>
       <div class="empty" id="cd-empty" hidden>没有匹配的商品</div>
@@ -908,28 +908,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907b"></script>
-<script src="对照-预置.js?v=20260907b"></script>
-<script src="数据-常用规格.js?v=20260907b"></script>
-<script src="数据-换算.js?v=20260907b"></script>
-<script src="数据-客户量纲.js?v=20260907b"></script>
-<script src="引擎-读文件.js?v=20260907b"></script>
-<script src="数据-商户名.js?v=20260907b"></script>
-<script src="导出-观麦.js?v=20260907b"></script>
-<script src="引擎-解析.js?v=20260907b"></script>
-<script src="引擎-读结构.js?v=20260907b"></script>
-<script src="引擎-认表.js?v=20260907b"></script>
-<script src="新-按内容认单.js?v=20260907b"></script>
-<script src="引擎-抓取.js?v=20260907b"></script>
-<script src="引擎-点位册.js?v=20260907b"></script>
-<script src="引擎-匹配.js?v=20260907b"></script>
-<script src="数据-切法规矩.js?v=20260907b"></script>
-<script src="引擎-断句规矩.js?v=20260907b"></script>
-<script src="引擎-碎片类.js?v=20260907b"></script>
-<script src="引擎-总闸.js?v=20260907b"></script>
-<script src="引擎-认列.js?v=20260907b"></script>
-<script src="引擎-学分法.js?v=20260907b"></script>
-<script src="引擎-OCR.js?v=20260907b"></script>
+<script src="数据-价格库.js?v=20260907c"></script>
+<script src="对照-预置.js?v=20260907c"></script>
+<script src="数据-常用规格.js?v=20260907c"></script>
+<script src="数据-换算.js?v=20260907c"></script>
+<script src="数据-客户量纲.js?v=20260907c"></script>
+<script src="引擎-读文件.js?v=20260907c"></script>
+<script src="数据-商户名.js?v=20260907c"></script>
+<script src="导出-观麦.js?v=20260907c"></script>
+<script src="引擎-解析.js?v=20260907c"></script>
+<script src="引擎-读结构.js?v=20260907c"></script>
+<script src="引擎-认表.js?v=20260907c"></script>
+<script src="新-按内容认单.js?v=20260907c"></script>
+<script src="引擎-抓取.js?v=20260907c"></script>
+<script src="引擎-点位册.js?v=20260907c"></script>
+<script src="引擎-匹配.js?v=20260907c"></script>
+<script src="数据-切法规矩.js?v=20260907c"></script>
+<script src="引擎-断句规矩.js?v=20260907c"></script>
+<script src="引擎-碎片类.js?v=20260907c"></script>
+<script src="引擎-总闸.js?v=20260907c"></script>
+<script src="引擎-认列.js?v=20260907c"></script>
+<script src="引擎-学分法.js?v=20260907c"></script>
+<script src="引擎-OCR.js?v=20260907c"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -942,7 +942,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907b";
+  var 版本号 = "v20260907c";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1317,8 +1317,10 @@ window.addEventListener("unhandledrejection",function(ev){
     snapOrig();
     DATA.items.forEach(function(it){
       it[2]=it._o[0]; it[4]=it._o[1]; it[8]=it._o[2];
+      it._del=0;                    /* ★ 每遍先擦干净，不擦「还原」就撤不掉删除 */
       var c=DATA.custs[it[0]]; if(!c) return;
       var x=OV.px[c[0]]&&OV.px[c[0]][it[6]]; if(!x) return;
+      if(x.del) it._del=1;
       if(typeof x.p==="number") it[4]=x.p;
       if(x.alias) it[2]=x.alias;
       if(x.on!==undefined) it[8]=x.on;
@@ -3414,8 +3416,7 @@ window.addEventListener("unhandledrejection",function(ev){
         '<td>'+esc(t.unit)+'</td><td class="muted">'+esc(t.spec)+'</td>'+
         '<td class="num"><input class="ed" data-f="price" data-sku="'+esc(t.sku)+'" value="'+
           (t.price>0?n2(t.price):"0.00")+'"></td>'+
-        '<td>'+src+' <button class="btn ghost sm" data-f="on" data-sku="'+esc(t.sku)+'">'+
-          (t.on?"停售":"恢复")+'</button></td>'+
+        '<td>'+src+' <button class="btn ghost sm" data-f="del" data-sku="'+esc(t.sku)+'">删除</button></td>'+
         '<td>'+(x?'<button class="btn ghost sm" data-f="undo" data-sku="'+esc(t.sku)+'">还原</button>':'')+'</td>';
       tb.appendChild(tr);
     });
@@ -3459,6 +3460,31 @@ window.addEventListener("unhandledrejection",function(ev){
     logChange(cid,label,what,fromTxt,toTxt);
     pxCommit(); renderCustDetail();
   }
+  /* ★★ 2026-09-07 老板：「停售的直接删掉。」
+     原来那个按钮是【停售】—— 点完东西还挂在列表里，只是灰一下；
+     而且停售【根本不影响识别】（匹配那头压根不看上下架），等于只换了个颜色。
+     现在换成【删除】：从这家客户的清单里去掉，列表不显示、开单也配不到。
+     ⚠ 删的是【覆盖层】—— 观麦那份原样不动，点「全部还原成观麦的」能整批找回来。
+     ⚠ 自己新建的品是【真删】：它本来就不在观麦那份里，还原也还不回来。 */
+  function 删掉这个品(sku,label){
+    var cid=CL.cid;
+    var 自建=(OV.padd[cid]||[]).some(function(a){ return a&&a.sku===sku; });
+    if(自建){
+      OV.padd[cid]=(OV.padd[cid]||[]).filter(function(a){ return !(a&&a.sku===sku); });
+      var ci0=custIndexById(cid);
+      for(var k=DATA.items.length-1;k>=0;k--){
+        if(DATA.items[k][0]===ci0&&DATA.items[k][6]===sku) DATA.items.splice(k,1);
+      }
+      ovTouch("padd",cid);
+    }else{
+      OV.px[cid]=OV.px[cid]||{};
+      var e=OV.px[cid][sku]||{}; e.del=1; OV.px[cid][sku]=e;
+      delete OV.gone["px|"+cid+"|"+sku]; ovTouch("px",cid+"|"+sku);
+    }
+    logChange(cid,label,"删除","在这家清单里","已删掉"+(自建?"（自己建的，还原也回不来）":""));
+    pxCommit(); renderCustDetail();
+  }
+
   function pxUndo(sku,label){
     var cid=CL.cid;
     if(!(OV.px[cid]&&OV.px[cid][sku])) return;
@@ -8020,11 +8046,11 @@ window.addEventListener("unhandledrejection",function(ev){
     $("cd-rows").addEventListener("click",function(e){
       var el=e.target.closest("[data-f]"); if(!el) return;
       var f=el.getAttribute("data-f"), sku=el.getAttribute("data-sku");
-      if(f!=="on"&&f!=="undo") return;
+      if(f!=="del"&&f!=="undo") return;
       var ci=custIndexById(CL.cid), idx=findItem(ci,sku); if(idx<0) return;
       var t=item(idx);
       if(!needWho()) return;
-      if(f==="on") pxSet(sku,"on",t.on?0:1,t.prod,"状态",t.on?"上架":"停售",t.on?"停售":"上架");
+      if(f==="del") 删掉这个品(sku,t.prod);
       else pxUndo(sku,t.prod);
     });
 

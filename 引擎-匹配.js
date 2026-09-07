@@ -44,6 +44,10 @@
     var IDX;
     IDX={byCust:{},aliasAll:{}};
     DATA.items.forEach(function(it,i){
+      /* ★★ 2026-09-07：这家客户删掉的品，索引里一个字都不许留 ——
+         留了就还搜得到、还配得上，等于没删（老板：「停售的直接删掉」）。
+         记号是 配送开单台.html 的 applyPX() 按覆盖层盖上去的。 */
+      if(it._del) return;
       var ci=it[0];
       if(!IDX.byCust[ci]) IDX.byCust[ci]={list:[],alias:{},aliasU:{},bare:{},bareAll:{},prod:{},prodU:{},sku:{}};
       var b=IDX.byCust[ci];
