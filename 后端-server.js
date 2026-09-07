@@ -183,7 +183,7 @@ function findOrder(no) {
    「来新表得先调 AI 识别正确之后交给人去判断，好了之后给他一个专注的表。」
    ⚠ 合并这儿【必须列出来】：这个 out 是白名单，漏掉一个字段，
      换台电脑一同步就被整份抹掉，人还以为是自己没教过。 */
-const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, 列读法: {}, 碎片角色: {}, px: {}, padd: {}, plog: [], cadd: {} };
+const EMPTY_OV = { maps: {}, gmap: {}, mem: {}, spots: [], price: {}, gone: {}, spotbook: {}, 排名单: {}, 切法: [], 读法本: {}, 列读法: {}, 碎片角色: {}, px: {}, padd: {}, plog: [], cadd: {}, cgone: {} };
 
 function loadOverlay() {
   const o = readJSON(OVERLAY_FILE, null);
@@ -218,6 +218,9 @@ function mergeOverlay(base, incoming) {
        ⚠ 跟 padd 一个待遇：漏在这张白名单外面，换台电脑一同步就被整份抹掉，
          人还以为客户没加成 —— 8/18 padd 那个洞就是这么来的。 */
     cadd: Object.assign({}, base.cadd, incoming.cadd || {}),
+    /* cgone = 删掉的客户。跟 cadd 一个待遇 —— 漏了这一行，
+       这台删了推上去，换台电脑照样看得见，两边看到的客户不一样。 */
+    cgone: Object.assign({}, base.cgone, incoming.cgone || {}),
     /* ★ 2026-08-18：px / padd / plog 原来【不在这张名单里】，
        页面推上来整份被丢掉 —— 老板 8/18 撞了一天的那个洞。
 

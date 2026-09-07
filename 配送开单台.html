@@ -600,6 +600,7 @@
           <button id="cl-f0" aria-pressed="true">全部</button>
           <button id="cl-f1" aria-pressed="false">改过的</button>
           <button id="cl-f2" aria-pressed="false">有缺价的</button>
+          <button id="cl-f3" aria-pressed="false">删掉的</button>
         </div>
         <!-- ★ 2026-09-07 老板：「现在这个问题是不可以直接加客户，把这个功能加上去。」 -->
         <button class="btn sm" id="cl-add">＋ 新增客户</button>
@@ -642,6 +643,8 @@
         <button class="btn sm" id="cd-import">从报价单导入</button>
         <input type="file" id="cd-file" accept=".xlsx,.xlsm,.csv,.docx" hidden>
         <button class="btn ghost sm" id="cd-reset">全部还原成观麦的</button>
+        <!-- ★ 2026-09-07 老板：「要做一个可以把客户删掉的功能，就是整个客户删掉。」 -->
+        <button class="btn ghost sm" id="cd-del">✕ 删掉这个客户</button>
         <span class="muted" id="cd-count"></span>
       </div>
 
@@ -939,28 +942,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907i"></script>
-<script src="对照-预置.js?v=20260907i"></script>
-<script src="数据-常用规格.js?v=20260907i"></script>
-<script src="数据-换算.js?v=20260907i"></script>
-<script src="数据-客户量纲.js?v=20260907i"></script>
-<script src="引擎-读文件.js?v=20260907i"></script>
-<script src="数据-商户名.js?v=20260907i"></script>
-<script src="导出-观麦.js?v=20260907i"></script>
-<script src="引擎-解析.js?v=20260907i"></script>
-<script src="引擎-读结构.js?v=20260907i"></script>
-<script src="引擎-认表.js?v=20260907i"></script>
-<script src="新-按内容认单.js?v=20260907i"></script>
-<script src="引擎-抓取.js?v=20260907i"></script>
-<script src="引擎-点位册.js?v=20260907i"></script>
-<script src="引擎-匹配.js?v=20260907i"></script>
-<script src="数据-切法规矩.js?v=20260907i"></script>
-<script src="引擎-断句规矩.js?v=20260907i"></script>
-<script src="引擎-碎片类.js?v=20260907i"></script>
-<script src="引擎-总闸.js?v=20260907i"></script>
-<script src="引擎-认列.js?v=20260907i"></script>
-<script src="引擎-学分法.js?v=20260907i"></script>
-<script src="引擎-OCR.js?v=20260907i"></script>
+<script src="数据-价格库.js?v=20260907j"></script>
+<script src="对照-预置.js?v=20260907j"></script>
+<script src="数据-常用规格.js?v=20260907j"></script>
+<script src="数据-换算.js?v=20260907j"></script>
+<script src="数据-客户量纲.js?v=20260907j"></script>
+<script src="引擎-读文件.js?v=20260907j"></script>
+<script src="数据-商户名.js?v=20260907j"></script>
+<script src="导出-观麦.js?v=20260907j"></script>
+<script src="引擎-解析.js?v=20260907j"></script>
+<script src="引擎-读结构.js?v=20260907j"></script>
+<script src="引擎-认表.js?v=20260907j"></script>
+<script src="新-按内容认单.js?v=20260907j"></script>
+<script src="引擎-抓取.js?v=20260907j"></script>
+<script src="引擎-点位册.js?v=20260907j"></script>
+<script src="引擎-匹配.js?v=20260907j"></script>
+<script src="数据-切法规矩.js?v=20260907j"></script>
+<script src="引擎-断句规矩.js?v=20260907j"></script>
+<script src="引擎-碎片类.js?v=20260907j"></script>
+<script src="引擎-总闸.js?v=20260907j"></script>
+<script src="引擎-认列.js?v=20260907j"></script>
+<script src="引擎-学分法.js?v=20260907j"></script>
+<script src="引擎-OCR.js?v=20260907j"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -973,7 +976,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907i";
+  var 版本号 = "v20260907j";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -1030,7 +1033,7 @@ window.addEventListener("unhandledrejection",function(ev){
      全部挂在 OV 里，这样「导出备份」一个文件就全带走，将来搬去云端也只搬这一个包。 */
   /* spotbook = 点位册：一家一本，记住这家的送货点都叫什么。
      跟 maps（商品叫法）一个待遇 —— 存服务器，换电脑不丢。 */
-  var OV={maps:{},spots:[],mem:{},gmap:{},px:{},padd:{},plog:[],who:"",spotbook:{},cadd:{}}, OV_FIXED=0;
+  var OV={maps:{},spots:[],mem:{},gmap:{},px:{},padd:{},plog:[],who:"",spotbook:{},cadd:{},cgone:{}}, OV_FIXED=0;
 
   /* 把老的教学记录救回来。
      以前学习只按「完整文本」存键，可 OCR 每次吐出来的写法都不一样：
@@ -1186,6 +1189,11 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!OV.cadd) OV.cadd={};
     Object.keys(d.cadd||{}).forEach(function(cid){
       if(OV.cadd[cid]===undefined){ OV.cadd[cid]=d.cadd[cid]; 变++; 品价变了++; }
+    });
+    /* 删掉的客户名单也要同步 —— 不同步，这台删了那台还在，两边看到的客户不一样 */
+    if(!OV.cgone) OV.cgone={};
+    Object.keys(d.cgone||{}).forEach(function(cid){
+      if(OV.cgone[cid]===undefined){ OV.cgone[cid]=d.cgone[cid]; 变++; 品价变了++; }
     });
     /* 新建的品：按 sku 去重收下 —— sku 带时间戳天生不撞，两台电脑各建各的都留着 */
     if(!OV.padd) OV.padd={};
@@ -1347,6 +1355,7 @@ window.addEventListener("unhandledrejection",function(ev){
   function applyCust(){
     Object.keys(OV.cadd||{}).forEach(function(cid){
       if(!cid) return;
+      if((OV.cgone||{})[cid]) return;        /* ★ 删掉的不再接回来 */
       if(DATA.custs.some(function(c){ return c[0]===cid; })) return;
       DATA.custs.push([cid, String((OV.cadd[cid]&&OV.cadd[cid].名)||cid)]);
       CID2CI=null;      /* ★ 「号→第几家」那张缓存表作废，不作废新客户查不到 */
@@ -3427,6 +3436,12 @@ window.addEventListener("unhandledrejection",function(ev){
     var q=norm(CL.q), grid=$("cl-grid"), out=[], shown=0, total=0;
     DATA.custs.forEach(function(c,ci){
       var s=custStat(ci);
+      /* ★ 2026-09-07 删掉的客户：平时一律不露面，只有点「删掉的」那个筛选才看得见。
+         ⚠ 不许真的从 DATA.custs 里抠掉 —— 每条价格记的是【客户的第几家】，
+           抠一个所有序号全往前挪，6000 多条价格瞬间全串到别家去。 */
+      var 删了=!!(OV.cgone||{})[c[0]];
+      if(CL.f===3){ if(!删了) return; }
+      else if(删了) return;
       if(q && norm(c[1]).indexOf(q)<0 && norm(c[0]).indexOf(q)<0) return;
       if(CL.f===1 && !(s.ed||s.add)) return;
       if(CL.f===2 && !s.zero) return;
@@ -3435,6 +3450,16 @@ window.addEventListener("unhandledrejection",function(ev){
       var bd="";
       if(s.ed||s.add) bd+='<span class="tag ok">改过 '+(s.ed+s.add)+'</span>';
       if(s.zero)      bd+='<span class="tag sale">缺价 '+s.zero+'</span>';
+      /* 删掉的那些：不进详情页，只给一个「恢复」—— 不给的话删错了就救不回来 */
+      if(删了){
+        var 删于=((OV.cgone||{})[c[0]]||{}).删于||"";
+        out.push('<div class="ccard" style="opacity:.75">'+
+          '<div class="cn">'+esc(c[1])+'</div>'+
+          '<div class="cm">'+esc(c[0])+'　·　'+s.n+' 项　·　删于 '+esc(删于)+'</div>'+
+          '<div class="cb"><span class="tag warn">已删掉</span> '+
+          '<button class="btn ghost sm" data-restore="'+esc(c[0])+'">恢复</button></div></div>');
+        return;
+      }
       out.push('<button class="ccard" data-cid="'+esc(c[0])+'">'+
         '<div class="cn">'+esc(c[1])+'</div>'+
         '<div class="cm">'+esc(c[0])+'　·　'+s.n+' 项</div>'+
@@ -3731,6 +3756,51 @@ window.addEventListener("unhandledrejection",function(ev){
     提醒("导好了：新增 "+加+" 条"+(跳?("，跳过 "+跳+" 条（已经有了或者没填对）"):""));
   }
 
+  /* ══════ 把整个客户删掉　★（2026-09-07 老板点名要的）══════
+     ⛔⛔ 绝不许从 DATA.custs 里真抠掉那一条 ——
+       每条价格记的是【这是第几家客户】（items 第 1 个字段是客户序号），
+       抠掉一家，后面所有序号往前挪一位，6000 多条价格瞬间全串到别家去。
+       所以删 = 在覆盖层记一笔，凡是能选到客户的地方都跳过它。
+     ⚠ 这家的价、教过的对照、点位册【都留着】，没删。
+       点错了在客户列表点「删掉的」那个筛选，还能恢复回来。
+     ⚠ 自己新增的客户（cadd）连着从 cadd 里也去掉 —— 不然下次开机又接回来了。 */
+  function 删掉这个客户(cid){
+    if(!cid) return;
+    var 名=custName(custIndexById(cid))||cid;
+    var b=IDX.byCust[custIndexById(cid)];
+    var 几项=(b&&b.list&&b.list.length)||0;
+    if(!confirm("把「"+名+"」整个删掉？\n\n"+
+                "· 这家的 "+几项+" 项价格、教过的叫法、点位册都还留着，没删\n"+
+                "· 客户列表和开单那个下拉里都不会再出现它\n"+
+                "· 删错了可以在客户列表点「删掉的」找回来")) return;
+    if(!needWho()) return;
+    OV.cgone=OV.cgone||{};
+    OV.cgone[cid]={名:名,删于:new Date().toISOString().slice(0,16).replace("T"," ")};
+    ovTouch("cgone",cid);
+    if(OV.cadd&&OV.cadd[cid]){ delete OV.cadd[cid]; ovTouch("cadd",cid); }
+    logChange(cid,名,"删掉客户","在列表里","已删掉（还能找回来）");
+    ovSave();
+    /* 正开着这家就退回列表；开单那头选着这家也要放开，不然还会拿它算价 */
+    if(ST.ci>=0&&custId(ST.ci)===cid){ ST.ci=-1; ST.custOK=false; try{ renderMatch(); }catch(e){} }
+    CL.cid=null;
+    try{ $("cd-card").hidden=true; $("cl-card").hidden=false; }catch(e){}
+    renderCustCards();
+    try{ fillCust($("cust-select"),$("cust-filter").value||"",true); }catch(e){}
+    提醒("「"+名+"」删掉了。要找回来：客户列表点「删掉的」。");
+  }
+
+  function 恢复这个客户(cid){
+    if(!cid||!(OV.cgone||{})[cid]) return;
+    var 名=(OV.cgone[cid]&&OV.cgone[cid].名)||cid;
+    if(!needWho()) return;
+    delete OV.cgone[cid]; ovForget("cgone",cid);
+    logChange(cid,名,"恢复客户","删掉了","回来了");
+    ovSave(); applyCust(); applyAdd(); applyPX(); buildIndex();
+    renderCustCards();
+    try{ fillCust($("cust-select"),$("cust-filter").value||"",true); }catch(e){}
+    提醒("「"+名+"」回来了。");
+  }
+
   function pxUndo(sku,label){
     var cid=CL.cid;
     if(!(OV.px[cid]&&OV.px[cid][sku])) return;
@@ -3866,6 +3936,7 @@ window.addEventListener("unhandledrejection",function(ev){
       sel.appendChild(o0);
     }
     DATA.custs.forEach(function(c,i){
+      if((OV.cgone||{})[c[0]]) return;      /* ★ 删掉的客户，开单这儿也选不到 */
       if(filter&&(c[1]+c[0]).toLowerCase().indexOf(filter.toLowerCase())<0) return;
       var o=document.createElement("option");
       o.value=i; o.textContent=c[1]+"（"+(IDX.byCust[i]?IDX.byCust[i].list.length:0)+" 项）";
@@ -8260,15 +8331,17 @@ window.addEventListener("unhandledrejection",function(ev){
 
     /* ---- 客户卡片 ---- */
     $("cl-q").addEventListener("input",function(){ CL.q=this.value; renderCustCards(); });
-    [["cl-f0",0],["cl-f1",1],["cl-f2",2]].forEach(function(p){
+    [["cl-f0",0],["cl-f1",1],["cl-f2",2],["cl-f3",3]].forEach(function(p){
       $(p[0]).addEventListener("click",function(){
         CL.f=p[1];
-        ["cl-f0","cl-f1","cl-f2"].forEach(function(id,k){
+        ["cl-f0","cl-f1","cl-f2","cl-f3"].forEach(function(id,k){
           $(id).setAttribute("aria-pressed",k===p[1]?"true":"false"); });
         renderCustCards();
       });
     });
     $("cl-grid").addEventListener("click",function(e){
+      var r=e.target.closest("[data-restore]");
+      if(r){ 恢复这个客户(r.getAttribute("data-restore")); return; }
       var b=e.target.closest("[data-cid]"); if(b) openCust(b.getAttribute("data-cid"));
     });
 
@@ -8380,6 +8453,7 @@ window.addEventListener("unhandledrejection",function(ev){
     });
 
     /* ★ 2026-09-07 报价单导入：点按钮选文件，或者直接拖到这张卡片上 */
+    $("cd-del").addEventListener("click",function(){ 删掉这个客户(CL.cid); });
     $("cd-import").addEventListener("click",function(){ $("cd-file").click(); });
     $("cd-file").addEventListener("change",function(){
       var f=this.files&&this.files[0]; this.value="";
