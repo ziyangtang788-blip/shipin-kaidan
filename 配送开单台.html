@@ -939,28 +939,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907h"></script>
-<script src="对照-预置.js?v=20260907h"></script>
-<script src="数据-常用规格.js?v=20260907h"></script>
-<script src="数据-换算.js?v=20260907h"></script>
-<script src="数据-客户量纲.js?v=20260907h"></script>
-<script src="引擎-读文件.js?v=20260907h"></script>
-<script src="数据-商户名.js?v=20260907h"></script>
-<script src="导出-观麦.js?v=20260907h"></script>
-<script src="引擎-解析.js?v=20260907h"></script>
-<script src="引擎-读结构.js?v=20260907h"></script>
-<script src="引擎-认表.js?v=20260907h"></script>
-<script src="新-按内容认单.js?v=20260907h"></script>
-<script src="引擎-抓取.js?v=20260907h"></script>
-<script src="引擎-点位册.js?v=20260907h"></script>
-<script src="引擎-匹配.js?v=20260907h"></script>
-<script src="数据-切法规矩.js?v=20260907h"></script>
-<script src="引擎-断句规矩.js?v=20260907h"></script>
-<script src="引擎-碎片类.js?v=20260907h"></script>
-<script src="引擎-总闸.js?v=20260907h"></script>
-<script src="引擎-认列.js?v=20260907h"></script>
-<script src="引擎-学分法.js?v=20260907h"></script>
-<script src="引擎-OCR.js?v=20260907h"></script>
+<script src="数据-价格库.js?v=20260907i"></script>
+<script src="对照-预置.js?v=20260907i"></script>
+<script src="数据-常用规格.js?v=20260907i"></script>
+<script src="数据-换算.js?v=20260907i"></script>
+<script src="数据-客户量纲.js?v=20260907i"></script>
+<script src="引擎-读文件.js?v=20260907i"></script>
+<script src="数据-商户名.js?v=20260907i"></script>
+<script src="导出-观麦.js?v=20260907i"></script>
+<script src="引擎-解析.js?v=20260907i"></script>
+<script src="引擎-读结构.js?v=20260907i"></script>
+<script src="引擎-认表.js?v=20260907i"></script>
+<script src="新-按内容认单.js?v=20260907i"></script>
+<script src="引擎-抓取.js?v=20260907i"></script>
+<script src="引擎-点位册.js?v=20260907i"></script>
+<script src="引擎-匹配.js?v=20260907i"></script>
+<script src="数据-切法规矩.js?v=20260907i"></script>
+<script src="引擎-断句规矩.js?v=20260907i"></script>
+<script src="引擎-碎片类.js?v=20260907i"></script>
+<script src="引擎-总闸.js?v=20260907i"></script>
+<script src="引擎-认列.js?v=20260907i"></script>
+<script src="引擎-学分法.js?v=20260907i"></script>
+<script src="引擎-OCR.js?v=20260907i"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -973,7 +973,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907h";
+  var 版本号 = "v20260907i";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -3615,6 +3615,57 @@ window.addEventListener("unhandledrejection",function(ev){
   function 报价单规范(s){
     return String(s==null?"":s).replace(/(\d)\.0(?=[^\d])/g,"$1").replace(/(\d)\.0$/,"$1").trim();
   }
+  /* ★★ 把报价单那张表读成一条条货 —— 【纯算，不碰页面】。
+     抽成单独一个函数是有原因的：9/7 那次价格全读成 0.00 上了线，
+     测试只查了代码长相、没拿真文件真跑一遍，所以什么都没抓到。
+     抽出来之后，测试可以拿老板那份真报价单直接喂给它，逐条核价。
+     ⚠ 认列靠【表头的名字】，不靠第几列（观麦那份导出 40 列，列序变了按位置读会整片读错）。 */
+  function 报价单读成条(表, 已有码, 商品名们){
+    表=表||[]; 已有码=已有码||{}; 商品名们=商品名们||[];
+    if(表.length<2) throw new Error("这份文件里没读到表格");
+    var 头=(表[0]||[]).map(function(x){ return String(x==null?"":x).trim(); });
+    function 第(名们){ for(var i=0;i<名们.length;i++){ var k=头.indexOf(名们[i]); if(k>=0) return k; } return -1; }
+    var c={
+      spu名:第(["SPU名","商品名","品名"]),
+      叫法:第(["商品名(可修改)","商品名（可修改）","客户叫法(规格名)","规格名"]),
+      码:第(["商品ID(SKUID)","商品ID","规格编码","SKUID"]),
+      价:第(["单价(可修改)","单价（可修改）","销售价(元)","单价"]),
+      规格:第(["销售规格","规格"]),
+      状态:第(["销售状态(可修改，1上架，0下架)","销售状态","上架状态"])
+    };
+    if(c.叫法<0&&c.spu名<0) throw new Error("这份文件里没有「商品名」那一列，认不出是报价单");
+    var 出=[];
+    for(var i=1;i<表.length;i++){
+      var r=表[i]||[];
+      var 叫法=String((c.叫法>=0?r[c.叫法]:r[c.spu名])||"").trim();
+      if(!叫法) continue;
+      var spu=String((c.spu名>=0?r[c.spu名]:"")||"").trim();
+      var 规=报价单规范(c.规格>=0?r[c.规格]:"");
+      var 单位=(规.split("/")[1]||"").trim();
+      /* ⛔ 这个字符组写成 [^d.] 就完了 —— 那是「删掉除了字母 d 和小数点以外的一切」，
+         数字全被删光，价永远读成 0（9/7 老板导完一看八条全是 0.00，就是这么来的）。
+         要的是 [^\d.]：删掉除了【数字】和小数点以外的一切。 */
+      var 价=parseFloat(String(c.价>=0?r[c.价]:"").replace(/[^\d.]/g,""));
+      var 码=String((c.码>=0?r[c.码]:"")||"").trim().toUpperCase();
+      var 上架=(c.状态<0)||String(r[c.状态]).trim()==="1";
+      /* 对到我们已有的商品：先按【SPU名】原样找，再按去括号的名字找 */
+      var 对到="", pi=spu?商品名们.indexOf(spu):-1;
+      if(pi>=0) 对到=商品名们[pi];
+      else if(spu){
+        var 光=spu.replace(/[（(][^）)]*[)）]/g,"").trim();
+        for(var k=0;k<商品名们.length;k++){
+          var 那=String(商品名们[k]).replace(/[（(][^）)]*[)）]/g,"").trim();
+          if(那&&那===光){ 对到=商品名们[k]; break; }
+        }
+      }
+      出.push({叫法:叫法,spu:spu,对到:对到,单位:单位||"斤",规格:规,
+               价:(isFinite(价)?Math.round(价*100)/100:0),码:码,上架:上架,
+               已有:!!(码&&已有码[码]!==undefined)});
+    }
+    if(!出.length) throw new Error("读出来一条货都没有");
+    return 出;
+  }
+
   function 读报价单(file){
     var F=window.GM_FILE;
     if(!F||!F.readXlsxGrid){ 提醒("读文件那套没加载起来"); return; }
@@ -3622,49 +3673,12 @@ window.addEventListener("unhandledrejection",function(ev){
     if(!cid){ 提醒("先点进一家客户再导"); return; }
     file.arrayBuffer().then(function(ab){
       var 名=String(file.name||"");
-      if(/.docx$/i.test(名)) return F.readDocxGrid(ab);
+      if(/\.docx$/i.test(名)) return F.readDocxGrid(ab);
       return F.readXlsxGrid(ab);
     }).then(function(gs){
       var 表=(gs&&gs[0]&&gs[0].rows)||[];
-      if(表.length<2) throw new Error("这份文件里没读到表格");
-      var 头=表[0].map(function(x){ return String(x==null?"":x).trim(); });
-      function 第(名们){ for(var i=0;i<名们.length;i++){ var k=头.indexOf(名们[i]); if(k>=0) return k; } return -1; }
-      var c={
-        spu名:第(["SPU名","商品名","品名"]),
-        叫法:第(["商品名(可修改)","商品名（可修改）","客户叫法(规格名)","规格名"]),
-        码:第(["商品ID(SKUID)","商品ID","规格编码","SKUID"]),
-        价:第(["单价(可修改)","单价（可修改）","销售价(元)","单价"]),
-        规格:第(["销售规格","规格"]),
-        状态:第(["销售状态(可修改，1上架，0下架)","销售状态","上架状态"])
-      };
-      if(c.叫法<0&&c.spu名<0) throw new Error("这份文件里没有「商品名」那一列，认不出是报价单");
       var ci=custIndexById(cid), b=(ci>=0&&IDX.byCust[ci])||{sku:{}};
-      var 出=[];
-      for(var i=1;i<表.length;i++){
-        var r=表[i]||[];
-        var 叫法=String((c.叫法>=0?r[c.叫法]:r[c.spu名])||"").trim();
-        if(!叫法) continue;
-        var spu=String((c.spu名>=0?r[c.spu名]:"")||"").trim();
-        var 规=报价单规范(c.规格>=0?r[c.规格]:"");
-        var 单位=(规.split("/")[1]||"").trim();
-        var 价=parseFloat(String(c.价>=0?r[c.价]:"").replace(/[^d.]/g,""));
-        var 码=String((c.码>=0?r[c.码]:"")||"").trim().toUpperCase();
-        var 上架=(c.状态<0)||String(r[c.状态]).trim()==="1";
-        /* 对到我们已有的商品：先按【SPU名】原样找，再按去括号的名字找 */
-        var 对到="", pi=spu?DATA.prods.indexOf(spu):-1;
-        if(pi>=0) 对到=DATA.prods[pi];
-        else if(spu){
-          var 光=spu.replace(/[（(][^）)]*[)）]/g,"").trim();
-          for(var k=0;k<DATA.prods.length;k++){
-            var 那=DATA.prods[k].replace(/[（(][^）)]*[)）]/g,"").trim();
-            if(那&&那===光){ 对到=DATA.prods[k]; break; }
-          }
-        }
-        出.push({叫法:叫法,spu:spu,对到:对到,单位:单位||"斤",规格:规,
-                 价:(isFinite(价)?Math.round(价*100)/100:0),码:码,上架:上架,
-                 已有:!!(码&&b.sku&&b.sku[码]!==undefined)});
-      }
-      if(!出.length) throw new Error("读出来一条货都没有");
+      var 出=报价单读成条(表, b.sku||{}, DATA.prods||[]);
       IMP={cid:cid,行:出,文件:String(file.name||"")};
       摆报价单();
     }).catch(function(e){
