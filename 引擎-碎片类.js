@@ -212,6 +212,19 @@
     return { qty: 数量.qty, unit: 数量.unit, code: 地址[0], note: 备注.join(" ") };
   }
 
+  /* 整个号被一对括号框着 → 括号是单子上的排版，不是号的一部分。
+     ★ 2026-09-09 广晟二部那张：明细写成「( ) 4板 (GS204) ( ) 2板 (GS206B)」，
+       号原样带出来就成了「(GS204)」—— 跟点位册、跟学过的对照全对不上，
+       同一个点位从此算两个。
+     ⚠ 卡死在【框住的里面一个中文都没有】：
+         (GS204) → GS204        ✓ 光是个号，括号纯排版
+         （老人餐）→ 原样不动     ✓ 那是名字的一部分
+         西樵派出所(官山)2-6(2) → 原样不动（本来就不是整个被框着） */
+  function 剥外括号(s) {
+    var m = /^[（(]\s*([A-Za-z0-9][A-Za-z0-9._\-]*)\s*[)）]$/.exec(字(s));
+    return m ? m[1] : s;
+  }
+
   function 照角色切(格, 角色表) {
     var 原 = 字(格);
     var R0 = 角色表 || 角色表默认();
@@ -282,7 +295,7 @@
     if (!地址.length || 地址.length !== 数量.length) return null;
     var 出 = [];
     for (var i = 0; i < 地址.length; i++)
-      出.push({ qty: 数量[i].qty, unit: 数量[i].unit, code: 地址[i], note: "" });
+      出.push({ qty: 数量[i].qty, unit: 数量[i].unit, code: 剥外括号(地址[i]), note: "" });
     var 上量 = -1;
     顺.forEach(function (x) {
       if (x.t === "q") 上量 = x.i;

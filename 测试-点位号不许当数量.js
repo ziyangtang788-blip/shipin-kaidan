@@ -28,7 +28,7 @@ const path = require("path");
 global.window = {};
 ["./数据-价格库.js", "./对照-预置.js", "./数据-常用规格.js", "./数据-换算.js",
  "./引擎-解析.js", "./引擎-匹配.js", "./引擎-读文件.js", "./引擎-读结构.js",
- "./引擎-抓取.js", "./引擎-认表.js"]
+ "./引擎-抓取.js", "./引擎-认表.js", "./引擎-碎片类.js"]
   .forEach(f => require(path.resolve(__dirname, f)));
 const S = global.window.GM_STRUCT;
 

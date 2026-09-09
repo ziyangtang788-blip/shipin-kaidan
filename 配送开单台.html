@@ -942,28 +942,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260907j"></script>
-<script src="对照-预置.js?v=20260907j"></script>
-<script src="数据-常用规格.js?v=20260907j"></script>
-<script src="数据-换算.js?v=20260907j"></script>
-<script src="数据-客户量纲.js?v=20260907j"></script>
-<script src="引擎-读文件.js?v=20260907j"></script>
-<script src="数据-商户名.js?v=20260907j"></script>
-<script src="导出-观麦.js?v=20260907j"></script>
-<script src="引擎-解析.js?v=20260907j"></script>
-<script src="引擎-读结构.js?v=20260907j"></script>
-<script src="引擎-认表.js?v=20260907j"></script>
-<script src="新-按内容认单.js?v=20260907j"></script>
-<script src="引擎-抓取.js?v=20260907j"></script>
-<script src="引擎-点位册.js?v=20260907j"></script>
-<script src="引擎-匹配.js?v=20260907j"></script>
-<script src="数据-切法规矩.js?v=20260907j"></script>
-<script src="引擎-断句规矩.js?v=20260907j"></script>
-<script src="引擎-碎片类.js?v=20260907j"></script>
-<script src="引擎-总闸.js?v=20260907j"></script>
-<script src="引擎-认列.js?v=20260907j"></script>
-<script src="引擎-学分法.js?v=20260907j"></script>
-<script src="引擎-OCR.js?v=20260907j"></script>
+<script src="数据-价格库.js?v=20260909a"></script>
+<script src="对照-预置.js?v=20260909a"></script>
+<script src="数据-常用规格.js?v=20260909a"></script>
+<script src="数据-换算.js?v=20260909a"></script>
+<script src="数据-客户量纲.js?v=20260909a"></script>
+<script src="引擎-读文件.js?v=20260909a"></script>
+<script src="数据-商户名.js?v=20260909a"></script>
+<script src="导出-观麦.js?v=20260909a"></script>
+<script src="引擎-解析.js?v=20260909a"></script>
+<script src="引擎-读结构.js?v=20260909a"></script>
+<script src="引擎-认表.js?v=20260909a"></script>
+<script src="新-按内容认单.js?v=20260909a"></script>
+<script src="引擎-抓取.js?v=20260909a"></script>
+<script src="引擎-点位册.js?v=20260909a"></script>
+<script src="引擎-匹配.js?v=20260909a"></script>
+<script src="数据-切法规矩.js?v=20260909a"></script>
+<script src="引擎-断句规矩.js?v=20260909a"></script>
+<script src="引擎-碎片类.js?v=20260909a"></script>
+<script src="引擎-总闸.js?v=20260909a"></script>
+<script src="引擎-认列.js?v=20260909a"></script>
+<script src="引擎-学分法.js?v=20260909a"></script>
+<script src="引擎-OCR.js?v=20260909a"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -976,7 +976,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260907j";
+  var 版本号 = "v20260909a";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -6622,6 +6622,26 @@ window.addEventListener("unhandledrejection",function(ev){
   function 抓取试一把(份,选项){
     var G=window.GM_抓取;
     if(!G||!G.抓) return null;
+    /* ★★ 2026-09-09 老板定的总规矩：【一格里挤着两个以上数量 → 老员工不许读这张单】。
+       判据在 引擎-总闸.近道该让开（跟 9/7「只数数量、点位一概不管」同一把尺子，
+       不另写一份）。让开之后这张表自己往下走：读法本 → B 认列 → 问 AI。
+
+       为什么非拦不可：这条近道【只要一张单里大半行看着简单，它就整张包了】，
+       那几行一格挤着好几笔的被它按简单行读 —— 数量那一列直接扔，账还是平的，
+       一句不弹。三周里为朱先生改的 31 次全打在 B 身上，一次都没生效过，
+       就因为走到 B 之前先被这儿 return 了。
+       ⚠ 存档实测：13 张换人读（朱鲜生 12 + 广晟 1），别家一张都不动；
+         35 张真表快照、改前改后、B 体检三张网跑完一格没变。 */
+    var Z0=window.GM_总闸;
+    if(Z0&&Z0.近道该让开){
+      var 该让=false;
+      (份||[]).forEach(function(z){
+        ((z&&z.grid)||[]).forEach(function(sh){
+          if(!该让&&sh&&sh.rows&&Z0.近道该让开(sh.rows)) 该让=true;
+        });
+      });
+      if(该让) return null;
+    }
     /* 每一行都过秤：明细加起来 = 表上写的总数。
        只给下面那条【豁免】当门槛用 —— 没有总数可对的、有一段没数量的、对不上的，
        一律不算过秤。宁可多花一次 AI，也不许带着算不平的账出单。
@@ -7000,7 +7020,11 @@ window.addEventListener("unhandledrejection",function(ev){
         var 出单自认=function(认果){
           var 备=(认果&&!认果.要问的)?GZ.备好(rows0,认果,custId(ST.ci)):null;
           if(!备) return false;
-          var 合自=T.摊平([{n:1,rows:备.rows}],备.读法);
+          /* 抬头文 = 表格【上面】那几行（照片单的「任务数: 18」就在这儿）。
+             ★ 2026-09-09：不带上它，摊平那道「说好 18 样只读出 15 样」的对账就没得对。
+             ⚠ 抬头不许拼进 rows —— 会把两页单的表头行号弄错位（见 markdown转表 里那段）。 */
+          var 合自=T.摊平([{n:1,rows:备.rows,
+                            抬头文:(份[0].grid[0]||{}).抬头文}],备.读法);
           if(!合自||!合自.行.length) return false;
           /* ★★ 2026-09-02：一次拖进来几份就摊几份 —— 原来这儿只摊 份[0]。
              老板 9/2 拖广显那张两页单（客户微信里发的两张图）：
