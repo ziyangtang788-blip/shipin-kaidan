@@ -942,28 +942,28 @@ window.addEventListener("unhandledrejection",function(ev){
 });
 </script>
 
-<script src="数据-价格库.js?v=20260909a"></script>
-<script src="对照-预置.js?v=20260909a"></script>
-<script src="数据-常用规格.js?v=20260909a"></script>
-<script src="数据-换算.js?v=20260909a"></script>
-<script src="数据-客户量纲.js?v=20260909a"></script>
-<script src="引擎-读文件.js?v=20260909a"></script>
-<script src="数据-商户名.js?v=20260909a"></script>
-<script src="导出-观麦.js?v=20260909a"></script>
-<script src="引擎-解析.js?v=20260909a"></script>
-<script src="引擎-读结构.js?v=20260909a"></script>
-<script src="引擎-认表.js?v=20260909a"></script>
-<script src="新-按内容认单.js?v=20260909a"></script>
-<script src="引擎-抓取.js?v=20260909a"></script>
-<script src="引擎-点位册.js?v=20260909a"></script>
-<script src="引擎-匹配.js?v=20260909a"></script>
-<script src="数据-切法规矩.js?v=20260909a"></script>
-<script src="引擎-断句规矩.js?v=20260909a"></script>
-<script src="引擎-碎片类.js?v=20260909a"></script>
-<script src="引擎-总闸.js?v=20260909a"></script>
-<script src="引擎-认列.js?v=20260909a"></script>
-<script src="引擎-学分法.js?v=20260909a"></script>
-<script src="引擎-OCR.js?v=20260909a"></script>
+<script src="数据-价格库.js?v=20260909b"></script>
+<script src="对照-预置.js?v=20260909b"></script>
+<script src="数据-常用规格.js?v=20260909b"></script>
+<script src="数据-换算.js?v=20260909b"></script>
+<script src="数据-客户量纲.js?v=20260909b"></script>
+<script src="引擎-读文件.js?v=20260909b"></script>
+<script src="数据-商户名.js?v=20260909b"></script>
+<script src="导出-观麦.js?v=20260909b"></script>
+<script src="引擎-解析.js?v=20260909b"></script>
+<script src="引擎-读结构.js?v=20260909b"></script>
+<script src="引擎-认表.js?v=20260909b"></script>
+<script src="新-按内容认单.js?v=20260909b"></script>
+<script src="引擎-抓取.js?v=20260909b"></script>
+<script src="引擎-点位册.js?v=20260909b"></script>
+<script src="引擎-匹配.js?v=20260909b"></script>
+<script src="数据-切法规矩.js?v=20260909b"></script>
+<script src="引擎-断句规矩.js?v=20260909b"></script>
+<script src="引擎-碎片类.js?v=20260909b"></script>
+<script src="引擎-总闸.js?v=20260909b"></script>
+<script src="引擎-认列.js?v=20260909b"></script>
+<script src="引擎-学分法.js?v=20260909b"></script>
+<script src="引擎-OCR.js?v=20260909b"></script>
 <script src="密钥-本机.js"></script>
 <script>
 (function(){
@@ -976,7 +976,7 @@ window.addEventListener("unhandledrejection",function(ev){
         改了哪个 .js 就把那一行的 ?v= 一起改，否则浏览器还用旧的。
         （这里别写出完整的 script 标签样子 —— 全部检查.js 靠正则扫标签，
           注释里出现一个假的，它会当成真文件去找，然后报「本地却没有」。） */
-  var 版本号 = "v20260909a";
+  var 版本号 = "v20260909b";
   var $=function(id){return document.getElementById(id);};
   function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
   function n2(v){return Number(v).toFixed(2);}
@@ -2256,7 +2256,8 @@ window.addEventListener("unhandledrejection",function(ev){
          套上去人只会看不懂，看不懂就不看，真出事那次也跟着漏掉。
          现在按性质分两档：真少了货才喊，其余的只说「看一眼」。 */
       var 真少了=结构报告.校验.filter(function(x){
-        return x.类==="条数"||x.类==="小计"||x.类==="页码"||x.类==="坏";
+        /* 「序号」= 几张图拼一单时中间跳了号（★9/9）—— 跟漏页是一回事，摆在同一块里 */
+        return x.类==="条数"||x.类==="小计"||x.类==="页码"||x.类==="序号"||x.类==="坏";
       });
       var 看一眼=结构报告.校验.filter(function(x){
         return x.类!=="总数"&&真少了.indexOf(x)<0;
@@ -5987,6 +5988,8 @@ window.addEventListener("unhandledrejection",function(ev){
       成++;
       合.行=合.行.concat(J.行||[]);
       合.没读懂的=合.没读懂的.concat(J.没读懂的||[]);
+      /* 几份的行号接起来 —— 读结构那头靠它看出「中间漏了一页」（★9/9 老板选的 B：只提一句） */
+      if(J.序号们) 合.序号们=(合.序号们||[]).concat(J.序号们);
       if(!合.表怎么读的) 合.表怎么读的=J.表怎么读的;
       Object.keys(J.抬头||{}).forEach(function(k){ if(!合.抬头[k]) 合.抬头[k]=J.抬头[k]; });
     });
@@ -7026,6 +7029,8 @@ window.addEventListener("unhandledrejection",function(ev){
           var 合自=T.摊平([{n:1,rows:备.rows,
                             抬头文:(份[0].grid[0]||{}).抬头文}],备.读法);
           if(!合自||!合自.行.length) return false;
+          /* 行号要拿【原始】rows 去数：备好() 把没派上用场的列清空了，序号那列首当其冲 */
+          if(T.数一数序号) 合自.序号们=T.数一数序号(rows0,备.读法);
           /* ★★ 2026-09-02：一次拖进来几份就摊几份 —— 原来这儿只摊 份[0]。
              老板 9/2 拖广显那张两页单（客户微信里发的两张图）：
                第 1 页 18 行读得好好的，第 2 页 13 行货【一格都没进来】，
@@ -7052,13 +7057,21 @@ window.addEventListener("unhandledrejection",function(ev){
             if(!备N) return false;
             /* 读法对不上就别硬拼：重摊那一趟（选完客户补拆）用的是第一份的读法，
                表头行、分布列不一样的话，拿它去摊后面几份就是错位。 */
-            if(备N.读法.表头在第几行!==备.读法.表头在第几行
-               ||备N.读法.分布列!==备.读法.分布列
+            /* ⚠ 2026-09-09：【表头在第几行】不再算数。
+               老板把一张单截成两张图丢进来：第二张是下半截，本来就没有表头行，
+               于是「表头行 0 ≠ 1」→ 判成两种表 → 整条本地路作废 → 交给 AI 猜列 →
+               AI 把「每个点位发多少」那一整列漏了，5 行数量全变 0。
+               可这两张【地址列、明细列一模一样】，本来就该合。
+               续页没表头是常态，拿它当判据等于把对的挡在门外。
+               ⚠ 剩下两条不能松：分布列/点位名列不一样，那才是真的两种表。 */
+            if(备N.读法.分布列!==备.读法.分布列
                ||备N.读法.点位名列!==备.读法.点位名列) return false;
             var 合N=T.摊平([{n:1,rows:备N.rows}],备N.读法);
             if(!合N||!合N.行.length) return false;
             合自.行=合自.行.concat(合N.行||[]);
             合自.没读懂的=(合自.没读懂的||[]).concat(合N.没读懂的||[]);
+            var 号N=T.数一数序号?T.数一数序号(rowsN,备N.读法):null;
+            if(号N) 合自.序号们=(合自.序号们||[]).concat(号N);
             备们.push(备N);
           }
           /* 记份数账 —— 走到这儿其实每一份都成了（少一份上面就 return 了），
